@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+
+    <!-- Bootstrap & Font Awesome -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/EventManager.WebUI.styles.css" asp-append-version="true" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+        }
+
+        #wrapper {
+            display: flex;
+        }
+
+        /* Sidebar */
+        #sidebar-wrapper {
+            width: 220px;
+            background: linear-gradient(to bottom, #FFEE58, #FFF176); /* light yellow gradient */
+            transition: all 0.3s;
+            min-height: 100vh;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+            #sidebar-wrapper.collapsed {
+                width: 60px;
+            }
+
+            #sidebar-wrapper .sidebar-heading {
+                font-size: 1.4rem;
+                text-align: center;
+                padding: 1rem;
+            }
+
+            #sidebar-wrapper .list-group-item {
+                border: none;
+                color: #000;
+                padding: 0.75rem 1.5rem;
+                font-weight: 500;
+                display: flex;
+                align-items: center;
+                transition: background 0.2s;
+            }
+
+                #sidebar-wrapper .list-group-item i {
+                    margin-right: 10px;
+                    font-size: 1.2rem;
+                }
+
+                #sidebar-wrapper .list-group-item:hover {
+                    background-color: #FFEB3B; /* slightly brighter on hover */
+                    border-radius: 0.5rem;
+                }
+
+            #sidebar-wrapper.collapsed .list-group-item span {
+                display: none;
+            }
+
+        /* Page content */
+        #page-content-wrapper {
+            flex: 1;
+            margin-left: 220px;
+            transition: all 0.3s;
+        }
+
+        #sidebar-wrapper.collapsed + #page-content-wrapper {
+            margin-left: 60px;
+        }
+
+        /* Navbar */
+        .navbar-custom {
+            background: linear-gradient(to right, #FFEE58, #FFF176);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 500;
+        }
+
+            .navbar-custom .navbar-brand, .navbar-custom .nav-link {
+                color: #000;
+                font-weight: 500;
+            }
+
+                .navbar-custom .nav-link:hover {
+                    color: #333;
+                }
+
+        /* Responsive adjustments */
+        @@media (max-width: 768px) {
+            #sidebar-wrapper {
+                left: -220px;
+            }
+
+                #sidebar-wrapper.collapsed {
+                    left: 0;
+                }
+
+            #page-content-wrapper {
+                margin-left: 0;
+            }
+        }
+    </style>
+
+</head>
+<body>
+    <div id="wrapper">
+
+        <!-- Sidebar -->
+        <div id="sidebar-wrapper">
+            <div class="sidebar-heading">EventManager</div>
+            <div class="list-group list-group-flush">
+                <a asp-controller="Home" asp-action="Index" class="list-group-item list-group-item-action">
+                    <i class="fas fa-home"></i> <span>Dashboard</span>
+                </a>
+                <a asp-controller="Events" asp-action="Index" class="list-group-item list-group-item-action">
+                    <i class="fas fa-calendar-check"></i> <span>Events</span>
+                </a>
+                <a asp-controller="Participants" asp-action="Index" class="list-group-item list-group-item-action">
+                    <i class="fas fa-users"></i> <span>Participants</span>
+                </a>
+                <a asp-controller="Reports" asp-action="Index" class="list-group-item list-group-item-action">
+                    <i class="fas fa-chart-line"></i> <span>Reports</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <div id="page-content-wrapper">
+
+            <!-- Navbar -->
+            <nav class="navbar navbar-expand-lg navbar-custom border-bottom">
+                <div class="container-fluid">
+                    <button class="btn btn-outline-secondary" id="sidebarToggle"><i class="fas fa-bars"></i></button>
+                    <a class="navbar-brand ms-3" asp-area="" asp-controller="Home" asp-action="Index">EventManagerApp</a>
+                    <div class="collapse navbar-collapse justify-content-end">
+                        <ul class="navbar-nav align-items-center">
+                            <li class="nav-item me-2">
+                                <a class="nav-link" href="#">Ashutosh Singh</a>
+                            </li>
+                            <li class="nav-item">
+                                <img src="~/images/avatar.png" class="rounded-circle" width="35" height="35" />
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+
+            <div class="container-fluid p-4">
+                <main role="main" class="pb-3">
+                    @RenderBody()
+                </main>
+            </div>
+
+            <footer class="border-top footer text-muted mt-auto">
+                <div class="container">
+                    &copy; 2025 - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+                </div>
+            </footer>
+
+        </div>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.getElementById("sidebarToggle").addEventListener("click", function () {
+            document.getElementById("sidebar-wrapper").classList.toggle("collapsed");
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+
