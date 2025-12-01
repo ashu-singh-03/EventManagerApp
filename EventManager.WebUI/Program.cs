@@ -1,4 +1,18 @@
+using EventManager.Application;
+using EventManager.Infrastructure;
+using EventManager.Infrastructure.Data;
+using MySql.Data.MySqlClient;
+using System.Data;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Register your application & infrastructure services
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure();
+
+// Register IDbConnection so repositories can use it
+builder.Services.AddTransient<IDbConnection>(sp =>
+    new MySqlConnection(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -9,7 +23,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -22,8 +35,7 @@ app.MapStaticAssets();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}")
+    pattern: "{controller=Event}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

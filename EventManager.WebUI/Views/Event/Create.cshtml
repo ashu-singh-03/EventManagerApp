@@ -1,0 +1,1221 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Event - Multi-Step Form</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-calendar-plus"></i> Create New Event</h1>
+        </div>
+
+        <div class="form-container">
+            <!-- Multi-step progress indicator -->
+            <div class="form-steps">
+                <div class="step active" data-step="1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Event Details</div>
+                </div>
+                <div class="step" data-step="2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">Ticket Setup</div>
+                </div>
+                <div class="step" data-step="3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Coupons & Extras</div>
+                </div>
+                <div class="step" data-step="4">
+                    <div class="step-number">4</div>
+                    <div class="step-label">Review & Submit</div>
+                </div>
+            </div>
+
+            <form id="eventForm">
+                <!-- Step 1: Event Details -->
+                <div class="form-step active" id="step-1">
+                    <h2><i class="fas fa-info-circle"></i> Event Details</h2>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="eventTitle" class="required">Event Title</label>
+                            <input type="text" id="eventTitle" name="eventTitle" placeholder="Enter event title" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="eventDescription" class="required">Event Description</label>
+                            <textarea id="eventDescription" name="eventDescription" placeholder="Describe your event" required></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="eventDate" class="required">Event Date</label>
+                            <input type="date" id="eventDate" name="eventDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="eventTime" class="required">Event Time</label>
+                            <input type="time" id="eventTime" name="eventTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group full-width">
+                            <label for="eventLocation" class="required">Event Location</label>
+                            <input type="text" id="eventLocation" name="eventLocation" placeholder="Where will the event take place?" required>
+                        </div>
+                    </div>
+
+
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="endDate" class="required">End Date</label>
+                            <input type="date" id="endDate" name="endDate" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="endTime" class="required">End Time</label>
+                            <input type="time" id="endTime" name="endTime" required>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-cancel">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>
+                        <button type="button" class="btn-next" data-next="2">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 2: Ticket Setup -->
+                <div class="form-step" id="step-2">
+                    <h2><i class="fas fa-ticket-alt"></i> Ticket Configuration</h2>
+
+                    <div class="global-config">
+                        <div class="config-header">
+                            <h3><i class="fas fa-cogs"></i> Global Ticket Configuration</h3>
+                        </div>
+
+                        <div class="config-options">
+                            <div class="config-option active" data-config="separate">
+                                <input type="radio" name="config-type" id="separate-config" checked>
+                                <label for="separate-config">
+                                    <i class="fas fa-indent"></i> Configure Each Ticket Separately
+                                </label>
+                            </div>
+                            <div class="config-option" data-config="same">
+                                <input type="radio" name="config-type" id="same-config">
+                                <label for="same-config">
+                                    <i class="fas fa-copy"></i> Same Configuration for All Tickets
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="config-info">
+                            <i class="fas fa-info-circle"></i>
+                            Choose whether to apply the same settings to all ticket types or configure each one individually.
+                        </div>
+
+                        <div class="global-settings" id="global-settings">
+                            <h3 style="color: #b8860b; font-size: 1.1rem; margin-bottom: 15px;">
+                                <i class="fas fa-sliders-h"></i> Global Ticket Settings
+                            </h3>
+
+                            <div class="ticket-form-row">
+                                <div class="ticket-form-group price-input">
+                                    <label>Default Price</label>
+                                    <input type="number" min="0" step="0.01" value="0" id="global-price">
+                                </div>
+                                <div class="ticket-form-group">
+                                    <label>Default Booking Type</label>
+                                    <select id="global-booking-type">
+                                        <option value="direct">Direct Booking</option>
+                                        <option value="approval">Approval Required</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="ticket-form-row">
+                                <div class="ticket-form-group">
+                                    <label>Default Capacity</label>
+                                    <select id="global-capacity">
+                                        <option value="limited">Limited Capacity</option>
+                                        <option value="unlimited">Unlimited Capacity</option>
+                                    </select>
+                                </div>
+                                <div class="ticket-form-group">
+                                    <label>Default Waiting List</label>
+                                    <div class="waiting-list-toggle">
+                                        <span>Enable by Default</span>
+                                        <label class="toggle-switch">
+                                            <input type="checkbox" id="global-waiting-list">
+                                            <span class="toggle-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="ticket-form-row" id="global-quantity-row">
+                                <div class="ticket-form-group">
+                                    <label>Default Quantity</label>
+                                    <input type="number" min="1" value="100" id="global-quantity">
+                                </div>
+                                <div class="ticket-form-group">
+                                    <label>Default Sales End Date</label>
+                                    <input type="date" id="global-sales-end">
+                                </div>
+                            </div>
+
+                            <div class="ticket-form-row">
+                                <div class="ticket-form-group full-width">
+                                    <button type="button" class="btn-apply" id="apply-global">
+                                        <i class="fas fa-bolt"></i> Apply to All Existing Tickets
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="ticket-types">
+                        <div class="ticket-header">
+                            <h3><i class="fas fa-ticket-alt"></i> Ticket Types</h3>
+                            <button type="button" class="btn-add" id="addTicketType">
+                                <i class="fas fa-plus"></i> Add Ticket Type
+                            </button>
+                        </div>
+
+                        <div id="ticketTypesContainer">
+                            <!-- Ticket types will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-prev" data-prev="1">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn-next" data-next="3">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Coupons & Extras -->
+                <div class="form-step" id="step-3">
+                    <h2><i class="fas fa-tag"></i> Coupon Codes</h2>
+
+                    <div class="coupon-section">
+                        <div class="coupon-header">
+                            <h3><i class="fas fa-tag"></i> Coupon Codes</h3>
+                            <button type="button" class="btn-add" id="addCoupon">
+                                <i class="fas fa-plus"></i> Add Coupon Code
+                            </button>
+                        </div>
+
+                        <div class="config-info">
+                            <i class="fas fa-info-circle"></i>
+                            Create discount codes that attendees can use during RSVP. You can set percentage or fixed amount discounts.
+                        </div>
+
+                        <div id="couponContainer">
+                            <!-- Coupon codes will be added here dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-prev" data-prev="2">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="button" class="btn-next" data-next="4">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: Review & Submit -->
+                <div class="form-step" id="step-4">
+                    <h2><i class="fas fa-clipboard-check"></i> Review & Submit</h2>
+
+                    <div class="review-section">
+                        <div class="review-card" style="background: #fffef7; border: 1px solid #ffe082; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <h3 style="color: #b8860b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-info-circle"></i> Event Details
+                            </h3>
+                            <div id="review-event-details">
+                                <!-- Event details will be populated here -->
+                            </div>
+                        </div>
+
+                        <div class="review-card" style="background: #fffef7; border: 1px solid #ffe082; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <h3 style="color: #b8860b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-ticket-alt"></i> Ticket Types
+                            </h3>
+                            <div id="review-ticket-types">
+                                <!-- Ticket types will be populated here -->
+                            </div>
+                        </div>
+
+                        <div class="review-card" style="background: #fffef7; border: 1px solid #ffe082; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                            <h3 style="color: #b8860b; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-tag"></i> Coupon Codes
+                            </h3>
+                            <div id="review-coupons">
+                                <!-- Coupons will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="btn-prev" data-prev="3">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <button type="submit" class="btn-submit">
+                            <i class="fas fa-check"></i> Create Event
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Event Management System &copy; 2023</p>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+              $(document).ready(function() {
+
+            // Handle Step 1 submit
+            $('#eventForm').on('click', '.btn-submit', function(e) {
+                e.preventDefault();
+
+                const eventData = {
+                    EventName: $('#eventTitle').val(),
+                    EventDescription: $('#eventDescription').val(),
+                    EventDate: $('#eventDate').val(),
+                    EventTime: $('#eventTime').val(),
+                    Location: $('#eventLocation').val(),
+                    EndDate: $('#endDate').val(),
+                    EndTime: $('#endTime').val()
+                };
+
+                console.log('Step 1 Data:', eventData);
+
+                $.ajax({
+                    url: '/Event/Create',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(eventData),
+                    success: function(response) {
+                        console.log('Server Response:', response);
+                        if (response.success) {
+                            alert(response.message || 'Step 1 saved successfully!');
+                            window.location.href = '/Event/Index';
+                        } else {
+                            alert(response.message || 'Failed to save event.');
+                        }
+                    },
+                    error: function(xhr) {
+                        console.error('AJAX Error:', xhr);
+                        alert('Error saving event: ' + xhr.responseText);
+                    }
+                });
+            });
+
+           
+
+        });
+
+        // Keep your vanilla JS for the remaining steps (3,4, etc.)
+
+        // Multi-step form functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const formSteps = document.querySelectorAll('.form-step');
+            const stepIndicators = document.querySelectorAll('.step');
+            const nextButtons = document.querySelectorAll('.btn-next');
+            const prevButtons = document.querySelectorAll('.btn-prev');
+
+            // Initialize the form with first step active
+            showStep(1);
+
+            // Next button event listeners
+            nextButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const currentStep = getCurrentStep();
+                    const nextStep = parseInt(this.getAttribute('data-next'));
+
+                    // Validate current step before proceeding
+                    if (validateStep(currentStep)) {
+                        showStep(nextStep);
+                    }
+                });
+            });
+
+            // Previous button event listeners
+            prevButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    const prevStep = parseInt(this.getAttribute('data-prev'));
+                    showStep(prevStep);
+                });
+            });
+
+            // Function to show a specific step
+            function showStep(stepNumber) {
+                // Hide all steps
+                formSteps.forEach(step => {
+                    step.classList.remove('active');
+                });
+
+                // Show the selected step
+                document.getElementById(`step-${stepNumber}`).classList.add('active');
+
+                // Update step indicators
+                stepIndicators.forEach(indicator => {
+                    indicator.classList.remove('active', 'completed');
+
+                    const indicatorStep = parseInt(indicator.getAttribute('data-step'));
+
+                    if (indicatorStep < stepNumber) {
+                        indicator.classList.add('completed');
+                    } else if (indicatorStep === stepNumber) {
+                        indicator.classList.add('active');
+                    }
+                });
+
+                // If we're on the last step, update the review section
+                if (stepNumber === 4) {
+                    updateReviewSection();
+                }
+            }
+
+            // Function to get current step number
+            function getCurrentStep() {
+                let currentStep = 1;
+                formSteps.forEach((step, index) => {
+                    if (step.classList.contains('active')) {
+                        currentStep = index + 1;
+                    }
+                });
+                return currentStep;
+            }
+
+            // Function to validate a step
+            function validateStep(stepNumber) {
+                let isValid = true;
+                const currentStep = document.getElementById(`step-${stepNumber}`);
+
+                // Get all required inputs in the current step
+                const requiredInputs = currentStep.querySelectorAll('[required]');
+
+                requiredInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        isValid = false;
+                        input.style.borderColor = '#e53935';
+
+                        // Add error message if not already present
+                        if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('error-message')) {
+                            const errorMsg = document.createElement('div');
+                            errorMsg.className = 'error-message';
+                            errorMsg.style.color = '#e53935';
+                            errorMsg.style.fontSize = '0.8rem';
+                            errorMsg.style.marginTop = '5px';
+                            errorMsg.textContent = 'This field is required';
+                            input.parentNode.appendChild(errorMsg);
+                        }
+                    } else {
+                        input.style.borderColor = '#ffe082';
+
+                        // Remove error message if exists
+                        if (input.nextElementSibling && input.nextElementSibling.classList.contains('error-message')) {
+                            input.nextElementSibling.remove();
+                        }
+                    }
+                });
+
+
+                // Additional validation for step 2
+                if (stepNumber === 2) {
+                    const ticketCards = document.querySelectorAll('.ticket-card');
+                    if (ticketCards.length === 0) {
+                        isValid = false;
+                        alert('Please add at least one ticket type.');
+                    }
+                }
+
+                if (!isValid) {
+                    alert('Please fill in all required fields correctly before proceeding.');
+                }
+
+                return isValid;
+            }
+
+            // Function to update the review section
+            function updateReviewSection() {
+                // Event details
+                const eventTitle = document.getElementById('eventTitle').value;
+                const eventDescription = document.getElementById('eventDescription').value;
+                const eventDate = document.getElementById('eventDate').value;
+                const eventTime = document.getElementById('eventTime').value;
+                const eventLocation = document.getElementById('eventLocation').value;
+
+                document.getElementById('review-event-details').innerHTML = `
+                    <p><strong>Title:</strong> ${eventTitle || 'Not provided'}</p>
+                    <p><strong>Description:</strong> ${eventDescription || 'Not provided'}</p>
+                    <p><strong>Date:</strong> ${eventDate || 'Not provided'} at ${eventTime || 'Not provided'}</p>
+                    <p><strong>Location:</strong> ${eventLocation || 'Not provided'}</p>
+                `;
+
+                // Ticket types
+                const ticketCards = document.querySelectorAll('.ticket-card');
+                let ticketHTML = '';
+
+                if (ticketCards.length > 0) {
+                    ticketCards.forEach(card => {
+                        const ticketName = card.querySelector('input[type="text"]').value;
+                        const ticketPrice = card.querySelector('.price-input input').value;
+                        ticketHTML += `<p><strong>${ticketName || 'Unnamed Ticket'}:</strong> $${ticketPrice || '0'}</p>`;
+                    });
+                } else {
+                    ticketHTML = '<p>No ticket types added</p>';
+                }
+
+                document.getElementById('review-ticket-types').innerHTML = ticketHTML;
+
+                // Coupons
+                const couponCards = document.querySelectorAll('.coupon-card');
+                let couponHTML = '';
+
+                if (couponCards.length > 0) {
+                    couponCards.forEach(card => {
+                        const couponCode = card.querySelector('.coupon-code-input input').value;
+                        const discountType = card.querySelector('.discount-option.active').dataset.discountType;
+                        const discountValue = card.querySelector('.discount-input input').value;
+
+                        couponHTML += `<p><strong>${couponCode || 'No Code'}:</strong> ${discountValue}${discountType === 'percentage' ? '%' : '$'} off</p>`;
+                    });
+                } else {
+                    couponHTML = '<p>No coupon codes added</p>';
+                }
+
+                document.getElementById('review-coupons').innerHTML = couponHTML;
+            }
+
+            // Initialize with one ticket and one coupon
+            addTicketType();
+            addCoupon();
+
+            // Set minimum date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('eventDate').setAttribute('min', today);
+            document.getElementById('endDate').setAttribute('min', today);
+            document.getElementById('global-sales-end').setAttribute('min', today);
+
+            // Add event listener for "Add Ticket Type" button
+            document.getElementById('addTicketType').addEventListener('click', addTicketType);
+
+            // Add event listener for "Add Coupon" button
+            document.getElementById('addCoupon').addEventListener('click', addCoupon);
+
+            // Cancel button functionality
+            document.querySelector('.btn-cancel').addEventListener('click', function() {
+                if (confirm('Are you sure you want to cancel? All unsaved changes will be lost.')) {
+                    window.location.href = '#'; // In a real app, redirect to previous page
+                }
+            });
+
+            // Form submission handler
+            document.getElementById('eventForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                // Validate all steps
+                let allValid = true;
+                for (let i = 1; i <= 4; i++) {
+                    if (!validateStep(i)) {
+                        allValid = false;
+                        showStep(i);
+                        break;
+                    }
+                }
+
+                if (allValid) {
+                    alert('Event created successfully!');
+                    // In a real application, you would submit the form data to a server here
+                }
+            });
+        });
+
+        // All the other JavaScript functions from the original code (addTicketType, addCoupon, etc.)
+        // would go here, but I've omitted them for brevity since they're quite lengthy
+        // and the focus is on the multi-step functionality
+
+        // Ticket type counter
+        let ticketCounter = 0;
+        let couponCounter = 0;
+        let globalConfigMode = 'separate'; // 'separate' or 'same'
+
+        // Function to generate a random coupon code
+        function generateCouponCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let result = '';
+            for (let i = 0; i < 8; i++) {
+                result += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return result;
+        }
+
+        // Function to add a new coupon code
+        function addCoupon() {
+            couponCounter++;
+            const container = document.getElementById('couponContainer');
+
+            const couponCard = document.createElement('div');
+            couponCard.className = 'coupon-card';
+            couponCard.innerHTML = `
+                <div class="coupon-card-header">
+                    <div class="coupon-title">Coupon Code #${couponCounter}</div>
+                    <button type="button" class="remove-coupon" onclick="removeCoupon(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="coupon-form-row">
+                    <div class="coupon-form-group coupon-code-input">
+                        <label class="required">Coupon Code</label>
+                        <input type="text" placeholder="e.g., SUMMER25" value="${generateCouponCode()}" required>
+                    </div>
+                    <div class="coupon-form-group">
+                        <label class="required">Description</label>
+                        <input type="text" placeholder="e.g., Summer discount for students" required>
+                    </div>
+                </div>
+
+                <div class="discount-type">
+                    <div class="discount-option active" data-discount-type="percentage">
+                        <input type="radio" name="discount-type-${couponCounter}" id="percentage-${couponCounter}" checked>
+                        <label for="percentage-${couponCounter}">
+                            <i class="fas fa-percentage"></i> Percentage Discount
+                        </label>
+                    </div>
+                    <div class="discount-option" data-discount-type="amount">
+                        <input type="radio" name="discount-type-${couponCounter}" id="amount-${couponCounter}">
+                        <label for="amount-${couponCounter}">
+                            <i class="fas fa-dollar-sign"></i> Fixed Amount Discount
+                        </label>
+                    </div>
+                </div>
+
+                <div class="coupon-form-row">
+                    <div class="coupon-form-group discount-input percentage" id="discount-input-${couponCounter}">
+                        <label class="required">Discount Value</label>
+                        <input type="number" min="0" max="100" step="1" value="10" required>
+                    </div>
+                    <div class="coupon-form-group">
+                        <label>Valid Until</label>
+                        <input type="date">
+                    </div>
+                </div>
+
+                <div class="coupon-advanced">
+                    <div class="coupon-advanced-header" onclick="toggleAdvancedSettings(this)">
+                        <h3 style="color: #b8860b; font-size: 1rem;">
+                            <i class="fas fa-cog"></i> Advanced Settings
+                        </h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+
+                    <div class="coupon-advanced-content">
+                        <div class="coupon-form-row">
+                            <div class="coupon-form-group">
+                                <label>Usage Limit</label>
+                                <input type="number" min="0" placeholder="0 for unlimited">
+                            </div>
+                            <div class="coupon-form-group">
+                                <label>Minimum Order Value</label>
+                                <input type="number" min="0" step="0.01" placeholder="No minimum">
+                            </div>
+                        </div>
+
+                        <div class="coupon-limitations">
+                            <div class="limitation-option">
+                                <input type="checkbox" id="apply-all-${couponCounter}" checked>
+                                <label for="apply-all-${couponCounter}">Apply to all ticket types</label>
+                            </div>
+                            <div class="limitation-option">
+                                <input type="checkbox" id="first-time-${couponCounter}">
+                                <label for="first-time-${couponCounter}">Only for first-time attendees</label>
+                            </div>
+                            <div class="limitation-option">
+                                <input type="checkbox" id="one-per-user-${couponCounter}" checked>
+                                <label for="one-per-user-${couponCounter}">Limit to one use per user</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="coupon-info">
+                    <i class="fas fa-info-circle"></i>
+                    Attendees can enter this code during the RSVP process to receive a discount. Make sure to communicate the code to your target audience.
+                </div>
+            `;
+
+            container.appendChild(couponCard);
+
+            // Add event listeners for the coupon
+            setupCouponEventListeners(couponCard, couponCounter);
+        }
+
+        // Function to set up event listeners for a coupon
+        function setupCouponEventListeners(couponCard, couponId) {
+            // Add event listeners for discount type options
+            const discountOptions = couponCard.querySelectorAll('.discount-option');
+            const discountInput = couponCard.querySelector('.discount-input');
+
+            discountOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update active state
+                    discountOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Check the radio input
+                    const radioInput = this.querySelector('input');
+                    radioInput.checked = true;
+
+                    // Update discount input type
+                    if (this.dataset.discountType === 'percentage') {
+                        discountInput.className = 'coupon-form-group discount-input percentage';
+                        discountInput.querySelector('input').setAttribute('max', '100');
+                        discountInput.querySelector('input').setAttribute('step', '1');
+                    } else {
+                        discountInput.className = 'coupon-form-group discount-input amount';
+                        discountInput.querySelector('input').removeAttribute('max');
+                        discountInput.querySelector('input').setAttribute('step', '0.01');
+                    }
+                });
+            });
+
+            // Set minimum date to today for valid until input
+            const today = new Date().toISOString().split('T')[0];
+            const validUntilInput = couponCard.querySelector('input[type="date"]');
+            validUntilInput.setAttribute('min', today);
+        }
+
+        // Function to toggle advanced settings
+        function toggleAdvancedSettings(header) {
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.fa-chevron-down');
+
+            content.classList.toggle('active');
+            icon.classList.toggle('fa-chevron-down');
+            icon.classList.toggle('fa-chevron-up');
+        }
+
+        // Function to remove a coupon
+        function removeCoupon(button) {
+            const couponCard = button.closest('.coupon-card');
+            couponCard.remove();
+            // Update coupon numbers
+            updateCouponNumbers();
+        }
+
+        // Function to update coupon numbers after removal
+        function updateCouponNumbers() {
+            const couponCards = document.querySelectorAll('.coupon-card');
+            couponCards.forEach((card, index) => {
+                const title = card.querySelector('.coupon-title');
+                title.textContent = `Coupon Code #${index + 1}`;
+            });
+            couponCounter = couponCards.length;
+        }
+
+        // Function to add a new ticket type
+        function addTicketType() {
+            ticketCounter++;
+            const container = document.getElementById('ticketTypesContainer');
+
+            const ticketCard = document.createElement('div');
+            ticketCard.className = 'ticket-card';
+            ticketCard.innerHTML = `
+                <div class="ticket-card-header">
+                    <div class="ticket-title">Ticket Type #${ticketCounter}</div>
+                    <button type="button" class="remove-ticket" onclick="removeTicketType(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="ticket-form-row">
+                    <div class="ticket-form-group">
+                        <label class="required">Ticket Name</label>
+                        <input type="text" placeholder="e.g., General Admission, VIP" required>
+                    </div>
+                    <div class="ticket-form-group price-input">
+                        <label class="required">Price</label>
+                        <input type="number" min="0" step="0.01" value="0" required>
+                    </div>
+                </div>
+
+                <!-- Booking Type Section -->
+                <div class="booking-type-section">
+                    <label class="required">Booking Type</label>
+                    <div class="booking-type-options">
+                        <div class="booking-type-option active" data-booking-type="direct">
+                            <input type="radio" name="booking-type-${ticketCounter}" id="direct-${ticketCounter}" checked>
+                            <label for="direct-${ticketCounter}">
+                                <div class="booking-type-icon">
+                                    <i class="fas fa-bolt"></i>
+                                </div>
+                                <div>
+                                    <div class="booking-type-title">Direct Booking</div>
+                                    <div class="booking-type-desc" style="font-size: 0.8rem; color: #666;">Attendees book immediately</div>
+                                </div>
+                            </label>
+                        </div>
+                        <div class="booking-type-option" data-booking-type="approval">
+                            <input type="radio" name="booking-type-${ticketCounter}" id="approval-${ticketCounter}">
+                            <label for="approval-${ticketCounter}">
+                                <div class="booking-type-icon">
+                                    <i class="fas fa-user-check"></i>
+                                </div>
+                                <div>
+                                    <div class="booking-type-title">Approval Required</div>
+                                    <div class="booking-type-desc" style="font-size: 0.8rem; color: #666;">You approve each request</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="booking-type-content" id="approval-content-${ticketCounter}">
+                        <div class="approval-settings">
+                            <div class="approval-option">
+                                <input type="checkbox" id="auto-expire-${ticketCounter}" checked>
+                                <label for="auto-expire-${ticketCounter}">Automatically expire pending requests after 48 hours</label>
+                            </div>
+                            <div class="approval-option">
+                                <input type="checkbox" id="notify-admin-${ticketCounter}" checked>
+                                <label for="notify-admin-${ticketCounter}">Notify me when new requests arrive</label>
+                            </div>
+                            <div class="approval-option">
+                                <input type="checkbox" id="limit-per-user-${ticketCounter}">
+                                <label for="limit-per-user-${ticketCounter}">Limit to 1 request per user</label>
+                            </div>
+                        </div>
+                        <div class="approval-info">
+                            <i class="fas fa-info-circle"></i>
+                            Attendees will submit booking requests that you can approve or decline. This is useful for exclusive events or when you need to screen attendees.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Time Slots Section -->
+                <div class="time-slots-section">
+                    <div class="time-slots-header">
+                        <h3 style="color: #b8860b; font-size: 1.1rem;">
+                            <i class="fas fa-clock"></i> Time Slots
+                        </h3>
+                        <div class="time-slots-toggle">
+                            <span>Enable Time Slots</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="time-slots-toggle-input">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="time-slots-content" id="time-slots-${ticketCounter}">
+                        <div class="time-slot-card">
+                            <div class="time-slot-header">
+                                <div class="time-slot-title">Time Slot #1</div>
+                                <button type="button" class="remove-time-slot" onclick="removeTimeSlot(this)">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="time-slot-form-row">
+                                <div class="time-slot-form-group">
+                                    <label class="required">Date</label>
+                                    <input type="date" required>
+                                </div>
+                                <div class="time-slot-form-group">
+                                    <label class="required">Start Time</label>
+                                    <input type="time" required>
+                                </div>
+                            </div>
+                            <div class="time-slot-form-row">
+                                <div class="time-slot-form-group">
+                                    <label class="required">End Time</label>
+                                    <input type="time" required>
+                                </div>
+                                <div class="time-slot-form-group">
+                                    <label>Capacity</label>
+                                    <input type="number" min="1" placeholder="Leave empty for default">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="time-slot-actions">
+                            <button type="button" class="btn-add-time-slot" onclick="addTimeSlot(this)">
+                                <i class="fas fa-plus"></i> Add Time Slot
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Capacity Section -->
+                <div class="capacity-section">
+                    <label class="required">Capacity</label>
+                    <div class="capacity-options">
+                        <div class="capacity-option active" data-capacity="limited">
+                            <input type="radio" name="capacity-${ticketCounter}" id="limited-${ticketCounter}" checked>
+                            <label for="limited-${ticketCounter}">
+                                <i class="fas fa-chart-bar"></i> Limited Capacity
+                            </label>
+                        </div>
+                        <div class="capacity-option" data-capacity="unlimited">
+                            <input type="radio" name="capacity-${ticketCounter}" id="unlimited-${ticketCounter}">
+                            <label for="unlimited-${ticketCounter}">
+                                <i class="fas fa-infinity"></i> Unlimited Capacity
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="capacity-limited active" id="capacity-limited-${ticketCounter}">
+                        <div class="ticket-form-row">
+                            <div class="ticket-form-group">
+                                <label class="required">Quantity Available</label>
+                                <input type="number" min="1" value="100" required>
+                            </div>
+                            <div class="ticket-form-group">
+                                <label>Sales End Date</label>
+                                <input type="date">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ticket-form-row">
+                    <div class="ticket-form-group full-width ticket-description">
+                        <label>Description</label>
+                        <textarea placeholder="Describe what this ticket includes"></textarea>
+                    </div>
+                </div>
+                <div class="free-checkbox">
+                    <input type="checkbox" id="free-${ticketCounter}">
+                    <label for="free-${ticketCounter}">This is a free ticket</label>
+                </div>
+
+                <!-- Waiting List Section -->
+                <div class="waiting-list-section">
+                    <div class="waiting-list-header">
+                        <h3 style="color: #b8860b; font-size: 1.1rem;">
+                            <i class="fas fa-user-clock"></i> Waiting List
+                        </h3>
+                        <div class="waiting-list-toggle">
+                            <span>Enable Waiting List</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" class="waiting-list-toggle-input">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="waiting-list-content" id="waiting-list-${ticketCounter}">
+                        <div class="waiting-list-options">
+                            <div class="waiting-list-option">
+                                <label>Max Waitlist Capacity</label>
+                                <input type="number" min="0" placeholder="0 for unlimited" value="50">
+                            </div>
+                            <div class="waiting-list-option">
+                                <label>Auto-confirm if available?</label>
+                                <select>
+                                    <option value="yes">Yes, automatically confirm</option>
+                                    <option value="no">No, manual confirmation required</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="waiting-list-info">
+                            <i class="fas fa-info-circle"></i>
+                            When this ticket type sells out, people can join the waiting list. If tickets become available, they'll be offered in the order people joined.
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            container.appendChild(ticketCard);
+
+            // Apply global settings if in same configuration mode
+            if (globalConfigMode === 'same') {
+                applyGlobalSettingsToTicket(ticketCard);
+            }
+
+            // Add event listeners
+            setupTicketEventListeners(ticketCard, ticketCounter);
+        }
+
+        // Function to add a time slot to a ticket
+        function addTimeSlot(button) {
+            const timeSlotsContent = button.closest('.time-slots-content');
+            const timeSlotCards = timeSlotsContent.querySelectorAll('.time-slot-card');
+            const timeSlotCount = timeSlotCards.length + 1;
+
+            const timeSlotCard = document.createElement('div');
+            timeSlotCard.className = 'time-slot-card';
+            timeSlotCard.innerHTML = `
+                <div class="time-slot-header">
+                    <div class="time-slot-title">Time Slot #${timeSlotCount}</div>
+                    <button type="button" class="remove-time-slot" onclick="removeTimeSlot(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="time-slot-form-row">
+                    <div class="time-slot-form-group">
+                        <label class="required">Date</label>
+                        <input type="date" required>
+                    </div>
+                    <div class="time-slot-form-group">
+                        <label class="required">Start Time</label>
+                        <input type="time" required>
+                    </div>
+                </div>
+                <div class="time-slot-form-row">
+                    <div class="time-slot-form-group">
+                        <label class="required">End Time</label>
+                        <input type="time" required>
+                    </div>
+                    <div class="time-slot-form-group">
+                        <label>Capacity</label>
+                        <input type="number" min="1" placeholder="Leave empty for default">
+                    </div>
+                </div>
+            `;
+
+            // Insert before the actions div
+            const actionsDiv = timeSlotsContent.querySelector('.time-slot-actions');
+            timeSlotsContent.insertBefore(timeSlotCard, actionsDiv);
+
+            // Set minimum date to today for the new date input
+            const today = new Date().toISOString().split('T')[0];
+            timeSlotCard.querySelector('input[type="date"]').setAttribute('min', today);
+        }
+
+        // Function to remove a time slot
+        function removeTimeSlot(button) {
+            const timeSlotCard = button.closest('.time-slot-card');
+            const timeSlotsContent = timeSlotCard.closest('.time-slots-content');
+            const timeSlotCards = timeSlotsContent.querySelectorAll('.time-slot-card');
+
+            // Don't remove if it's the last time slot
+            if (timeSlotCards.length > 1) {
+                timeSlotCard.remove();
+
+                // Update time slot numbers
+                const remainingTimeSlots = timeSlotsContent.querySelectorAll('.time-slot-card');
+                remainingTimeSlots.forEach((slot, index) => {
+                    const title = slot.querySelector('.time-slot-title');
+                    title.textContent = `Time Slot #${index + 1}`;
+                });
+            } else {
+                alert('You need to have at least one time slot.');
+            }
+        }
+
+        // Function to set up event listeners for a ticket
+        function setupTicketEventListeners(ticketCard, ticketId) {
+            // Add event listener for free checkbox
+            const freeCheckbox = ticketCard.querySelector(`#free-${ticketId}`);
+            const priceInput = ticketCard.querySelector('.price-input input');
+
+            freeCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    priceInput.value = '0';
+                    priceInput.disabled = true;
+                } else {
+                    priceInput.disabled = false;
+                }
+            });
+
+            // Add event listener for waiting list toggle
+            const waitingListToggle = ticketCard.querySelector('.waiting-list-toggle-input');
+            const waitingListContent = ticketCard.querySelector('.waiting-list-content');
+
+            waitingListToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    waitingListContent.classList.add('active');
+                } else {
+                    waitingListContent.classList.remove('active');
+                }
+            });
+
+            // Add event listener for time slots toggle
+            const timeSlotsToggle = ticketCard.querySelector('.time-slots-toggle-input');
+            const timeSlotsContent = ticketCard.querySelector('.time-slots-content');
+
+            timeSlotsToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    timeSlotsContent.classList.add('active');
+                } else {
+                    timeSlotsContent.classList.remove('active');
+                }
+            });
+
+            // Add event listeners for booking type options
+            const bookingTypeOptions = ticketCard.querySelectorAll('.booking-type-option');
+            const approvalContent = ticketCard.querySelector('.booking-type-content');
+
+            bookingTypeOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update active state
+                    bookingTypeOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Check the radio input
+                    const radioInput = this.querySelector('input');
+                    radioInput.checked = true;
+
+                    // Show/hide approval settings
+                    if (this.dataset.bookingType === 'approval') {
+                        approvalContent.classList.add('active');
+                    } else {
+                        approvalContent.classList.remove('active');
+                    }
+                });
+            });
+
+            // Add event listeners for capacity options
+            const capacityOptions = ticketCard.querySelectorAll('.capacity-option');
+            const capacityLimited = ticketCard.querySelector('.capacity-limited');
+
+            capacityOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Update active state
+                    capacityOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Check the radio input
+                    const radioInput = this.querySelector('input');
+                    radioInput.checked = true;
+
+                    // Show/hide limited capacity fields
+                    if (this.dataset.capacity === 'limited') {
+                        capacityLimited.classList.add('active');
+                    } else {
+                        capacityLimited.classList.remove('active');
+                    }
+                });
+            });
+
+            // Set minimum date to today for time slot date inputs
+            const today = new Date().toISOString().split('T')[0];
+            const timeSlotDateInputs = ticketCard.querySelectorAll('.time-slot-card input[type="date"]');
+            timeSlotDateInputs.forEach(input => {
+                input.setAttribute('min', today);
+            });
+        }
+
+        // Function to apply global settings to a ticket
+        function applyGlobalSettingsToTicket(ticketCard) {
+            const globalPrice = document.getElementById('global-price').value;
+            const globalBookingType = document.getElementById('global-booking-type').value;
+            const globalCapacity = document.getElementById('global-capacity').value;
+            const globalQuantity = document.getElementById('global-quantity').value;
+            const globalSalesEnd = document.getElementById('global-sales-end').value;
+            const globalWaitingList = document.getElementById('global-waiting-list').checked;
+
+            // Apply price
+            const priceInput = ticketCard.querySelector('.price-input input');
+            priceInput.value = globalPrice;
+
+            // Apply booking type
+            const bookingTypeOptions = ticketCard.querySelectorAll('.booking-type-option');
+            const approvalContent = ticketCard.querySelector('.booking-type-content');
+
+            bookingTypeOptions.forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.bookingType === globalBookingType) {
+                    option.classList.add('active');
+                    const radioInput = option.querySelector('input');
+                    radioInput.checked = true;
+
+                    if (globalBookingType === 'approval') {
+                        approvalContent.classList.add('active');
+                    } else {
+                        approvalContent.classList.remove('active');
+                    }
+                }
+            });
+
+            // Apply capacity
+            const capacityOptions = ticketCard.querySelectorAll('.capacity-option');
+            const capacityLimited = ticketCard.querySelector('.capacity-limited');
+
+            capacityOptions.forEach(option => {
+                option.classList.remove('active');
+                if (option.dataset.capacity === globalCapacity) {
+                    option.classList.add('active');
+                    const radioInput = option.querySelector('input');
+                    radioInput.checked = true;
+
+                    if (globalCapacity === 'limited') {
+                        capacityLimited.classList.add('active');
+                    } else {
+                        capacityLimited.classList.remove('active');
+                    }
+                }
+            });
+
+            // Apply quantity and sales end date if limited capacity
+            if (globalCapacity === 'limited') {
+                const quantityInput = capacityLimited.querySelector('input[type="number"]');
+                const salesEndInput = capacityLimited.querySelector('input[type="date"]');
+
+                quantityInput.value = globalQuantity;
+                if (globalSalesEnd) {
+                    salesEndInput.value = globalSalesEnd;
+                }
+            }
+
+            // Apply waiting list setting
+            const waitingListToggle = ticketCard.querySelector('.waiting-list-toggle-input');
+            const waitingListContent = ticketCard.querySelector('.waiting-list-content');
+
+            waitingListToggle.checked = globalWaitingList;
+            if (globalWaitingList) {
+                waitingListContent.classList.add('active');
+            } else {
+                waitingListContent.classList.remove('active');
+            }
+        }
+
+        // Function to remove a ticket type
+        function removeTicketType(button) {
+            const ticketCard = button.closest('.ticket-card');
+            ticketCard.remove();
+            // Update ticket numbers
+            updateTicketNumbers();
+        }
+
+        // Function to update ticket numbers after removal
+        function updateTicketNumbers() {
+            const ticketCards = document.querySelectorAll('.ticket-card');
+            ticketCards.forEach((card, index) => {
+                const title = card.querySelector('.ticket-title');
+                title.textContent = `Ticket Type #${index + 1}`;
+            });
+            ticketCounter = ticketCards.length;
+        }
+
+        // Function to apply global settings to all existing tickets
+        function applyGlobalToAllTickets() {
+            const ticketCards = document.querySelectorAll('.ticket-card');
+            ticketCards.forEach(card => {
+                applyGlobalSettingsToTicket(card);
+            });
+
+            alert('Global settings applied to all ticket types!');
+        }
+    </script>
+</body>
+</html>

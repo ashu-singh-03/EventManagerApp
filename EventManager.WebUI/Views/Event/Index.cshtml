@@ -1,0 +1,121 @@
+﻿@model IEnumerable<EventManager.Domain.Entities.Event>
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="container py-5">
+
+    @if (!Model.Any())
+    {
+        <!-- Only Welcome Card when no events -->
+        <div class="card shadow-lg rounded-4 p-5 mx-auto mb-5 text-center" style="max-width: 700px; background: #fdfcf9;">
+            <i class="fa-solid fa-calendar-plus fa-4x mb-3 text-warning"></i>
+            <h1 class="fw-bold text-dark">Welcome, Admin!</h1>
+            <p class="lead mt-3 text-muted">
+                You haven’t created any events yet. Let’s get started by creating your first one!
+            </p>
+            <a class="btn btn-warning btn-lg fw-bold mt-3 px-4 py-2" asp-controller="Event" asp-action="Create">
+                <i class="fa-solid fa-plus me-2"></i> Create Event
+            </a>
+        </div>
+    }
+    else
+    {
+        <!-- Create button always on top -->
+        <div class="text-center mb-4">
+            <a class="btn btn-warning btn-lg fw-bold px-4 py-2" asp-controller="Event" asp-action="Create">
+                <i class="fa-solid fa-plus me-2"></i> Create Event
+            </a>
+        </div>
+
+        <!-- Event Cards Container -->
+        <div id="eventContainer" class="row g-4 justify-content-center">
+            @foreach (var evt in Model)
+            {
+                <div class="col-md-4" id="eventCard_@evt.EventId">
+                    <div class="card shadow-sm rounded-3 p-4 h-100">
+                        <i class="fa-solid fa-calendar-days fa-2x mb-2 text-warning"></i>
+                        <h5 class="fw-semibold text-dark">@evt.EventName</h5>
+                        <p class="text-muted">@evt.EventDescription</p>
+                        <p class="text-muted mb-1"><strong>Date:</strong> @evt.EventDate.ToString("dd MMM yyyy")</p>
+                        <p class="text-muted mb-1"><strong>Time:</strong> @evt.EventTime?.ToString(@"hh\:mm")</p>
+                        <p class="text-muted mb-1"><strong>Location:</strong> @evt.Location</p>
+
+                        <div class="d-flex justify-content-between mt-2">
+                            <a class="btn btn-warning btn-sm" asp-controller="Event" asp-action="Edit" asp-route-id="@evt.EventId">
+                                <i class="fa-solid fa-pen me-1"></i> Edit
+                            </a>
+
+                            <button class="btn btn-danger btn-sm delete-event" data-id="@evt.EventId">
+                                <i class="fa-solid fa-trash me-1"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Tips Section (always visible) -->
+    <div class="row g-4 justify-content-center mt-5">
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm rounded-3 h-100 tip-card text-center">
+                <i class="fa-solid fa-lightbulb fa-2x mb-2 text-warning"></i>
+                <h5 class="fw-semibold text-dark">Use Clear Titles</h5>
+                <p class="text-muted">Descriptive titles and details help attract the right participants.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm rounded-3 h-100 tip-card text-center">
+                <i class="fa-solid fa-ticket fa-2x mb-2 text-warning"></i>
+                <h5 class="fw-semibold text-dark">Set Ticket Options</h5>
+                <p class="text-muted">Define ticket types and capacities to match your event needs.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm rounded-3 h-100 tip-card text-center">
+                <i class="fa-solid fa-chart-line fa-2x mb-2 text-warning"></i>
+                <h5 class="fw-semibold text-dark">Track & Promote</h5>
+                <p class="text-muted">Monitor registrations and use coupons to boost attendance.</p>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Scripts -->
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Handle Delete button using event delegation
+            $('#eventContainer').on('click', '.delete-event', function () {
+                var eventId = $(this).data('id');
+
+                if (confirm('Are you sure you want to delete this event?')) {
+                    $.ajax({
+                        url: '/Event/Delete',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(eventId),
+                        success: function (response) {
+                            if (response.success) {
+                                alert(response.message);
+                                // Remove card without reloading
+                                $('#eventCard_' + eventId).fadeOut(500, function () {
+                                    $(this).remove();
+                                });
+                            } else {
+                                alert(response.message || 'Failed to delete event.');
+                            }
+                        },
+                        error: function (xhr) {
+                            console.error(xhr);
+                            alert('Error deleting event: ' + xhr.responseText);
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}
