@@ -9,10 +9,7 @@ namespace EventManager.Application.Interfaces
     {
         Task<IEnumerable<Event>> GetAllEventsAsync();
         Task<Event> GetEventByIdAsync(int eventId);
-
-        // Single method for insert/update
         Task SaveEventAsync(Event evt);
-
         Task DeleteEventAsync(int eventId);
     }
 }

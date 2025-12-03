@@ -15,15 +15,94 @@
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/event.css" />
 
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: sticky;
+            top: 0;
+            z-index: 1030;
+            background-color: #fff9e6; /* soft color */
+        }
+
+        /* Layout */
+        .layout-wrapper {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: #fff9e6; /* same soft color */
+            padding: 15px;
+            box-shadow: 1px 0 5px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 56px; /* navbar height */
+            height: calc(100vh - 56px);
+            overflow-y: auto;
+        }
+
+        .menu-section {
+            margin-bottom: 20px;
+        }
+
+        .menu-title {
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 5px;
+            text-decoration: none;
+            color: #212121; /* dark text */
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+            .menu-item:hover {
+                background-color: #ffe0b3; /* slightly darker on hover */
+            }
+
+        .menu-icon {
+            margin-right: 10px;
+        }
+
+        .menu-badge {
+            background-color: #1976D2;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+        }
+
+        /* Main content */
+        .main-content {
+            flex-grow: 1;
+        }
+    </style>
+
     @RenderSection("Styles", required: false)
 </head>
 <body class="bg-light d-flex flex-column min-vh-100">
 
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg bg-warning shadow-sm w-100">
+    <nav class="navbar navbar-expand-lg shadow-sm w-100">
         <div class="w-100 d-flex justify-content-between align-items-center px-4">
             <a class="navbar-brand text-dark fw-bold fs-4" href="#">EventManagerApp</a>
-
             <div class="d-flex align-items-center">
                 <a class="nav-link text-dark" asp-controller="Event" asp-action="Index">
                     <i class="fa-solid fa-house"></i> Home
@@ -35,19 +114,36 @@
         </div>
     </nav>
 
+    @* Determine if sidebar should show *@
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString().ToLower();
+        bool showSidebar = controller == "participant";
+    }
 
+    <div class="layout-wrapper">
+        @* Sidebar only for Participant pages *@
+        @if (showSidebar)
+        {
+            <aside class="sidebar">
+                <div class="menu-section">
+                    <div class="menu-title">Main</div>
+                    <a class="menu-item" href="#">
+                        <span class="menu-icon">👤</span>
+                        <span>Create Participants</span>
+                        <span class="menu-badge" style="display:none;" id="groupBadge">0</span>
+                    </a>
+                </div>
+            </aside>
+        }
 
-    <!-- Main Content -->
-    <main class="flex-grow-1 py-5">
-        <div class="custom-container">
+        <main role="main" class="main-content">
+            <div class="alert" id="alertBox"></div>
             @RenderBody()
-        </div>
-
-    </main>
+        </main>
+    </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
-
     @RenderSection("Scripts", required: false)
 </body>
 </html>

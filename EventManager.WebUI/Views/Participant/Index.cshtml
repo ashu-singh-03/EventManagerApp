@@ -1,0 +1,415 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attendee Management</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #FFC107;
+            --primary-dark: #FFA000;
+            --primary-light: #FFECB3;
+            --secondary: #212121;
+            --light: #FFFDE7;
+            --dark: #212121;
+            --gray: #757575;
+            --light-gray: #F5F5F5;
+            --border: #E0E0E0;
+            --danger: #D32F2F;
+            --success: #388E3C;
+            --warning: #F57C00;
+            --info: #1976D2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            font-size: 14px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: var(--dark);
+            padding: 15px 0;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .menu-bar {
+            display: flex;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .menu-itemlocal {
+            flex: 1;
+            text-align: center;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 0.9rem;
+            border-right: 1px solid var(--border);
+        }
+
+            .menu-itemlocal:last-child {
+                border-right: none;
+            }
+
+            .menu-itemlocal.active {
+                background-color: var(--primary);
+                color: var(--dark);
+            }
+
+            .menu-itemlocal:hover:not(.active) {
+                background-color: var(--primary-light);
+            }
+
+        .content-section {
+            display: none;
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            min-height: 600px; /* Default min-height for smooth transition */
+        }
+
+            .content-section.active {
+                display: block;
+            }
+
+        .table-container {
+            overflow-x: auto;
+            border-radius: 8px;
+            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background-color: var(--light-gray);
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        tr:hover {
+            background-color: var(--primary-light);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: var(--dark);
+        }
+
+            .btn-primary:hover {
+                background-color: var(--primary-dark);
+            }
+
+        .btn-secondary {
+            background-color: var(--light-gray);
+            color: var(--dark);
+        }
+
+            .btn-secondary:hover {
+                background-color: var(--border);
+            }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-col {
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 0.9rem;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+            input:focus, select:focus, textarea:focus {
+                outline: none;
+                border-color: var(--primary);
+                box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+            }
+
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div class="menu-bar">
+            <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
+            <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
+        </div>
+
+        <!-- Manage Attendees Section -->
+        <div class="content-section active" id="manage-attendees">
+            <div class="action-bar">
+                <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
+            </div>
+            <form id="attendeeForm">
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" required>
+                    </div>
+                    <div class="form-col">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-col">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="company">Company</label>
+                        <input type="text" id="company">
+                    </div>
+                    <div class="form-col">
+                        <label for="department">Department</label>
+                        <input type="text" id="department">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Save Attendee</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Attendees List Section -->
+        <div class="content-section" id="attendees-list">
+            <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
+            <div class="table-container" id="attendeesTableContainer">
+                <table class="table" id="attendeesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Company</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendeesTableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const attendees = JSON.parse(localStorage.getItem('attendees')) || [];
+        let editingId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderAttendeesTable();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.querySelectorAll('.menu-itemlocal').forEach(item => {
+                item.addEventListener('click', () => {
+                    document.querySelectorAll('.menu-itemlocal').forEach(i => i.classList.remove('active'));
+                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                    item.classList.add('active');
+                    const section = document.getElementById(item.dataset.section);
+                    if(section) section.classList.add('active');
+                });
+            });
+
+            document.getElementById('attendeeForm').addEventListener('submit', handleAttendeeSubmit);
+        }
+
+        function handleAttendeeSubmit(e) {
+            e.preventDefault();
+            const formData = {
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                company: document.getElementById('company').value,
+                department: document.getElementById('department').value,
+                notes: document.getElementById('notes').value,
+                id: editingId || 'A-' + String(attendees.length + 1).padStart(3, '0')
+            };
+
+            if(editingId) {
+                const index = attendees.findIndex(a => a.id === editingId);
+                if(index !== -1) attendees[index] = formData;
+                editingId = null;
+            } else {
+                attendees.push(formData);
+            }
+
+            localStorage.setItem('attendees', JSON.stringify(attendees));
+            renderAttendeesTable();
+            document.getElementById('attendeeForm').reset();
+        }
+
+        function renderAttendeesTable() {
+            const tableBody = document.getElementById('attendeesTableBody');
+            tableBody.innerHTML = '';
+
+            if(attendees.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="7" style="text-align:center; color:var(--gray);">No attendees added yet.</td>`;
+                tableBody.appendChild(row);
+                return;
+            }
+
+            attendees.forEach(att => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${att.id}</td>
+                    <td>${att.firstName} ${att.lastName}</td>
+                    <td>${att.email}</td>
+                    <td>${att.phone}</td>
+                    <td>${att.company}</td>
+                    <td>${att.department}</td>
+                    <td>
+                        <button class="btn btn-primary btn-sm" onclick="editAttendee('${att.id}')">Edit</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteAttendee('${att.id}')">Delete</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function editAttendee(id) {
+            const att = attendees.find(a => a.id === id);
+            if(!att) return;
+            editingId = id;
+            document.getElementById('firstName').value = att.firstName;
+            document.getElementById('lastName').value = att.lastName;
+            document.getElementById('email').value = att.email;
+            document.getElementById('phone').value = att.phone;
+            document.getElementById('company').value = att.company;
+            document.getElementById('department').value = att.department;
+            document.getElementById('notes').value = att.notes;
+        }
+
+        function deleteAttendee(id) {
+            const index = attendees.findIndex(a => a.id === id);
+            if(index !== -1) attendees.splice(index, 1);
+            localStorage.setItem('attendees', JSON.stringify(attendees));
+            renderAttendeesTable();
+       }
+
+        // Adjust section heights to match tallest section
+                document.querySelectorAll('.menu-itemlocal').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('.menu-itemlocal').forEach(i => i.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+                item.classList.add('active');
+                const section = document.getElementById(item.dataset.section);
+                if(section) section.classList.add('active');
+
+            });
+        });
+
+    </script>
+
+</body>
+</html>
