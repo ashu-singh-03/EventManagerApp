@@ -8,7 +8,11 @@ namespace EventManager.Application.Interfaces
     public interface IEventRepository
     {
         Task<IEnumerable<Event>> GetAllEventsAsync();
-        Task AddEventAsync(Event newEvent);
+        Task<Event> GetEventByIdAsync(int eventId);
+
+        // Single method for insert/update
+        Task SaveEventAsync(Event evt);
+
         Task DeleteEventAsync(int eventId);
     }
 }

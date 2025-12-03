@@ -2,7 +2,7 @@
 using EventManager.Domain.Entities;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace EventManager.Application.Services
 {
@@ -20,12 +20,21 @@ namespace EventManager.Application.Services
             return await _eventRepository.GetAllEventsAsync();
         }
 
-        public async Task AddEventAsync(Event newEvent)
+        public async Task<Event> GetEventByIdAsync(int eventId)
         {
-            newEvent.CreatedAt = DateTime.Now;
-            newEvent.Status = "Active"; // default status
-            await _eventRepository.AddEventAsync(newEvent);
+            return await _eventRepository.GetEventByIdAsync(eventId);
         }
+
+        public async Task SaveEventAsync(Event evt)
+        {
+            if (evt.EventId == 0)
+                evt.CreatedAt = DateTime.Now;
+            else
+                evt.UpdatedBy = "1"; // Replace with actual user
+
+            await _eventRepository.SaveEventAsync(evt);
+        }
+
         public async Task DeleteEventAsync(int eventId)
         {
             await _eventRepository.DeleteEventAsync(eventId);

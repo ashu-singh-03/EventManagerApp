@@ -34,6 +34,7 @@
             </div>
 
             <form id="eventForm">
+                <input type="hidden" id="eventId" name="EventId" value="@Model?.EventId" />
                 <!-- Step 1: Event Details -->
                 <div class="form-step active" id="step-1">
                     <h2><i class="fas fa-info-circle"></i> Event Details</h2>
@@ -41,47 +42,51 @@
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="eventTitle" class="required">Event Title</label>
-                            <input type="text" id="eventTitle" name="eventTitle" placeholder="Enter event title" required>
+                            <input type="text" id="eventTitle" name="eventTitle" placeholder="Enter event title"
+                                   value="@Model?.EventName" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="eventDescription" class="required">Event Description</label>
-                            <textarea id="eventDescription" name="eventDescription" placeholder="Describe your event" required></textarea>
+                            <textarea id="eventDescription" name="eventDescription" placeholder="Describe your event" required>@Model?.EventDescription</textarea>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="eventDate" class="required">Event Date</label>
-                            <input type="date" id="eventDate" name="eventDate" required>
+                            <input type="date" id="eventDate" name="eventDate"
+                                   value="@(Model != null ? Model.EventDate.ToString("yyyy-MM-dd") : "")" required>
                         </div>
 
                         <div class="form-group">
                             <label for="eventTime" class="required">Event Time</label>
-                            <input type="time" id="eventTime" name="eventTime" required>
+                            <input type="time" id="eventTime" name="eventTime"
+                                   value="@(Model != null ? Model.EventTime.ToString(@"hh\:mm") : "")" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="eventLocation" class="required">Event Location</label>
-                            <input type="text" id="eventLocation" name="eventLocation" placeholder="Where will the event take place?" required>
+                            <input type="text" id="eventLocation" name="eventLocation" placeholder="Where will the event take place?"
+                                   value="@Model?.Location" required>
                         </div>
                     </div>
-
-
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="endDate" class="required">End Date</label>
-                            <input type="date" id="endDate" name="endDate" required>
+                            <input type="date" id="endDate" name="endDate"
+                                   value="@(Model != null ? Model.EndDate.ToString("yyyy-MM-dd") : "")" required>
                         </div>
 
                         <div class="form-group">
                             <label for="endTime" class="required">End Time</label>
-                            <input type="time" id="endTime" name="endTime" required>
+                            <input type="time" id="endTime" name="endTime"
+                                   value="@(Model != null ? Model.EndTime.ToString(@"hh\:mm") : "")" required>
                         </div>
                     </div>
 
@@ -291,13 +296,14 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-              $(document).ready(function() {
+        $(document).ready(function() {
 
             // Handle Step 1 submit
             $('#eventForm').on('click', '.btn-submit', function(e) {
                 e.preventDefault();
 
                 const eventData = {
+                    EventId: $('#eventId').val() || 0, // 0 means new event
                     EventName: $('#eventTitle').val(),
                     EventDescription: $('#eventDescription').val(),
                     EventDate: $('#eventDate').val(),
@@ -310,14 +316,18 @@
                 console.log('Step 1 Data:', eventData);
 
                 $.ajax({
-                    url: '/Event/Create',
+                    url: '/Event/Save',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(eventData),
                     success: function(response) {
                         console.log('Server Response:', response);
                         if (response.success) {
-                            alert(response.message || 'Step 1 saved successfully!');
+                            if (eventData.EventId > 0) {
+                                alert(response.message || 'Event updated successfully!');
+                            } else {
+                                alert(response.message || 'Event created successfully!');
+                            }
                             window.location.href = '/Event/Index';
                         } else {
                             alert(response.message || 'Failed to save event.');
@@ -330,9 +340,8 @@
                 });
             });
 
-           
-
         });
+
 
         // Keep your vanilla JS for the remaining steps (3,4, etc.)
 
@@ -421,22 +430,22 @@
                         input.style.borderColor = '#e53935';
 
                         // Add error message if not already present
-                        if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('error-message')) {
-                            const errorMsg = document.createElement('div');
-                            errorMsg.className = 'error-message';
-                            errorMsg.style.color = '#e53935';
-                            errorMsg.style.fontSize = '0.8rem';
-                            errorMsg.style.marginTop = '5px';
-                            errorMsg.textContent = 'This field is required';
-                            input.parentNode.appendChild(errorMsg);
-                        }
+                        // if (!input.nextElementSibling || !input.nextElementSibling.classList.contains('error-message')) {
+                        //     const errorMsg = document.createElement('div');
+                        //     errorMsg.className = 'error-message';
+                        //     errorMsg.style.color = '#e53935';
+                        //     errorMsg.style.fontSize = '0.8rem';
+                        //     errorMsg.style.marginTop = '5px';
+                        //     errorMsg.textContent = 'This field is required';
+                        //     input.parentNode.appendChild(errorMsg);
+                        // }
                     } else {
                         input.style.borderColor = '#ffe082';
 
-                        // Remove error message if exists
-                        if (input.nextElementSibling && input.nextElementSibling.classList.contains('error-message')) {
-                            input.nextElementSibling.remove();
-                        }
+                        // // Remove error message if exists
+                        // if (input.nextElementSibling && input.nextElementSibling.classList.contains('error-message')) {
+                        //     input.nextElementSibling.remove();
+                        // }
                     }
                 });
 
@@ -444,15 +453,15 @@
                 // Additional validation for step 2
                 if (stepNumber === 2) {
                     const ticketCards = document.querySelectorAll('.ticket-card');
-                    if (ticketCards.length === 0) {
-                        isValid = false;
-                        alert('Please add at least one ticket type.');
-                    }
+                    // if (ticketCards.length === 0) {
+                    //     isValid = false;
+                    //     alert('Please add at least one ticket type.');
+                    // }
                 }
 
-                if (!isValid) {
-                    alert('Please fill in all required fields correctly before proceeding.');
-                }
+                // if (!isValid) {
+                //     alert('Please fill in all required fields correctly before proceeding.');
+                // }
 
                 return isValid;
             }
@@ -591,8 +600,8 @@
                         <input type="text" placeholder="e.g., SUMMER25" value="${generateCouponCode()}" required>
                     </div>
                     <div class="coupon-form-group">
-                        <label class="required">Description</label>
-                        <input type="text" placeholder="e.g., Summer discount for students" required>
+                        <label>Description</label>
+                        <input type="text" placeholder="e.g., Summer discount for students" >
                     </div>
                 </div>
 
@@ -750,8 +759,8 @@
                 </div>
                 <div class="ticket-form-row">
                     <div class="ticket-form-group">
-                        <label class="required">Ticket Name</label>
-                        <input type="text" placeholder="e.g., General Admission, VIP" required>
+                        <label>Ticket Name</label>
+                        <input type="text" placeholder="e.g., General Admission, VIP" >
                     </div>
                     <div class="ticket-form-group price-input">
                         <label class="required">Price</label>
@@ -826,35 +835,38 @@
                         </div>
                     </div>
 
-                    <div class="time-slots-content" id="time-slots-${ticketCounter}">
-                        <div class="time-slot-card">
-                            <div class="time-slot-header">
-                                <div class="time-slot-title">Time Slot #1</div>
-                                <button type="button" class="remove-time-slot" onclick="removeTimeSlot(this)">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="time-slot-form-row">
-                                <div class="time-slot-form-group">
-                                    <label class="required">Date</label>
-                                    <input type="date" required>
-                                </div>
-                                <div class="time-slot-form-group">
-                                    <label class="required">Start Time</label>
-                                    <input type="time" required>
-                                </div>
-                            </div>
-                            <div class="time-slot-form-row">
-                                <div class="time-slot-form-group">
-                                    <label class="required">End Time</label>
-                                    <input type="time" required>
-                                </div>
-                                <div class="time-slot-form-group">
-                                    <label>Capacity</label>
-                                    <input type="number" min="1" placeholder="Leave empty for default">
-                                </div>
-                            </div>
-                        </div>
+                           <div class="time-slots-content" id="time-slots-${ticketCounter}">
+            <div class="time-slot-card">
+                <div class="time-slot-header">
+                    <div class="time-slot-title">Time Slot #1</div>
+                    <button type="button" class="remove-time-slot" onclick="removeTimeSlot(this)">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="time-slot-form-row">
+                    <div class="time-slot-form-group">
+                        <label>Date</label>
+                        <input type="date">
+                    </div>
+                    <div class="time-slot-form-group">
+                        <label>Start Time</label>
+                        <input type="time">
+                    </div>
+                </div>
+
+                <div class="time-slot-form-row">
+                    <div class="time-slot-form-group">
+                        <label>End Time</label>
+                        <input type="time">
+                    </div>
+                    <div class="time-slot-form-group">
+                        <label>Capacity</label>
+                        <input type="number" min="1" placeholder="Leave empty for default">
+                    </div>
+                </div>
+            </div>
+        </div>
 
                         <div class="time-slot-actions">
                             <button type="button" class="btn-add-time-slot" onclick="addTimeSlot(this)">
@@ -973,17 +985,17 @@
                 <div class="time-slot-form-row">
                     <div class="time-slot-form-group">
                         <label class="required">Date</label>
-                        <input type="date" required>
+                        <input type="date">
                     </div>
                     <div class="time-slot-form-group">
                         <label class="required">Start Time</label>
-                        <input type="time" required>
+                        <input type="time">
                     </div>
                 </div>
                 <div class="time-slot-form-row">
                     <div class="time-slot-form-group">
                         <label class="required">End Time</label>
-                        <input type="time" required>
+                        <input type="time">
                     </div>
                     <div class="time-slot-form-group">
                         <label>Capacity</label>

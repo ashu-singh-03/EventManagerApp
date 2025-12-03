@@ -16,55 +16,60 @@ namespace EventManager.Infrastructure.Repositories
             _context = context;
         }
 
-        // Get all events
         public async Task<IEnumerable<Event>> GetAllEventsAsync()
         {
             using var connection = _context.CreateConnection();
-
-            // Dapper will map columns using aliases from stored procedure
             return await connection.QueryAsync<Event>(
                 "sp_GetAllEvents",
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
 
-        // Add new event
-        public async Task AddEventAsync(Event newEvent)
+        public async Task<Event> GetEventByIdAsync(int eventId)
+        {
+            using var connection = _context.CreateConnection();
+            var parameters = new { p_event_id = eventId };
+            return await connection.QueryFirstOrDefaultAsync<Event>(
+                "sp_GetEventById",
+                parameters,
+                commandType: System.Data.CommandType.StoredProcedure
+            );
+        }
+
+        public async Task SaveEventAsync(Event evt)
         {
             using var connection = _context.CreateConnection();
 
             var parameters = new
             {
-                p_event_name = newEvent.EventName,
-                p_event_description = newEvent.EventDescription,
-                p_event_date = newEvent.EventDate,
-                p_event_time = newEvent.EventTime,
-                p_location = newEvent.Location,
-                p_end_date = newEvent.EndDate,
-                p_end_time = newEvent.EndTime,
-                p_created_by = newEvent.CreatedBy,
-                p_created_at = newEvent.CreatedAt
+                p_event_id = evt.EventId,
+                p_event_name = evt.EventName,
+                p_event_description = evt.EventDescription,
+                p_event_date = evt.EventDate,
+                p_event_time = evt.EventTime,
+                p_location = evt.Location,
+                p_end_date = evt.EndDate,
+                p_end_time = evt.EndTime,
+                p_created_by = evt.CreatedBy ?? "1",
+                p_updated_by = evt.UpdatedBy ?? "1"
             };
 
             await connection.ExecuteAsync(
-                "sp_AddEvent",
+                "sp_SaveEvent",
                 parameters,
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
+
         public async Task DeleteEventAsync(int eventId)
         {
             using var connection = _context.CreateConnection();
-
             var parameters = new { p_event_id = eventId };
-
-            // Call the stored procedure to soft delete
             await connection.ExecuteAsync(
                 "sp_DeleteEvent",
                 parameters,
                 commandType: System.Data.CommandType.StoredProcedure
             );
         }
-
     }
 }
