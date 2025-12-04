@@ -33,10 +33,11 @@ namespace EventManager.Infrastructure.Repositories
             using var connection = _context.CreateConnection();
             var result = await connection.QueryFirstOrDefaultAsync<Participant>(
                 "sp_GetParticipantById",
-                new { ParticipantId = participantId },
+                new { p_ParticipantId = participantId }, // Must match SP parameter exactly
                 commandType: System.Data.CommandType.StoredProcedure);
             return result;
         }
+
 
         public async Task SaveParticipantAsync(Participant participant)
         {
@@ -50,6 +51,9 @@ namespace EventManager.Infrastructure.Repositories
                 p_LastName = participant.LastName,
                 p_Email = participant.Email,
                 p_Phone = participant.Phone,
+                p_Company = participant.Company,         
+                p_Department = participant.Department,  
+                p_Notes = participant.Notes,
                 p_QrCodeHash = participant.QrCodeHash,
                 p_CreatedBy = participant.CreatedBy,
                 p_UpdatedBy = participant.UpdatedBy
@@ -67,8 +71,9 @@ namespace EventManager.Infrastructure.Repositories
             using var connection = _context.CreateConnection();
             await connection.ExecuteAsync(
                 "sp_DeleteParticipant",
-                new { ParticipantId = participantId },
+                new { p_ParticipantId = participantId }, // must match SP parameter name
                 commandType: System.Data.CommandType.StoredProcedure);
         }
+
     }
 }

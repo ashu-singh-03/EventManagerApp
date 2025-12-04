@@ -13,49 +13,62 @@ namespace EventManager.WebUI.Controllers
             _service = service;
         }
 
-        // GET: /Participant?eventId=123
+        // LOAD PAGE (HTML)
         public async Task<IActionResult> Index(int eventId)
         {
-            // Pass EventId to ViewBag for the hidden field in the form
             ViewBag.EventId = eventId;
 
             var participants = await _service.GetParticipantsByEventAsync(eventId);
-            return View(participants);
+
+            return View(participants);      // Loads the page
         }
 
-        // GET: /Participant/Details/5
+        // RETURN PARTICIPANTS AS JSON (for table AJAX)
+        [HttpGet]
+        public async Task<IActionResult> LoadParticipants(int eventId)
+        {
+            var participants = await _service.GetParticipantsByEventAsync(eventId);
+
+            return Json(participants);      // AJAX expects JSON
+        }
+
+        // GET ONE PARTICIPANT
+        [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
             var participant = await _service.GetParticipantByIdAsync(id);
-            if (participant == null) return NotFound();
-            return View(participant);
+            if (participant == null)
+                return NotFound();
+
+            return Json(participant); // return JSON instead of a view
         }
 
-        // POST: /Participant/Save
+
+        // SAVE (INSERT/UPDATE)
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] ParticipantDto dto)
         {
             if (dto == null)
                 return BadRequest(new { error = "dto is required" });
 
-            // Extra check to ensure EventId is valid
             if (dto.EventId <= 0)
-                return BadRequest(new { error = "EventId must be provided and greater than 0" });
+                return BadRequest(new { error = "EventId must be greater than 0" });
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             await _service.SaveParticipantAsync(dto);
+
             return Ok(new { message = "Participant saved successfully" });
         }
 
-        // POST: /Participant/Delete/5
+        // DELETE
         [HttpPost]
-        public async Task<IActionResult> Delete(int id, int eventId)
+        public async Task<IActionResult> Delete(int id)
         {
             await _service.DeleteParticipantAsync(id);
-            // Redirect back to the Index of the same event
-            return RedirectToAction(nameof(Index), new { eventId });
+
+            return Ok(new { message = "Deleted successfully" });
         }
     }
 }

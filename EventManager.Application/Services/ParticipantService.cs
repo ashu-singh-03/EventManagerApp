@@ -26,9 +26,14 @@ namespace EventManager.Application.Services
                 FirstName = p.FirstName,
                 LastName = p.LastName,
                 Email = p.Email,
-                Phone = p.Phone
-            });
+                Phone = p.Phone,
+                Company = p.Company,         
+                Department = p.Department,  
+                Notes = p.Notes              
+            }).ToList();
+
         }
+
 
         public async Task<ParticipantDto> GetParticipantByIdAsync(int participantId)
         {
@@ -42,9 +47,13 @@ namespace EventManager.Application.Services
                 FirstName = participant.FirstName,
                 LastName = participant.LastName,
                 Email = participant.Email,
-                Phone = participant.Phone
+                Phone = participant.Phone,
+                Company = participant.Company,         
+                Department = participant.Department,   
+                Notes = participant.Notes              
             };
         }
+
 
         public async Task SaveParticipantAsync(ParticipantDto dto)
         {
@@ -56,6 +65,9 @@ namespace EventManager.Application.Services
                 LastName = dto.LastName,
                 Email = dto.Email,
                 Phone = dto.Phone,
+                Company = dto.Company,          
+                Department = dto.Department,    
+                Notes = dto.Notes,
                 QrCodeHash = Guid.NewGuid().ToString() 
             };
 

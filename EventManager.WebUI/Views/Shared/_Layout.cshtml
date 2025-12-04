@@ -5,134 +5,196 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - EventManagerApp</title>
 
-
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" />
 
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
 
-    <!-- Site CSS -->
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/event.css" />
 
 
     <style>
+        :root {
+            --primary-yellow: #ffc107; /* Warning / Primary Accent */
+            --primary-dark: #2c3e50; /* Deep Blue/Dark Gray (used for text) */
+            --secondary-bg: #f5f7fa; /* Light background for body */
+            --text-dark: #212529; /* Explicit dark color for high contrast text */
+            --sidebar-width: 280px;
+        }
+
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
+            background-color: var(--secondary-bg) !important;
         }
 
-        /* Navbar */
+        /* --- Navbar (BRIGHT YELLOW THEME) --- */
         .navbar {
             position: sticky;
             top: 0;
             z-index: 1030;
-            background-color: #fff9e6; /* soft color */
+            background-color: var(--primary-yellow); /* CHANGED TO BRIGHT YELLOW */
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1); /* Subtle dark border */
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Layout */
+            .navbar-brand, .navbar .nav-link {
+                color: var(--text-dark) !important; /* CHANGED TO DARK TEXT FOR CONTRAST */
+                transition: color 0.3s;
+                font-weight: 600;
+            }
+
+                .navbar .nav-link:hover {
+                    color: var(--primary-dark) !important; /* Slightly darker hover */
+                }
+
+        /* --- Layout --- */
         .layout-wrapper {
             display: flex;
-            gap: 20px;
-            align-items: flex-start;
+            gap: 0;
             width: 100%;
+            flex-grow: 1;
         }
 
-        /* Sidebar */
+        /* --- Sidebar (Clean & Modern) --- */
         .sidebar {
-            width: 250px;
-            background-color: #fff9e6; /* same soft color */
-            padding: 15px;
-            box-shadow: 1px 0 5px rgba(0,0,0,0.1);
+            width: var(--sidebar-width);
+            min-width: var(--sidebar-width);
+            background-color: #ffffff;
+            padding: 20px 0;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
             position: sticky;
-            top: 56px; /* navbar height */
+            /* Adjust top position because navbar border is removed */
+            top: 56px;
             height: calc(100vh - 56px);
             overflow-y: auto;
         }
 
         .menu-section {
-            margin-bottom: 20px;
+            padding: 0 15px;
+            margin-bottom: 25px;
         }
 
         .menu-title {
-            font-weight: 600;
-            color: #555;
+            font-weight: 700;
+            color: #a0a0a0;
             margin-bottom: 10px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .menu-item {
+        /* General Menu Item Style */
+        .menu-itemlocal {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            padding: 10px 12px;
-            border-radius: 5px;
+            padding: 12px 15px;
+            border-radius: 8px;
             text-decoration: none;
-            color: #212121; /* dark text */
+            color: var(--text-dark);
             margin-bottom: 5px;
             cursor: pointer;
             transition: all 0.3s;
         }
 
-            .menu-item:hover {
-                background-color: #ffe0b3; /* slightly darker on hover */
+            /* Hover State */
+            .menu-itemlocal:hover {
+                background-color: rgba(255, 193, 7, 0.1);
+                color: var(--text-dark) !important;
+                font-weight: 600;
             }
 
+            /* *** CUSTOM ACTIVE STATE (Kept as per your previous request) *** */
+            .menu-itemlocal.active {
+                background-color: var(--primary-yellow);
+                color: var(--text-dark) !important;
+                font-weight: 700;
+                border-left: none;
+            }
+        /* *** END CUSTOM ACTIVE STATE *** */
+
+
         .menu-icon {
-            margin-right: 10px;
+            margin-right: 15px;
+            font-size: 1.1rem;
         }
 
         .menu-badge {
-            background-color: #1976D2;
+            background-color: #0d6efd;
             color: white;
             border-radius: 12px;
             padding: 2px 8px;
             font-size: 0.75rem;
+            margin-left: auto;
         }
 
-        /* Main content */
+        /* --- Main content --- */
         .main-content {
             flex-grow: 1;
+            padding: 20px;
         }
     </style>
 
     @RenderSection("Styles", required: false)
 </head>
-<body class="bg-light d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100">
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg shadow-sm w-100">
+    <nav class="navbar navbar-expand-lg w-100">
         <div class="w-100 d-flex justify-content-between align-items-center px-4">
-            <a class="navbar-brand text-dark fw-bold fs-4" href="#">EventManagerApp</a>
+            <a class="navbar-brand fw-bold fs-4" href="#">EventManagerApp</a>
+
             <div class="d-flex align-items-center">
-                <a class="nav-link text-dark" asp-controller="Event" asp-action="Index">
-                    <i class="fa-solid fa-house"></i> Home
+                <a class="nav-link" asp-controller="Event" asp-action="Index">
+                    <i class="fa-solid fa-house me-1"></i> Home
                 </a>
-                <a class="nav-link text-dark ms-3" href="#">
-                    <i class="fa-solid fa-user"></i> Admin
+                <a class="nav-link ms-3" href="#">
+                    <i class="fa-solid fa-bell me-1"></i> Notifications
+                </a>
+                <a class="nav-link ms-3" href="#">
+                    <i class="fa-solid fa-user me-1"></i> Admin Profile
                 </a>
             </div>
         </div>
     </nav>
 
-    @* Determine if sidebar should show *@
     @{
         var controller = ViewContext.RouteData.Values["controller"]?.ToString().ToLower();
+        var action = ViewContext.RouteData.Values["action"]?.ToString().ToLower();
         bool showSidebar = controller == "participant";
     }
 
     <div class="layout-wrapper">
-        @* Sidebar only for Participant pages *@
+
         @if (showSidebar)
         {
             <aside class="sidebar">
                 <div class="menu-section">
-                    <div class="menu-title">Main</div>
-                    <a class="menu-item" href="#">
-                        <span class="menu-icon">👤</span>
-                        <span>Create Participants</span>
-                        <span class="menu-badge" style="display:none;" id="groupBadge">0</span>
+                    <div class="menu-title">Dashboard</div>
+                    <a class="menu-itemlocal @(action == "index" ? "active" : "")" href="#">
+                        <i class="fa-solid fa-calendar-check menu-icon"></i>
+                        <span>Event Overview</span>
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-title">Participants Management</div>
+                    <a class="menu-itemlocal @(action == "create" ? "active" : "")" href="#">
+                        <i class="fa-solid fa-user-plus menu-icon"></i>
+                        <span>Add Participant</span>
+                    </a>
+                    <a class="menu-itemlocal" href="#">
+                        <i class="fa-solid fa-file-export menu-icon"></i>
+                        <span>Export Data</span>
+                        <span class="menu-badge">PRO</span>
+                    </a>
+                </div>
+
+                <div class="menu-section">
+                    <div class="menu-title">Settings</div>
+                    <a class="menu-itemlocal" href="#">
+                        <i class="fa-solid fa-gear menu-icon"></i>
+                        <span>App Settings</span>
                     </a>
                 </div>
             </aside>
@@ -143,8 +205,8 @@
             @RenderBody()
         </main>
     </div>
+
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
     @RenderSection("Scripts", required: false)
 </body>

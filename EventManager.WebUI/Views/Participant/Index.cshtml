@@ -284,7 +284,6 @@
                     <button type="submit" class="btn btn-primary">Save Attendee</button>
                 </div>
             </form>
-
         </div>
 
         <!-- Attendees List Section -->
@@ -309,62 +308,187 @@
         </div>
 
     </div>
-@section Scripts {
-    <script>
-             $(document).ready(function() {
-            // Tab switching
-            $('.menu-itemlocal').click(function() {
-                $('.menu-itemlocal').removeClass('active');
-                $(this).addClass('active');
 
-                $('.content-section').removeClass('active');
-                $('#' + $(this).data('section')).addClass('active');
-            });
+    @section Scripts {
+        <script>
+            $(document).ready(function () {
 
-            // AJAX form submit
-                        $('#attendeeForm').submit(function(e) {
-                e.preventDefault();
+                // Track if we are editing a record
+                var isEditing = false;
 
-                const dto = {
-                    ParticipantId: 0, // new participant
-                    EventId: parseInt($('#EventId').val()), // important
-                    FirstName: $('#firstName').val(),
-                    LastName: $('#lastName').val(),
-                    Email: $('#email').val(),
-                    Phone: $('#phone').val()
-                };
+                // ---------------------------------------------
+                // TAB SWITCHING
+                // ---------------------------------------------
+                $('.menu-itemlocal').click(function () {
+                    $('.menu-itemlocal').removeClass('active');
+                    $(this).addClass('active');
 
-                $.ajax({
-                    url: '@Url.Action("Save", "Participant")',
-                    type: 'POST',
-                    contentType: 'application/json',       // important
-                    data: JSON.stringify(dto),             // send JSON
-                    success: function() {
-                        alert('Participant saved successfully!');
-                        $('#attendeeForm')[0].reset();
+                    $('.content-section').removeClass('active');
+                    $('#' + $(this).data('section')).addClass('active');
+
+                    if ($(this).data('section') === 'attendees-list') {
                         loadParticipants();
-                    },
-                    error: function(xhr) {
-                        alert('Error: ' + xhr.responseText);
+                    }
+
+                    if ($(this).data('section') === 'manage-attendees') {
+                        // Reset form for new entry every time Manage Attendees is selected
+                        $('#attendeeForm')[0].reset();
+                        $('#attendeeForm').removeData('participant-id');
+                        $('#attendeeForm button[type="submit"]').text('Save Attendee');
+                        isEditing = false; // clear edit mode
                     }
                 });
+
+                // ---------------------------------------------
+                // LOAD PARTICIPANTS
+                // ---------------------------------------------
+                function loadParticipants() {
+                    $.ajax({
+                        url: '@Url.Action("LoadParticipants", "Participant")',
+                        type: 'GET',
+                        data: { eventId: $('#EventId').val() },
+                        success: function (participants) {
+                            let tbody = $('#attendeesTableBody');
+                            tbody.empty();
+
+                            if (!participants || participants.length === 0) {
+                                tbody.append(`<tr><td colspan="7" class="text-center">No attendees found</td></tr>`);
+                                return;
+                            }
+
+                            participants.forEach(p => {
+                                tbody.append(`
+                                    <tr>
+                                        <td>${p.participantId}</td>
+                                        <td>${p.firstName} ${p.lastName}</td>
+                                        <td>${p.email ?? ''}</td>
+                                        <td>${p.phone ?? ''}</td>
+                                        <td>${p.company ?? ''}</td>
+                                        <td>${p.department ?? ''}</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
+                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
+                                        </td>
+                                    </tr>
+                                `);
+                            });
+                        },
+                        error: function (xhr) {
+                            alert('Error loading participants: ' + xhr.responseText);
+                        }
+                    });
+                }
+
+                // ---------------------------------------------
+                // EDIT PARTICIPANT
+                // ---------------------------------------------
+                $(document).on('click', '.edit-btn', function () {
+                    var participantId = $(this).data('id');
+                    isEditing = true; // mark as editing
+
+                    $.ajax({
+                        url: '@Url.Action("Details", "Participant")',
+                        type: 'GET',
+                        data: { id: participantId },
+                        success: function (participant) {
+                            // Switch to Manage Attendees tab
+                            $('.menu-itemlocal').removeClass('active');
+                            $('.menu-itemlocal[data-section="manage-attendees"]').addClass('active');
+                            $('.content-section').removeClass('active');
+                            $('#manage-attendees').addClass('active');
+
+                            // Populate form
+                            $('#EventId').val(participant.eventId);
+                            $('#firstName').val(participant.firstName);
+                            $('#lastName').val(participant.lastName);
+                            $('#email').val(participant.email);
+                            $('#phone').val(participant.phone);
+                            $('#company').val(participant.company);
+                            $('#department').val(participant.department);
+                            $('#notes').val(participant.notes);
+
+                            $('#attendeeForm').data('participant-id', participant.participantId);
+                            $('#attendeeForm button[type="submit"]').text('Update Attendee');
+
+                            $('html, body').animate({
+                                scrollTop: $('#manage-attendees').offset().top
+                            }, 500);
+                        },
+                        error: function () {
+                            alert('Error fetching participant details.');
+                        }
+                    });
+                });
+
+                // ---------------------------------------------
+                // SAVE / UPDATE PARTICIPANT
+                // ---------------------------------------------
+                $('#attendeeForm').submit(function (e) {
+                    e.preventDefault();
+
+                    var participantId = $(this).data('participant-id') || 0;
+
+                    const dto = {
+                        ParticipantId: participantId,
+                        EventId: parseInt($('#EventId').val()),
+                        FirstName: $('#firstName').val(),
+                        LastName: $('#lastName').val(),
+                        Email: $('#email').val(),
+                        Phone: $('#phone').val(),
+                        Company: $('#company').val(),
+                        Department: $('#department').val(),
+                        Notes: $('#notes').val()
+                    };
+
+                    $.ajax({
+                        url: '@Url.Action("Save", "Participant")',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(dto),
+                        success: function () {
+                            alert('Participant saved successfully!');
+
+                            // Reset form for new entry
+                            $('#attendeeForm')[0].reset();
+                            $('#attendeeForm').removeData('participant-id');
+                            $('#attendeeForm button[type="submit"]').text('Save Attendee');
+                            isEditing = false; // finished editing
+
+                            // Switch to attendees list
+                            $('.menu-itemlocal[data-section="attendees-list"]').click();
+                        },
+                        error: function (xhr) {
+                            alert('Error: ' + xhr.responseText);
+                        }
+                    });
+                });
+
+                // ---------------------------------------------
+                // DELETE PARTICIPANT
+                // ---------------------------------------------
+                $(document).on('click', '.delete-btn', function () {
+                    const participantId = $(this).data('id');
+
+                    if (!confirm('Are you sure you want to delete this participant?')) return;
+
+                    $.ajax({
+                        url: '@Url.Action("Delete", "Participant")',
+                        type: 'POST',
+                        data: { id: participantId },
+                        success: function () {
+                            alert('Participant deleted successfully!');
+                            loadParticipants();
+                        },
+                        error: function (xhr) {
+                            alert('Error deleting participant: ' + xhr.responseText);
+                        }
+                    });
+                });
+
             });
-
-
-
-            function loadParticipants() {
-                $.ajax({
-                    url: '@Url.Action("Index", "Participant")',
-                    type: 'GET',
-                    data: { eventId: $('#EventId').val() },
-                    success: function(data) {
-                        $('#attendeesTableBody').html(data);
-                    }
-                });
-            }
-        });
-
-    </script>
+        </script>
     }
+
 </body>
 </html>
+ 

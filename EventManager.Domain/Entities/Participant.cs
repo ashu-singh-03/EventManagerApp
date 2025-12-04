@@ -8,6 +8,9 @@
         public string LastName { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }
+        public string? Company { get; set; }      
+        public string? Department { get; set; }    
+        public string? Notes { get; set; }         
         public string QrCodeHash { get; set; }
         public DateTime QrCodeGeneratedAt { get; set; } = DateTime.Now;
         public DateTime CreatedAt { get; set; } = DateTime.Now;
@@ -18,4 +21,5 @@
 
         public Event Event { get; set; }
     }
+
 }
