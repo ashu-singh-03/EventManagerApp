@@ -2,9 +2,6 @@
 using EventManager.Infrastructure.Data;
 using EventManager.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace EventManager.Infrastructure
 {
@@ -12,8 +9,13 @@ namespace EventManager.Infrastructure
     {
         public static IServiceCollection AddInfrastructure(this IServiceCollection services)
         {
-            services.AddScoped<IEventRepository, EventRepository>();
+            // Register Dapper context
             services.AddSingleton<DapperContext>();
+
+            // Register repositories
+            services.AddScoped<IParticipantRepository, ParticipantRepository>();
+            services.AddScoped<IEventRepository, EventRepository>(); // <-- Add this
+
             return services;
         }
     }

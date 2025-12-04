@@ -8,7 +8,12 @@ namespace EventManager.Application
     {
         public static IServiceCollection AddApplication(this IServiceCollection services)
         {
+            // Existing service
             services.AddScoped<IEventService, EventService>();
+
+            // Add Participant service
+            services.AddScoped<IParticipantService, ParticipantService>();
+
             return services;
         }
     }

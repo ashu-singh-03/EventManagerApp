@@ -1,11 +1,15 @@
-﻿<!DOCTYPE html>
+﻿@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Attendee Management";
+}
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendee Management</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
         :root {
             --primary: #FFC107;
@@ -236,44 +240,51 @@
                 <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
             </div>
             <form id="attendeeForm">
+                <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="firstName">First Name *</label>
-                        <input type="text" id="firstName" required>
+                        <input type="text" id="firstName" name="FirstName" required>
                     </div>
                     <div class="form-col">
                         <label for="lastName">Last Name *</label>
-                        <input type="text" id="lastName" required>
+                        <input type="text" id="lastName" name="LastName" required>
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="email">Email Address *</label>
-                        <input type="email" id="email" required>
+                        <input type="email" id="email" name="Email" required>
                     </div>
                     <div class="form-col">
                         <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone">
+                        <input type="tel" id="phone" name="Phone">
                     </div>
                 </div>
+
                 <div class="form-row">
                     <div class="form-col">
                         <label for="company">Company</label>
-                        <input type="text" id="company">
+                        <input type="text" id="company" name="Company">
                     </div>
                     <div class="form-col">
                         <label for="department">Department</label>
-                        <input type="text" id="department">
+                        <input type="text" id="department" name="Department">
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="notes">Additional Notes</label>
-                    <textarea id="notes" rows="2"></textarea>
+                    <textarea id="notes" name="Notes" rows="2"></textarea>
                 </div>
+
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary">Save Attendee</button>
                 </div>
             </form>
+
         </div>
 
         <!-- Attendees List Section -->
@@ -298,118 +309,62 @@
         </div>
 
     </div>
-
+@section Scripts {
     <script>
-        const attendees = JSON.parse(localStorage.getItem('attendees')) || [];
-        let editingId = null;
+             $(document).ready(function() {
+            // Tab switching
+            $('.menu-itemlocal').click(function() {
+                $('.menu-itemlocal').removeClass('active');
+                $(this).addClass('active');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            renderAttendeesTable();
-            setupEventListeners();
-        });
+                $('.content-section').removeClass('active');
+                $('#' + $(this).data('section')).addClass('active');
+            });
 
-        function setupEventListeners() {
-            document.querySelectorAll('.menu-itemlocal').forEach(item => {
-                item.addEventListener('click', () => {
-                    document.querySelectorAll('.menu-itemlocal').forEach(i => i.classList.remove('active'));
-                    document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-                    item.classList.add('active');
-                    const section = document.getElementById(item.dataset.section);
-                    if(section) section.classList.add('active');
+            // AJAX form submit
+                        $('#attendeeForm').submit(function(e) {
+                e.preventDefault();
+
+                const dto = {
+                    ParticipantId: 0, // new participant
+                    EventId: parseInt($('#EventId').val()), // important
+                    FirstName: $('#firstName').val(),
+                    LastName: $('#lastName').val(),
+                    Email: $('#email').val(),
+                    Phone: $('#phone').val()
+                };
+
+                $.ajax({
+                    url: '@Url.Action("Save", "Participant")',
+                    type: 'POST',
+                    contentType: 'application/json',       // important
+                    data: JSON.stringify(dto),             // send JSON
+                    success: function() {
+                        alert('Participant saved successfully!');
+                        $('#attendeeForm')[0].reset();
+                        loadParticipants();
+                    },
+                    error: function(xhr) {
+                        alert('Error: ' + xhr.responseText);
+                    }
                 });
             });
 
-            document.getElementById('attendeeForm').addEventListener('submit', handleAttendeeSubmit);
-        }
 
-        function handleAttendeeSubmit(e) {
-            e.preventDefault();
-            const formData = {
-                firstName: document.getElementById('firstName').value,
-                lastName: document.getElementById('lastName').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                company: document.getElementById('company').value,
-                department: document.getElementById('department').value,
-                notes: document.getElementById('notes').value,
-                id: editingId || 'A-' + String(attendees.length + 1).padStart(3, '0')
-            };
 
-            if(editingId) {
-                const index = attendees.findIndex(a => a.id === editingId);
-                if(index !== -1) attendees[index] = formData;
-                editingId = null;
-            } else {
-                attendees.push(formData);
+            function loadParticipants() {
+                $.ajax({
+                    url: '@Url.Action("Index", "Participant")',
+                    type: 'GET',
+                    data: { eventId: $('#EventId').val() },
+                    success: function(data) {
+                        $('#attendeesTableBody').html(data);
+                    }
+                });
             }
-
-            localStorage.setItem('attendees', JSON.stringify(attendees));
-            renderAttendeesTable();
-            document.getElementById('attendeeForm').reset();
-        }
-
-        function renderAttendeesTable() {
-            const tableBody = document.getElementById('attendeesTableBody');
-            tableBody.innerHTML = '';
-
-            if(attendees.length === 0) {
-                const row = document.createElement('tr');
-                row.innerHTML = `<td colspan="7" style="text-align:center; color:var(--gray);">No attendees added yet.</td>`;
-                tableBody.appendChild(row);
-                return;
-            }
-
-            attendees.forEach(att => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${att.id}</td>
-                    <td>${att.firstName} ${att.lastName}</td>
-                    <td>${att.email}</td>
-                    <td>${att.phone}</td>
-                    <td>${att.company}</td>
-                    <td>${att.department}</td>
-                    <td>
-                        <button class="btn btn-primary btn-sm" onclick="editAttendee('${att.id}')">Edit</button>
-                        <button class="btn btn-danger btn-sm" onclick="deleteAttendee('${att.id}')">Delete</button>
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        function editAttendee(id) {
-            const att = attendees.find(a => a.id === id);
-            if(!att) return;
-            editingId = id;
-            document.getElementById('firstName').value = att.firstName;
-            document.getElementById('lastName').value = att.lastName;
-            document.getElementById('email').value = att.email;
-            document.getElementById('phone').value = att.phone;
-            document.getElementById('company').value = att.company;
-            document.getElementById('department').value = att.department;
-            document.getElementById('notes').value = att.notes;
-        }
-
-        function deleteAttendee(id) {
-            const index = attendees.findIndex(a => a.id === id);
-            if(index !== -1) attendees.splice(index, 1);
-            localStorage.setItem('attendees', JSON.stringify(attendees));
-            renderAttendeesTable();
-       }
-
-        // Adjust section heights to match tallest section
-                document.querySelectorAll('.menu-itemlocal').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('.menu-itemlocal').forEach(i => i.classList.remove('active'));
-                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
-                item.classList.add('active');
-                const section = document.getElementById(item.dataset.section);
-                if(section) section.classList.add('active');
-
-            });
         });
 
     </script>
-
+    }
 </body>
 </html>

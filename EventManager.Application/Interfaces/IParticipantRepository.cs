@@ -9,7 +9,7 @@ namespace EventManager.Application.Interfaces
     {
         Task<IEnumerable<Participant>> GetParticipantsByEventAsync(int eventId);
         Task<Participant> GetParticipantByIdAsync(int participantId);
-        Task SaveParticipantAsync(Participant participant); 
+        Task SaveParticipantAsync(Participant participant);
         Task DeleteParticipantAsync(int participantId);
     }
 }
