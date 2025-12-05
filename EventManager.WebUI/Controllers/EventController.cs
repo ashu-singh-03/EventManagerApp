@@ -1,8 +1,7 @@
-﻿using EventManager.Application.Interfaces;
-using EventManager.Domain.Entities;
+﻿using EventManager.Application.DTOs;
+using EventManager.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace EventManager.WebUI.Controllers
@@ -10,72 +9,47 @@ namespace EventManager.WebUI.Controllers
     public class EventController : Controller
     {
         private readonly IEventService _eventService;
+        private readonly ITicketTypeService _ticketService;
 
-        public EventController(IEventService eventService)
+        public EventController(IEventService eventService, ITicketTypeService ticketService)
         {
             _eventService = eventService;
+            _ticketService = ticketService;
         }
 
-        // GET: /Event
         public async Task<IActionResult> Index()
         {
-            List<Event> events = new();
-            try
-            {
-                var allEvents = await _eventService.GetAllEventsAsync();
-                if (allEvents != null)
-                    events = new List<Event>(allEvents);
-            }
-            catch (Exception ex)
-            {
-                // Optionally log the exception
-            }
+            var events = await _eventService.GetAllEventsAsync();
             return View(events);
         }
 
-        // GET: /Event/Create
         [HttpGet]
         public IActionResult Create()
         {
-            return View(); // Empty model for new event
+            return View();
         }
 
-        // GET: /Event/Edit/5
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            if (id <= 0)
-                return BadRequest();
+            if (id <= 0) return BadRequest();
 
-            var evt = await _eventService.GetEventByIdAsync(id);
-            if (evt == null)
-                return NotFound();
+            var eventWithTickets = await _eventService.GetEventWithTicketsByIdAsync(id);
+            if (eventWithTickets == null) return NotFound();
 
-            return View("Create", evt); // Reuse Create view for editing
+            return View("Create", eventWithTickets);
         }
 
-        // POST: /Event/Save
         [HttpPost]
-        public async Task<IActionResult> Save([FromBody] Event evt)
+        public async Task<IActionResult> Save([FromBody] EventDto dto)
         {
-            if (evt == null)
+            if (dto == null)
                 return Json(new { success = false, message = "No data received." });
-
-            if (!ModelState.IsValid)
-                return Json(new { success = false, message = "Invalid data." });
 
             try
             {
-                // Save the event (no return value)
-                await _eventService.SaveEventAsync(evt);
-
-                // Use evt.EventId after save
-                return Json(new
-                {
-                    success = true,
-                    message = "Event saved successfully.",
-                    eventId = evt.EventId // <-- get ID from object
-                });
+                var eventId = await _eventService.SaveEventAsync(dto);
+                return Json(new { success = true, message = "Event saved successfully.", eventId });
             }
             catch (Exception ex)
             {
@@ -83,17 +57,14 @@ namespace EventManager.WebUI.Controllers
             }
         }
 
-
-        // POST: /Event/Delete
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] int id)
         {
-            if (id <= 0)
-                return Json(new { success = false, message = "Invalid event ID." });
+            if (id <= 0) return Json(new { success = false, message = "Invalid event ID." });
 
             try
             {
-                await _eventService.DeleteEventAsync(id); // Soft delete
+                await _eventService.DeleteEventAsync(id);
                 return Json(new { success = true, message = "Event deleted successfully." });
             }
             catch (Exception ex)

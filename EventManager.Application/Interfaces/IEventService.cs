@@ -1,15 +1,15 @@
-﻿using EventManager.Domain.Entities;
-using System;
+﻿using EventManager.Application.DTOs;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace EventManager.Application.Interfaces
 {
     public interface IEventService
     {
-        Task<IEnumerable<Event>> GetAllEventsAsync();
-        Task<Event> GetEventByIdAsync(int eventId);
-        Task SaveEventAsync(Event evt); 
+        Task<IEnumerable<EventDto>> GetAllEventsAsync();
+        Task<EventDto> GetEventByIdAsync(int eventId);
+        Task<EventWithTicketsDto> GetEventWithTicketsByIdAsync(int eventId);
+        Task<int> SaveEventAsync(EventDto dto);
         Task DeleteEventAsync(int eventId);
     }
 }

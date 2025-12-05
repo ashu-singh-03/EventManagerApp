@@ -6,9 +6,9 @@ namespace EventManager.Application.Interfaces
 {
     public interface ITicketTypeService
     {
-        Task<IEnumerable<TicketTypeDto>> GetTicketTypesByEventAsync(int eventId);
+        Task<List<TicketTypeDto>> GetTicketTypesByEventAsync(int eventId); // list for multiple tickets
         Task<TicketTypeDto> GetTicketTypeByIdAsync(int ticketTypeId);
-        Task SaveTicketTypeAsync(TicketTypeDto ticketTypeDto);
+        Task<int> SaveTicketTypeAsync(TicketTypeDto ticketTypeDto); // return saved ticket id
         Task DeleteTicketTypeAsync(int ticketTypeId);
     }
 }

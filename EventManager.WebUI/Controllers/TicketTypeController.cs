@@ -14,35 +14,24 @@ namespace EventManager.WebUI.Controllers
         {
             _service = service;
         }
-
-        // =====================================================================
-        // GET: /TicketType/ByEvent/5
-        // =====================================================================
         public async Task<IActionResult> ByEvent(int eventId)
         {
             var list = await _service.GetTicketTypesByEventAsync(eventId);
             return View(list);
         }
-
-        // =====================================================================
-        // GET: /TicketType/Create
-        // =====================================================================
         public IActionResult Create(int eventId)
         {
             var model = new TicketTypeDto { EventId = eventId };
             return View(model);
         }
 
-        // =====================================================================
-        // GET: /TicketType/Edit/5
-        // =====================================================================
         public async Task<IActionResult> Edit(int id)
         {
             var item = await _service.GetTicketTypeByIdAsync(id);
             if (item == null)
                 return NotFound();
 
-            return View("Create", item); // reuse the same view for editing
+            return View("Create", item); 
         }
 
         [HttpPost]

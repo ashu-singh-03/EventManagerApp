@@ -16,10 +16,9 @@ namespace EventManager.Application.Services
             _repository = repository;
         }
 
-        public async Task<IEnumerable<TicketTypeDto>> GetTicketTypesByEventAsync(int eventId)
+        public async Task<List<TicketTypeDto>> GetTicketTypesByEventAsync(int eventId)
         {
             var items = await _repository.GetTicketTypesByEventAsync(eventId);
-
             return items.Select(t => new TicketTypeDto
             {
                 TicketTypeId = t.TicketTypeId,
@@ -28,16 +27,13 @@ namespace EventManager.Application.Services
                 Price = t.Price,
                 BookingTypeID = t.BookingTypeID,
                 IsCapacityUnlimited = t.IsCapacityUnlimited,
-
                 MinCapacity = t.MinCapacity,
                 MaxCapacity = t.MaxCapacity,
-
                 SalesEndDate = t.SalesEndDate,
                 Description = t.Description,
                 IsFreeTicket = t.IsFreeTicket
             }).ToList();
         }
-
 
         public async Task<TicketTypeDto> GetTicketTypeByIdAsync(int ticketTypeId)
         {
@@ -52,17 +48,15 @@ namespace EventManager.Application.Services
                 Price = t.Price,
                 BookingTypeID = t.BookingTypeID,
                 IsCapacityUnlimited = t.IsCapacityUnlimited,
-
                 MinCapacity = t.MinCapacity,
                 MaxCapacity = t.MaxCapacity,
-
                 SalesEndDate = t.SalesEndDate,
                 Description = t.Description,
                 IsFreeTicket = t.IsFreeTicket
             };
         }
 
-        public async Task SaveTicketTypeAsync(TicketTypeDto dto)
+        public async Task<int> SaveTicketTypeAsync(TicketTypeDto dto)
         {
             var ticketType = new TicketType
             {
@@ -72,10 +66,8 @@ namespace EventManager.Application.Services
                 Price = dto.Price,
                 BookingTypeID = dto.BookingTypeID,
                 IsCapacityUnlimited = dto.IsCapacityUnlimited,
-
                 MinCapacity = dto.MinCapacity,
                 MaxCapacity = dto.MaxCapacity,
-
                 SalesEndDate = dto.SalesEndDate,
                 Description = dto.Description,
                 IsFreeTicket = dto.IsFreeTicket,
@@ -83,7 +75,8 @@ namespace EventManager.Application.Services
                 ModifiedBy = dto.UserId
             };
 
-            await _repository.SaveTicketTypeAsync(ticketType);
+            var savedId = await _repository.SaveTicketTypeAsync(ticketType);
+            return savedId;
         }
 
         public async Task DeleteTicketTypeAsync(int ticketTypeId)

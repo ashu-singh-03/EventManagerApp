@@ -1,15 +1,21 @@
 ﻿using EventManager.Domain.Entities;
-using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace EventManager.Application.Interfaces
 {
     public interface ITicketTypeRepository
     {
-        Task<IEnumerable<TicketType>> GetTicketTypesByEventAsync(int eventId);
+        // Get all ticket types for a specific event
+        Task<List<TicketType>> GetTicketTypesByEventAsync(int eventId);
+
+        // Get a single ticket type by ID
         Task<TicketType> GetTicketTypeByIdAsync(int ticketTypeId);
-        Task SaveTicketTypeAsync(TicketType ticketType);
+
+        // Save (insert/update) a ticket type and return the TicketTypeId
+        Task<int> SaveTicketTypeAsync(TicketType ticketType);
+
+        // Delete a ticket type by ID
         Task DeleteTicketTypeAsync(int ticketTypeId);
     }
 }

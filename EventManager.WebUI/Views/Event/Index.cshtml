@@ -1,4 +1,4 @@
-﻿@model IEnumerable<EventManager.Domain.Entities.Event>
+﻿@model IEnumerable<EventManager.Application.DTOs.EventDto>
 
 @{
     ViewData["Title"] = "Dashboard";
@@ -140,42 +140,52 @@
 
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 @{
-                                    // Simulated logic for a status badge
-                                    var isLive = (evt.EventDate >= DateTime.Now.Date);
+                                    // Parse EventDate string to DateTime
+                                    DateTime eventDate = DateTime.Parse(evt.EventDate);
+                                    bool isLive = eventDate >= DateTime.Now.Date;
                                     var badgeClass = isLive ? "bg-success text-white" : "bg-secondary text-white";
                                     var badgeText = isLive ? "LIVE" : "DRAFT/PAST";
                                 }
-                                <span class="badge @badgeClass status-badge">@badgeText</span>
+                            <span class="badge @badgeClass status-badge">@badgeText</span>
 
-                                <div class="text-end">
-                                    <h6 class="mb-0 text-muted small">Participants</h6>
-                                    <h4 class="fw-bolder text-info mb-0">125+</h4>
-                                </div>
+                            <div class="text-end">
+                                <h6 class="mb-0 text-muted small">Participants</h6>
+                                <h4 class="fw-bolder text-info mb-0">125+</h4>
                             </div>
-                            <div class="d-flex align-items-center mb-3">
-                                <div class="date-block me-3">
-                                    <span class="day">@evt.EventDate.ToString("MMM")</span>
-                                    <span class="date">@evt.EventDate.ToString("dd")</span>
-                                </div>
+                        </div>
 
-                                <div class="flex-grow-1">
-                                    <h5 class="card-title fw-bolder text-dark mb-1">@evt.EventName</h5>
-                                    <p class="text-secondary small mb-0 overflow-hidden" style="max-height: 1.5rem; line-height: 1.5;">
-                                        @((evt.EventDescription != null && evt.EventDescription.Length > 40) ? evt.EventDescription.Substring(0, 40) + "..." : evt.EventDescription)
+                        <div class="d-flex align-items-center mb-3">
+                            <div class="date-block me-3">
+                                <span class="day">@eventDate.ToString("MMM")</span>
+                                <span class="date">@eventDate.ToString("dd")</span>
+                            </div>
+
+                            <div class="flex-grow-1">
+                                <h5 class="card-title fw-bolder text-dark mb-1">@evt.EventName</h5>
+                                <p class="text-secondary small mb-0 overflow-hidden" style="max-height: 1.5rem; line-height: 1.5;">
+                                    @((evt.EventDescription != null && evt.EventDescription.Length > 40)
+                                                                    ? evt.EventDescription.Substring(0, 40) + "..."
+                                                                    : evt.EventDescription)
                                     </p>
                                 </div>
                             </div>
 
                             <div class="mb-4 event-info-block">
+                                @* Event Time *@
                                 <p class="text-muted mb-1 small d-flex align-items-center">
                                     @{
-                                        string eventTimeDisplay = (evt.EventTime.HasValue)
-                                        ? new DateTime().Add(evt.EventTime.Value).ToString("h:mm tt")
-                                        : "Time TBD";
+                                        string eventTimeDisplay = "Time TBD";
+                                        if (!string.IsNullOrEmpty(evt.EventTime))
+                                        {
+                                            TimeSpan ts = TimeSpan.Parse(evt.EventTime);
+                                            eventTimeDisplay = DateTime.Today.Add(ts).ToString("h:mm tt");
+                                        }
                                     }
                                     <i class="fa-solid fa-clock me-2"></i>
                                     <span class="text-dark fw-semibold">@eventTimeDisplay</span>
                                 </p>
+
+                                @* Event Location *@
                                 <p class="text-muted mb-0 small d-flex align-items-center">
                                     <i class="fa-solid fa-location-dot me-2"></i>
                                     <span class="text-dark fw-semibold">@evt.Location</span>
@@ -203,6 +213,7 @@
                                     </button>
                                 </div>
                             </div>
+
                         </div>
                     </div>
                 </div>

@@ -34,7 +34,7 @@
             </div>
 
             <form id="eventForm">
-                <input type="hidden" id="eventId" name="EventId" value="@Model?.EventId" />
+                <input type="hidden" id="eventId" name="EventId" value="@Model?.Event?.EventId" />
                 <!-- Step 1: Event Details -->
                 <div class="form-step active" id="step-1">
                     <h2><i class="fas fa-info-circle"></i> Event Details</h2>
@@ -42,51 +42,51 @@
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="eventTitle" class="required">Event Title</label>
-                            <input type="text" id="eventTitle" name="eventTitle" placeholder="Enter event title"
-                                   value="@Model?.EventName" required>
+                            <input type="text" id="eventTitle" name="eventTitle" value="@Model?.Event?.EventName" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="eventDescription" class="required">Event Description</label>
-                            <textarea id="eventDescription" name="eventDescription" placeholder="Describe your event" required>@Model?.EventDescription</textarea>
+                            <textarea id="eventDescription" name="eventDescription" required>@Model?.Event?.EventDescription</textarea>
+
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="eventDate" class="required">Event Date</label>
-                            <input type="date" id="eventDate" name="eventDate"
-                                   value="@(Model != null ? Model.EventDate.ToString("yyyy-MM-dd") : "")" required>
+                            <input type="date" id="eventDate" name="eventDate" value="@Model?.Event?.EventDate" required>
+
                         </div>
 
                         <div class="form-group">
                             <label for="eventTime" class="required">Event Time</label>
-                            <input type="time" id="eventTime" name="eventTime"
-                                   value="@(Model != null ? Model.EventTime.ToString(@"hh\:mm") : "")" required>
+                            <input type="time" id="eventTime" name="eventTime" value="@Model?.Event?.EventTime" required>
+
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group full-width">
                             <label for="eventLocation" class="required">Event Location</label>
-                            <input type="text" id="eventLocation" name="eventLocation" placeholder="Where will the event take place?"
-                                   value="@Model?.Location" required>
+                            <input type="text" id="eventLocation" name="eventLocation" value="@Model?.Event?.Location" required>
+
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
                             <label for="endDate" class="required">End Date</label>
-                            <input type="date" id="endDate" name="endDate"
-                                   value="@(Model != null ? Model.EndDate.ToString("yyyy-MM-dd") : "")" required>
+                            <input type="date" id="endDate" name="endDate" value="@Model?.Event?.EndDate" required>
+
                         </div>
 
                         <div class="form-group">
                             <label for="endTime" class="required">End Time</label>
-                            <input type="time" id="endTime" name="endTime"
-                                   value="@(Model != null ? Model.EndTime.ToString(@"hh\:mm") : "")" required>
+                            <input type="time" id="endTime" name="endTime" value="@Model?.Event?.EndTime" required>
+
                         </div>
                     </div>
 
