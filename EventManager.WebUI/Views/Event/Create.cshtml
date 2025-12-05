@@ -281,7 +281,7 @@
                         <button type="button" class="btn-prev" data-prev="3">
                             <i class="fas fa-arrow-left"></i> Previous
                         </button>
-                        <button type="submit" class="btn-submit">
+                        <button type="button" class="btn-submit">
                             <i class="fas fa-check"></i> Create Event
                         </button>
                     </div>
@@ -298,12 +298,13 @@
     <script>
         $(document).ready(function() {
 
-            // Handle Step 1 submit
-            $('#eventForm').on('click', '.btn-submit', function(e) {
+            // Step 1: Save Event
+            $('.btn-submit').on('click', function(e) {
                 e.preventDefault();
 
+                // Gather Event data
                 const eventData = {
-                    EventId: $('#eventId').val() || 0, // 0 means new event
+                    EventId: parseInt($('#eventId').val()) || 0, // Hidden input
                     EventName: $('#eventTitle').val(),
                     EventDescription: $('#eventDescription').val(),
                     EventDate: $('#eventDate').val(),
@@ -313,32 +314,81 @@
                     EndTime: $('#endTime').val()
                 };
 
-                console.log('Step 1 Data:', eventData);
-
+                // Save Event first
                 $.ajax({
                     url: '/Event/Save',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify(eventData),
                     success: function(response) {
-                        console.log('Server Response:', response);
                         if (response.success) {
-                            if (eventData.EventId > 0) {
-                                alert(response.message || 'Event updated successfully!');
-                            } else {
-                                alert(response.message || 'Event created successfully!');
-                            }
-                            window.location.href = '/Event/Index';
+                        $('#eventId').val(response.eventId);
+                        saveAllTicketTypes(response.eventId);
                         } else {
                             alert(response.message || 'Failed to save event.');
                         }
                     },
                     error: function(xhr) {
-                        console.error('AJAX Error:', xhr);
+                        console.error(xhr);
                         alert('Error saving event: ' + xhr.responseText);
                     }
                 });
             });
+
+            // Function to save all ticket types
+        function saveAllTicketTypes(eventId) {
+            $('#ticketTypesContainer .ticket-card').each(function() {
+                const $card = $(this);
+                const ticketCounter = $card.data('ticket-counter'); // ensure this attribute exists
+
+                // Ticket Name
+                const ticketNameInput = $card.find('.ticket-name');
+                const ticketName = ticketNameInput.length ? ticketNameInput.val().trim() : '';
+
+                // Sales End Date
+                const salesEndVal = $card.find('.ticket-sales-end').val();
+
+                // Booking Type: 1 = Direct, 2 = Approval
+                const bookingTypeInput = $card.find('input[name^="booking-type"]:checked');
+                const BookingTypeID = bookingTypeInput.attr('id').startsWith('direct') ? 1 : 2;
+
+                // Capacity: true = Unlimited, false = Limited
+                const capacityInput = $card.find('input[name^="capacity"]:checked');
+                const IsCapacityUnlimited = capacityInput.attr('id').startsWith('unlimited');
+
+                // Free Ticket
+                const IsFreeTicket = $card.find('.ticket-free').is(':checked');
+
+                const ticketData = {
+                    TicketTypeId: parseInt($card.data('ticket-id')) || 0,
+                    EventId: parseInt(eventId) || 0,
+                    TicketName: ticketName,
+                    Price: parseFloat($card.find('.ticket-price').val()) || 0,
+                    BookingTypeID: BookingTypeID,
+                    IsCapacityUnlimited: IsCapacityUnlimited,
+                    MinCapacity: parseInt($card.find('.ticket-min-capacity').val()) || 1,
+                    MaxCapacity: parseInt($card.find('.ticket-max-capacity').val()) || 100,
+                    SalesEndDate: salesEndVal || null, // send as string (YYYY-MM-DD)
+                    Description: $card.find('.ticket-description').val() || '',
+                    IsFreeTicket: IsFreeTicket,
+                    UserId: 1
+                };
+
+                $.ajax({
+                    url: '/TicketType/Save',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(ticketData),
+                    success: function(resp) {
+                        console.log('Ticket saved:', resp);
+                    },
+                    error: function(xhr) {
+                        console.error('Error saving ticket:', xhr.responseText);
+                    }
+                });
+            });
+        }
+
 
         });
 
@@ -760,11 +810,11 @@
                 <div class="ticket-form-row">
                     <div class="ticket-form-group">
                         <label>Ticket Name</label>
-                        <input type="text" placeholder="e.g., General Admission, VIP" >
+                        <input type="text" class="ticket-name" placeholder="e.g., General Admission, VIP">
                     </div>
                     <div class="ticket-form-group price-input">
                         <label class="required">Price</label>
-                        <input type="number" min="0" step="0.01" value="0" required>
+                        <input type="number" class="ticket-price" min="0" step="0.01" value="0" required>
                     </div>
                 </div>
 
@@ -879,45 +929,52 @@
                 <!-- Capacity Section -->
                 <div class="capacity-section">
                     <label class="required">Capacity</label>
-                    <div class="capacity-options">
-                        <div class="capacity-option active" data-capacity="limited">
-                            <input type="radio" name="capacity-${ticketCounter}" id="limited-${ticketCounter}" checked>
-                            <label for="limited-${ticketCounter}">
-                                <i class="fas fa-chart-bar"></i> Limited Capacity
-                            </label>
+                         <div class="capacity-options">
+                            <div class="capacity-option active" data-capacity="limited">
+                                <input type="radio" name="capacity-${ticketCounter}" id="limited-${ticketCounter}" checked>
+                                <label for="limited-${ticketCounter}">
+                                    <i class="fas fa-chart-bar"></i> Limited Capacity
+                                </label>
+                            </div>
+                            <div class="capacity-option" data-capacity="unlimited">
+                                <input type="radio" name="capacity-${ticketCounter}" id="unlimited-${ticketCounter}">
+                                <label for="unlimited-${ticketCounter}">
+                                    <i class="fas fa-infinity"></i> Unlimited Capacity
+                                </label>
+                            </div>
                         </div>
-                        <div class="capacity-option" data-capacity="unlimited">
-                            <input type="radio" name="capacity-${ticketCounter}" id="unlimited-${ticketCounter}">
-                            <label for="unlimited-${ticketCounter}">
-                                <i class="fas fa-infinity"></i> Unlimited Capacity
-                            </label>
-                        </div>
-                    </div>
 
                     <div class="capacity-limited active" id="capacity-limited-${ticketCounter}">
                         <div class="ticket-form-row">
                             <div class="ticket-form-group">
-                                <label class="required">Quantity Available</label>
-                                <input type="number" min="1" value="100" required>
+                                <label class="required" for="minQuantity">Min Quantity</label>
+                                <input type="number" class="ticket-min-capacity" id="minQuantity" name="minQuantity">
                             </div>
+
+                            <div class="ticket-form-group">
+                                <label class="required" for="maxQuantity">Max Quantity</label>
+                                <input type="number" class="ticket-max-capacity" id="maxQuantity" name="maxQuantity">
+                            </div>
+
                             <div class="ticket-form-group">
                                 <label>Sales End Date</label>
-                                <input type="date">
+                               <input type="date" class="ticket-sales-end">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="ticket-form-row">
-                    <div class="ticket-form-group full-width ticket-description">
-                        <label>Description</label>
-                        <textarea placeholder="Describe what this ticket includes"></textarea>
+                 <div class="ticket-form-row">
+                      <div class="ticket-form-group full-width">
+                          <label>Description</label>
+                          <textarea class="ticket-description" placeholder="Describe what this ticket includes"></textarea>
+                      </div>
                     </div>
-                </div>
-                <div class="free-checkbox">
-                    <input type="checkbox" id="free-${ticketCounter}">
-                    <label for="free-${ticketCounter}">This is a free ticket</label>
-                </div>
+                      <div class="free-checkbox">
+                        <input type="checkbox" class="ticket-free" id="free-${ticketCounter}">
+                        <label for="free-${ticketCounter}">This is a free ticket</label>
+                    </div>
+
 
                 <!-- Waiting List Section -->
                 <div class="waiting-list-section">

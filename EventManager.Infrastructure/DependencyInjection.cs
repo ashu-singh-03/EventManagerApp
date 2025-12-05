@@ -15,6 +15,7 @@ namespace EventManager.Infrastructure
             // Register repositories
             services.AddScoped<IParticipantRepository, ParticipantRepository>();
             services.AddScoped<IEventRepository, EventRepository>(); // <-- Add this
+            services.AddScoped<ITicketTypeRepository, TicketTypeRepository>(); // <-- Add this
 
             return services;
         }

@@ -66,15 +66,23 @@ namespace EventManager.WebUI.Controllers
 
             try
             {
-                await _eventService.SaveEventAsync(evt); // Calls SP for Insert/Update
-                return Json(new { success = true, message = "Event saved successfully." });
+                // Save the event (no return value)
+                await _eventService.SaveEventAsync(evt);
+
+                // Use evt.EventId after save
+                return Json(new
+                {
+                    success = true,
+                    message = "Event saved successfully.",
+                    eventId = evt.EventId // <-- get ID from object
+                });
             }
             catch (Exception ex)
             {
-                // Optionally log exception
                 return Json(new { success = false, message = ex.Message });
             }
         }
+
 
         // POST: /Event/Delete
         [HttpPost]

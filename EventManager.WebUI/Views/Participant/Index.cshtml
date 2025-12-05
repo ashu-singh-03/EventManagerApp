@@ -246,6 +246,7 @@
                     <div class="form-col">
                         <label for="firstName">First Name *</label>
                         <input type="text" id="firstName" name="FirstName" required>
+                        <span id="errfirstName">First Name is required</span>
                     </div>
                     <div class="form-col">
                         <label for="lastName">Last Name *</label>
@@ -448,7 +449,6 @@
                         success: function () {
                             alert('Participant saved successfully!');
 
-                            // Reset form for new entry
                             $('#attendeeForm')[0].reset();
                             $('#attendeeForm').removeData('participant-id');
                             $('#attendeeForm button[type="submit"]').text('Save Attendee');

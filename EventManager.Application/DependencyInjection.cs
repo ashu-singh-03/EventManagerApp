@@ -13,6 +13,7 @@ namespace EventManager.Application
 
             // Add Participant service
             services.AddScoped<IParticipantService, ParticipantService>();
+            services.AddScoped<ITicketTypeService, TicketTypeService>();
 
             return services;
         }
