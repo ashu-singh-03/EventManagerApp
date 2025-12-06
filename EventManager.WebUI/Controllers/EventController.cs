@@ -57,6 +57,7 @@ namespace EventManager.WebUI.Controllers
             }
         }
 
+
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] int id)
         {

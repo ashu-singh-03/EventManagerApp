@@ -77,7 +77,7 @@ namespace EventManager.Infrastructure.Repositories
         {
             using var connection = _context.CreateConnection();
             await connection.ExecuteAsync(
-                "sp_DeleteTicketType",
+                "usp_DeleteTicketType",
                 new { p_TicketTypeId = ticketTypeId },
                 commandType: System.Data.CommandType.StoredProcedure
             );

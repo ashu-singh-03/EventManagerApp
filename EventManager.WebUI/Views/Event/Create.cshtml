@@ -1,12 +1,4 @@
-﻿<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Create Event - Multi-Step Form</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</head>
-<body>
+﻿<body>
     <div class="container">
         <div class="header">
             <h1><i class="fas fa-calendar-plus"></i> Create New Event</h1>
@@ -582,6 +574,203 @@
             setupTicketEventListeners(ticketCard, ticketCounter);
         }
 
+        // Function to remove a ticket type WITH DELETE FUNCTIONALITY
+        // Function to remove a ticket type WITH DELETE FUNCTIONALITY
+        function removeTicketType(button) {
+            const ticketCard = $(button).closest('.ticket-card');
+            const ticketId = ticketCard.data('ticket-id');
+            const isExistingTicket = ticketId && parseInt(ticketId) > 0;
+
+            // Check if we're in edit mode and this is an existing ticket
+            const eventId = $('#eventId').val();
+            const isEditMode = eventId && parseInt(eventId) > 0;
+
+            if (isEditMode && isExistingTicket) {
+                // Show confirmation alert for existing tickets
+                if (confirm('Are you sure you want to delete this ticket type? This action cannot be undone.')) {
+                    // Show loading state
+                    const $button = $(button);
+                    const originalHtml = $button.html();
+                    $button.html('<i class="fas fa-spinner fa-spin"></i>');
+                    $button.prop('disabled', true);
+
+                    // Call API to delete from server using jQuery
+                    $.ajax({
+                        url: '/TicketType/Delete',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(parseInt(ticketId)), // Send just the integer
+                        success: function(response) {
+                            if (response.success) {
+                                // Remove from UI
+                                ticketCard.remove();
+                                updateTicketNumbers();
+
+                                // Show success message
+                                alert('Ticket type deleted successfully!');
+                            } else {
+                                // Show error message
+                                alert(response.message || 'Failed to delete ticket type');
+                                // Reset button
+                                $button.html(originalHtml);
+                                $button.prop('disabled', false);
+                            }
+                        },
+                        error: function(xhr) {
+                            console.error(xhr);
+                            alert('Error deleting ticket type: ' + xhr.responseText);
+                            // Reset button
+                            $button.html(originalHtml);
+                            $button.prop('disabled', false);
+                        }
+                    });
+                }
+            } else {
+                // For new tickets (not saved yet), just remove from UI
+                if (confirm('Are you sure you want to remove this ticket type?')) {
+                    ticketCard.remove();
+                    updateTicketNumbers();
+                }
+            }
+        }
+
+        // Helper function to show notifications
+        function showNotification(message, type = 'info') {
+            // Remove any existing notification
+            const existingNotification = document.querySelector('.notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+
+            // Add styles if not already present
+            if (!document.querySelector('#notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                    .notification {
+                        position: fixed;
+                        top: 20px;
+                        right: 20px;
+                        padding: 15px 20px;
+                        border-radius: 8px;
+                        color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        min-width: 300px;
+                        max-width: 400px;
+                        z-index: 9999;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                        animation: slideIn 0.3s ease-out;
+                    }
+                    .notification.success {
+                        background: #28a745;
+                    }
+                    .notification.error {
+                        background: #dc3545;
+                    }
+                    .notification.info {
+                        background: #17a2b8;
+                    }
+                    .notification-content {
+                        display: flex;
+                        align-items: center;
+                        gap: 10px;
+                    }
+                    .notification-close {
+                        background: none;
+                        border: none;
+                        color: white;
+                        cursor: pointer;
+                        padding: 5px;
+                        margin-left: 10px;
+                    }
+                    @@keyframes slideIn {
+                        from {
+                            transform: translateX(100%);
+                            opacity: 0;
+                        }
+                        to {
+                            transform: translateX(0);
+                            opacity: 1;
+                        }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Function to update ticket numbers after deletion
+               function updateTicketNumbers() {
+            const ticketCards = $('.ticket-card');
+            ticketCounter = ticketCards.length;
+
+            ticketCards.each(function(index) {
+                const $card = $(this);
+                const title = $card.find('.ticket-title');
+                if (title.length) {
+                    const currentName = $card.find('.ticket-name').val() || '';
+                    title.text(currentName || `Ticket Type #${index + 1}`);
+                }
+
+                // Update all IDs in the ticket card to avoid duplicates
+                updateTicketCardIds($card[0], index + 1);
+            });
+        }
+
+        // Function to update all IDs in a ticket card
+        function updateTicketCardIds(ticketCard, newNumber) {
+            // Update radio button names
+            const bookingRadios = ticketCard.querySelectorAll('input[type="radio"]');
+            bookingRadios.forEach(radio => {
+                const oldName = radio.name;
+                const newName = oldName.replace(/booking-type-\d+/, `booking-type-${newNumber}`)
+                                       .replace(/capacity-\d+/, `capacity-${newNumber}`);
+                radio.name = newName;
+                radio.id = radio.id.replace(/\d+$/, newNumber);
+
+                // Update label for attribute
+                const label = ticketCard.querySelector(`label[for="${radio.id.replace(/\d+$/, newNumber)}"]`);
+                if (label) {
+                    label.setAttribute('for', radio.id);
+                }
+            });
+
+            // Update checkbox IDs
+            const checkboxes = ticketCard.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.id = checkbox.id.replace(/\d+$/, newNumber);
+
+                // Update label for attribute
+                const label = ticketCard.querySelector(`label[for="${checkbox.id}"]`);
+                if (label) {
+                    label.setAttribute('for', checkbox.id);
+                }
+            });
+        }
+
         // YOUR EXISTING CODE STARTS HERE - NO CHANGES BELOW
         $(document).ready(function() {
             // ADD THIS LINE to load existing tickets when editing
@@ -611,12 +800,23 @@
                     data: JSON.stringify(eventData),
                     success: function(response) {
                         if (response.success) {
-                        $('#eventId').val(response.eventId);
-                        saveAllTicketTypes(response.eventId);
-                        } else {
-                            alert(response.message || 'Failed to save event.');
-                        }
-                    },
+                console.log('response.eventId:', response.eventId);
+                console.log('response.EventId:', response.EventId);
+
+                // Use whichever property exists
+                const returnedEventId = response.eventId || response.EventId;
+                console.log('Using eventId:', returnedEventId);
+
+                if (returnedEventId && returnedEventId > 0) {
+                    $('#eventId').val(returnedEventId);
+                    saveAllTicketTypes(returnedEventId);
+                } else {
+                    alert('Error: Event ID not returned or is invalid');
+                }
+            } else {
+                alert(response.message || 'Failed to save event.');
+            }
+        },
                     error: function(xhr) {
                         console.error(xhr);
                         alert('Error saving event: ' + xhr.responseText);
@@ -1110,9 +1310,10 @@
         // Function to remove a coupon
         function removeCoupon(button) {
             const couponCard = button.closest('.coupon-card');
-            couponCard.remove();
-            // Update coupon numbers
-            updateCouponNumbers();
+            if (confirm('Are you sure you want to remove this coupon?')) {
+                couponCard.remove();
+                updateCouponNumbers();
+            }
         }
 
         // Function to update coupon numbers after removal
@@ -1410,14 +1611,16 @@
 
             // Don't remove if it's the last time slot
             if (timeSlotCards.length > 1) {
-                timeSlotCard.remove();
+                if (confirm('Are you sure you want to remove this time slot?')) {
+                    timeSlotCard.remove();
 
-                // Update time slot numbers
-                const remainingTimeSlots = timeSlotsContent.querySelectorAll('.time-slot-card');
-                remainingTimeSlots.forEach((slot, index) => {
-                    const title = slot.querySelector('.time-slot-title');
-                    title.textContent = `Time Slot #${index + 1}`;
-                });
+                    // Update time slot numbers
+                    const remainingTimeSlots = timeSlotsContent.querySelectorAll('.time-slot-card');
+                    remainingTimeSlots.forEach((slot, index) => {
+                        const title = slot.querySelector('.time-slot-title');
+                        title.textContent = `Time Slot #${index + 1}`;
+                    });
+                }
             } else {
                 alert('You need to have at least one time slot.');
             }
@@ -1590,24 +1793,6 @@
             }
         }
 
-        // Function to remove a ticket type
-        function removeTicketType(button) {
-            const ticketCard = button.closest('.ticket-card');
-            ticketCard.remove();
-            // Update ticket numbers
-            updateTicketNumbers();
-        }
-
-        // Function to update ticket numbers after removal
-        function updateTicketNumbers() {
-            const ticketCards = document.querySelectorAll('.ticket-card');
-            ticketCards.forEach((card, index) => {
-                const title = card.querySelector('.ticket-title');
-                title.textContent = `Ticket Type #${index + 1}`;
-            });
-            ticketCounter = ticketCards.length;
-        }
-
         // Function to apply global settings to all existing tickets
         function applyGlobalToAllTickets() {
             const ticketCards = document.querySelectorAll('.ticket-card');
@@ -1619,4 +1804,3 @@
         }
     </script>
 </body>
-</html>

@@ -66,7 +66,12 @@ namespace EventManager.WebUI.Controllers
             try
             {
                 await _service.DeleteTicketTypeAsync(id);
-                return Json(new { success = true, message = "Ticket deleted successfully." });
+                return Json(new
+                {
+                    success = true,
+                    message = "Ticket deleted successfully.",
+                    ticketTypeId = id
+                });
             }
             catch (Exception ex)
             {
