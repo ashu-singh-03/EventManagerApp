@@ -52,9 +52,7 @@ namespace EventManager.WebUI.Controllers
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] ParticipantDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { error = "dto is required" });
-
+            dto.EventId = _eventClaimService.GetEventIdFromClaim();
             if (dto.EventId <= 0)
                 return BadRequest(new { error = "EventId must be greater than 0" });
 
@@ -65,6 +63,7 @@ namespace EventManager.WebUI.Controllers
 
             return Ok(new { message = "Participant saved successfully" });
         }
+
 
         // DELETE
         [HttpPost]

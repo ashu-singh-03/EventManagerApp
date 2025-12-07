@@ -50,27 +50,45 @@ namespace EventManager.WebUI.Controllers
             return View("Create", eventWithTickets);
         }
 
-        // Save (Create or Update) event
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] EventDto dto)
         {
             if (dto == null)
-                return Json(new { success = false, message = "No data received." });
+                return BadRequest(new { success = false, message = "No data received." });
 
             try
             {
-                // Use EventId from claim if available
-                int claimEventId = _eventClaimService.GetEventIdFromClaim();
-                dto.EventId = claimEventId > 0 ? claimEventId : dto.EventId;
+                if (dto.EventId > 0)
+                {
+                    // Existing event: use claim to validate/update
+                    int claimEventId = _eventClaimService.GetEventIdFromClaim();
+                    if (claimEventId > 0)
+                    {
+                        dto.EventId = claimEventId; // Ensure update is allowed for this user
+                    }
+                }
+                // else: new event, ignore claim and let SaveEventAsync insert a new record
 
                 var eventId = await _eventService.SaveEventAsync(dto);
-                return Json(new { success = true, message = "Event saved successfully.", eventId });
+
+                return Ok(new
+                {
+                    success = true,
+                    message = dto.EventId > 0 ? "Event updated successfully." : "Event created successfully.",
+                    eventId
+                });
             }
             catch (Exception ex)
             {
-                return Json(new { success = false, message = ex.Message });
+                return StatusCode(500, new
+                {
+                    success = false,
+                    message = "An error occurred while saving the event.",
+                    detail = ex.Message
+                });
             }
         }
+
 
         // Delete event
         [HttpPost]
