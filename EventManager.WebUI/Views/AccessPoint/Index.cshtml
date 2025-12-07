@@ -1,0 +1,699 @@
+﻿@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Access Point";
+}
+
+<style>
+    :root {
+        --primary: #FFC107;
+        --primary-dark: #FFA000;
+        --primary-light: #FFECB3;
+        --secondary: #212121;
+        --light: #FFFDE7;
+        --dark: #212121;
+        --gray: #757575;
+        --light-gray: #F5F5F5;
+        --border: #E0E0E0;
+        --danger: #D32F2F;
+        --success: #388E3C;
+        --warning: #F57C00;
+        --info: #1976D2;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: var(--light);
+        color: var(--dark);
+        line-height: 1.6;
+        font-size: 14px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+
+    header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: var(--dark);
+        padding: 20px 0;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .header-content {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 25px;
+    }
+
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+        .logo i {
+            font-size: 1.8rem;
+        }
+
+        .logo h1 {
+            font-size: 1.6rem;
+            font-weight: 700;
+        }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+    }
+
+    .user-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: var(--secondary);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--primary);
+        font-weight: bold;
+        font-size: 1rem;
+    }
+
+    .dashboard {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+        margin-bottom: 25px;
+    }
+
+    .dashboard-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+
+    .dashboard-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+    }
+
+    .dashboard-1 .dashboard-icon {
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    .dashboard-2 .dashboard-icon {
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    .dashboard-info h3 {
+        font-size: 1.8rem;
+        margin-bottom: 5px;
+    }
+
+    .dashboard-info p {
+        color: var(--gray);
+        font-size: 0.9rem;
+    }
+
+    .content-tabs {
+        display: flex;
+        background-color: white;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+    .tab {
+        flex: 1;
+        text-align: center;
+        padding: 18px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: var(--gray);
+        font-size: 0.95rem;
+        border-right: 1px solid var(--border);
+        position: relative;
+    }
+
+        .tab:last-child {
+            border-right: none;
+        }
+
+        .tab.active {
+            background-color: var(--primary);
+            color: var(--dark);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--primary-light);
+        }
+
+        .tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: var(--primary-dark);
+        }
+
+    .content-section {
+        display: none;
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+    }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .section-title {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .section-title i {
+            color: var(--primary-dark);
+        }
+
+    .form-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 25px;
+    }
+
+    .form-card {
+        background-color: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+
+        .form-card h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+            .form-card h3 i {
+                color: var(--primary-dark);
+            }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.9rem;
+    }
+
+    .required::after {
+        content: ' *';
+        color: var(--danger);
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 12px 15px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
+        }
+
+    .btn {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background-color: var(--primary);
+        color: var(--dark);
+    }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(255, 160, 0, 0.3);
+        }
+
+    .btn-secondary {
+        background-color: var(--light-gray);
+        color: var(--dark);
+    }
+
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+
+    .access-points-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 25px;
+    }
+
+    .access-point-card {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        background-color: white;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+        .access-point-card:hover {
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transform: translateY(-3px);
+            border-color: var(--primary);
+        }
+
+    .access-point-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+
+    .access-point-name {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--dark);
+    }
+
+    .access-point-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background-color: var(--primary-light);
+        color: var(--primary-dark);
+    }
+
+    .access-point-details div {
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .access-point-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .action-btn {
+        padding: 8px 12px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .edit-btn {
+        background-color: rgba(255, 193, 7, 0.2);
+        color: var(--warning);
+    }
+
+        .edit-btn:hover {
+            background-color: var(--warning);
+            color: white;
+        }
+
+    .delete-btn {
+        background-color: rgba(211, 47, 47, 0.1);
+        color: var(--danger);
+    }
+
+        .delete-btn:hover {
+            background-color: var(--danger);
+            color: white;
+        }
+
+    .notification {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 15px 20px;
+        border-radius: 8px;
+        background-color: var(--success);
+        color: white;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        transform: translateX(150%);
+        transition: transform 0.3s ease;
+    }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background-color: var(--danger);
+        }
+
+        .notification.warning {
+            background-color: var(--warning);
+            color: white;
+        }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+        color: var(--gray);
+    }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            color: var(--light-gray);
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+        }
+
+    @@media (max-width: 992px) {
+        .form-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .dashboard {
+            grid-template-columns: 1fr;
+        }
+
+        .content-tabs {
+            flex-direction: column;
+        }
+
+        .access-points-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="container">
+    <div class="dashboard">
+        <div class="dashboard-card dashboard-1">
+            <div class="dashboard-icon">
+                <i class="fas fa-map-marker-alt"></i>
+            </div>
+            <div class="dashboard-info">
+                <h3 id="totalAccessPoints">0</h3>
+                <p>Total Access Points</p>
+            </div>
+        </div>
+        <div class="dashboard-card dashboard-2">
+            <div class="dashboard-icon">
+                <i class="fas fa-link"></i>
+            </div>
+            <div class="dashboard-info">
+                <h3 id="activeAssignments">0</h3>
+                <p>Active Assignments</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-tabs">
+        <div class="tab active" data-section="create-access-point">
+            <i class="fas fa-plus-circle"></i> Create Access Point
+        </div>
+    </div>
+
+    <div class="content-section active" id="create-access-point">
+        <h2 class="section-title">
+            <i class="fas fa-door-open"></i> Create New Access Point
+        </h2>
+
+        <div class="form-container">
+            <div class="form-card">
+                <h3><i class="fas fa-info-circle"></i> Basic Information</h3>
+
+                <form id="accessPointForm">
+                    <div class="form-group">
+                        <label for="accessPointName" class="required">Access Point Name</label>
+                        <input type="text" id="accessPointName" name="AccessPointName" placeholder="e.g., Main Entrance">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="accessPointDescription">Description</label>
+                        <textarea id="accessPointDescription" name="AccessPointDescription" rows="3" placeholder="Describe this access point..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Create Access Point
+                        </button>
+                        <button type="reset" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Reset Form
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="form-card">
+                <h3><i class="fas fa-list"></i> Existing Access Points</h3>
+                <div class="access-points-grid" id="existingAccessPoints">
+                    <!-- Access points will be dynamically added here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i>
+    <span id="notificationText">Operation completed successfully!</span>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let editId = 0;
+
+            loadAccessPoints();
+
+            $('#accessPointForm').validate({
+                rules: {
+                    AccessPointName: { required: true, minlength: 3 },
+                    AccessPointDescription: { maxlength: 250 }
+                },
+                messages: {
+                    AccessPointName: {
+                        required: "Please enter Access Point Name",
+                        minlength: "Access Point Name must be at least 3 characters"
+                    },
+                    AccessPointDescription: { maxlength: "Description cannot exceed 250 characters" }
+                },
+                errorClass: "text-danger",
+                errorPlacement: function (error, element) { error.insertAfter(element); },
+                submitHandler: function (form) {
+                    const dto = {
+                        AccessPointId: editId,
+                        Name: $('#accessPointName').val().trim(),
+                        Description: $('#accessPointDescription').val().trim()
+                    };
+
+                    $.ajax({
+                        url: '/AccessPoint/Save',
+                        method: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify(dto),
+                        success: function (res) {
+                            showNotification(res.message);
+                            $('#accessPointForm')[0].reset();
+                            editId = 0;
+                            loadAccessPoints();
+                        },
+                        error: function (xhr) {
+                            const err = xhr.responseJSON?.error || 'Failed to save access point';
+                            showNotification(err, 'error');
+                        }
+                    });
+                }
+            });
+
+            $('.tab').click(function () {
+                $('.tab, .content-section').removeClass('active');
+                $(this).addClass('active');
+                $('#' + $(this).data('section')).addClass('active');
+            });
+
+            function loadAccessPoints() {
+                $.ajax({
+                    url: '/AccessPoint/LoadAccessPoints',
+                    method: 'GET',
+                    success: function (data) {
+                        renderAccessPoints(data);
+                        updateDashboard(data);
+                    },
+                    error: function () {
+                        showNotification('Failed to load access points', 'error');
+                    }
+                });
+            }
+
+            function renderAccessPoints(accessPoints) {
+                const container = $('#existingAccessPoints');
+                container.empty();
+
+                if (accessPoints.length === 0) {
+                    container.html(`
+                        <div class="empty-state">
+                            <i class="fas fa-door-closed"></i>
+                            <p>No access points created yet</p>
+                            <p style="margin-top:10px;">Create your first access point using the form on the left</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                accessPoints.forEach(ap => {
+                    const card = $(`
+                        <div class="access-point-card">
+                            <div class="access-point-header">
+                                <div class="access-point-name">${ap.name}</div>
+                                <div class="access-point-status status-active">Active</div>
+                            </div>
+                            <div class="access-point-details">
+                                <div><i class="fas fa-info-circle"></i> ${ap.description || ''}</div>
+                            </div>
+                            <div class="access-point-actions">
+                                <button class="action-btn edit-btn" data-id="${ap.accessPointId}"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="action-btn delete-btn" data-id="${ap.accessPointId}"><i class="fas fa-trash"></i> Delete</button>
+                            </div>
+                        </div>
+                    `);
+                    container.append(card);
+                });
+
+                $('.edit-btn').click(function () { editAccessPoint($(this).data('id')); });
+                $('.delete-btn').click(function () { deleteAccessPoint($(this).data('id')); });
+            }
+
+            function editAccessPoint(id) {
+                $.ajax({
+                    url: '/AccessPoint/Details?id=' + id,
+                    method: 'GET',
+                    success: function (ap) {
+                        $('#accessPointName').val(ap.name);
+                        $('#accessPointDescription').val(ap.description);
+                        editId = ap.accessPointId;
+                        showNotification('Access point loaded for editing. Update and click Create to save.', 'warning');
+                    },
+                    error: function () {
+                        showNotification('Failed to load access point details', 'error');
+                    }
+                });
+            }
+
+            function deleteAccessPoint(id) {
+                if (!confirm('Are you sure you want to delete this access point?')) return;
+
+                $.ajax({
+                    url: '/AccessPoint/Delete?id=' + id,
+                    method: 'POST',
+                    success: function (res) {
+                        showNotification(res.message);
+                        loadAccessPoints();
+                    },
+                    error: function () {
+                        showNotification('Failed to delete access point', 'error');
+                    }
+                });
+            }
+
+            function updateDashboard(accessPoints) {
+                $('#totalAccessPoints').text(accessPoints.length);
+                $('#activeAssignments').text('0');
+            }
+
+            function showNotification(message, type = 'success') {
+                const notification = $('#notification');
+                $('#notificationText').text(message);
+                notification.removeClass().addClass('notification').addClass(type).addClass('show');
+                setTimeout(() => notification.removeClass('show'), 3000);
+            }
+        });
+    </script>
+}

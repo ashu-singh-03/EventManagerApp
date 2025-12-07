@@ -1,35 +1,40 @@
 ﻿using EventManager.Application.DTOs;
 using EventManager.Application.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace EventManager.WebUI.Controllers
 {
     public class ParticipantController : Controller
     {
         private readonly IParticipantService _service;
+        private readonly IEventClaimService _eventClaimService;
 
-        public ParticipantController(IParticipantService service)
+        public ParticipantController(IParticipantService service, IEventClaimService eventClaimService)
         {
             _service = service;
+            _eventClaimService = eventClaimService;
         }
 
         // LOAD PAGE (HTML)
-        public async Task<IActionResult> Index(int eventId)
+        public async Task<IActionResult> Index()
         {
-            ViewBag.EventId = eventId;
+            int eventId = _eventClaimService.GetEventIdFromClaim();
+            if (eventId == 0) return BadRequest("EventId claim not set.");
 
             var participants = await _service.GetParticipantsByEventAsync(eventId);
-
-            return View(participants);      // Loads the page
+            return View(participants);
         }
 
         // RETURN PARTICIPANTS AS JSON (for table AJAX)
         [HttpGet]
-        public async Task<IActionResult> LoadParticipants(int eventId)
+        public async Task<IActionResult> LoadParticipants()
         {
-            var participants = await _service.GetParticipantsByEventAsync(eventId);
+            int eventId = _eventClaimService.GetEventIdFromClaim();
+            if (eventId == 0) return BadRequest("EventId claim not set.");
 
-            return Json(participants);      // AJAX expects JSON
+            var participants = await _service.GetParticipantsByEventAsync(eventId);
+            return Json(participants);
         }
 
         // GET ONE PARTICIPANT
@@ -40,9 +45,8 @@ namespace EventManager.WebUI.Controllers
             if (participant == null)
                 return NotFound();
 
-            return Json(participant); // return JSON instead of a view
+            return Json(participant);
         }
-
 
         // SAVE (INSERT/UPDATE)
         [HttpPost]

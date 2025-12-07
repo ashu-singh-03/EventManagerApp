@@ -1,7 +1,10 @@
 ﻿using EventManager.Application.DTOs;
 using EventManager.Application.Interfaces;
+using EventManager.Application.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Security.Claims;
 using System.Threading.Tasks;
 
 namespace EventManager.WebUI.Controllers
@@ -10,11 +13,12 @@ namespace EventManager.WebUI.Controllers
     {
         private readonly IEventService _eventService;
         private readonly ITicketTypeService _ticketService;
-
-        public EventController(IEventService eventService, ITicketTypeService ticketService)
+        private readonly IEventClaimService _eventClaimService;
+        public EventController(IEventService eventService, ITicketTypeService ticketService, IEventClaimService eventClaimService)
         {
             _eventService = eventService;
             _ticketService = ticketService;
+            _eventClaimService = eventClaimService;
         }
 
         public async Task<IActionResult> Index()
@@ -23,23 +27,30 @@ namespace EventManager.WebUI.Controllers
             return View(events);
         }
 
+        // Create new event
         [HttpGet]
         public IActionResult Create()
         {
             return View();
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Edit(int id)
+        // Edit existing event (secure, no EventId in URL)
+        [HttpPost]
+        public async Task<IActionResult> Edit(int eventId)
         {
-            if (id <= 0) return BadRequest();
+            if (eventId <= 0) return BadRequest();
 
-            var eventWithTickets = await _eventService.GetEventWithTicketsByIdAsync(id);
+            // Store eventId in claims
+            await _eventClaimService.SetEventIdClaimAsync(eventId);
+
+            var eventWithTickets = await _eventService.GetEventWithTicketsByIdAsync(eventId);
             if (eventWithTickets == null) return NotFound();
 
+            // Reuse Create view for editing
             return View("Create", eventWithTickets);
         }
 
+        // Save (Create or Update) event
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] EventDto dto)
         {
@@ -48,6 +59,10 @@ namespace EventManager.WebUI.Controllers
 
             try
             {
+                // Use EventId from claim if available
+                int claimEventId = _eventClaimService.GetEventIdFromClaim();
+                dto.EventId = claimEventId > 0 ? claimEventId : dto.EventId;
+
                 var eventId = await _eventService.SaveEventAsync(dto);
                 return Json(new { success = true, message = "Event saved successfully.", eventId });
             }
@@ -57,7 +72,7 @@ namespace EventManager.WebUI.Controllers
             }
         }
 
-
+        // Delete event
         [HttpPost]
         public async Task<IActionResult> Delete([FromBody] int id)
         {
@@ -72,6 +87,17 @@ namespace EventManager.WebUI.Controllers
             {
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+        [HttpPost]
+        public async Task<IActionResult> SetEventAndManage(int eventId)
+        {
+            if (eventId <= 0) return BadRequest();
+
+            // Store eventId in claims
+            await _eventClaimService.SetEventIdClaimAsync(eventId);
+
+            // Redirect to Participant/Index which will read claim
+            return RedirectToAction("Index", "Participant");
         }
     }
 }
