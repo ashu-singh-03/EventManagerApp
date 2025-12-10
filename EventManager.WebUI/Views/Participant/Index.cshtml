@@ -3,223 +3,552 @@
     ViewData["Title"] = "Attendee Management";
 }
 
-
 <style>
-        :root {
-            --primary: #FFC107;
-            --primary-dark: #FFA000;
-            --primary-light: #FFECB3;
-            --secondary: #212121;
-            --light: #FFFDE7;
-            --dark: #212121;
-            --gray: #757575;
-            --light-gray: #F5F5F5;
-            --border: #E0E0E0;
-            --danger: #D32F2F;
-            --success: #388E3C;
-            --warning: #F57C00;
-            --info: #1976D2;
+    :root {
+        --primary: #FFC107;
+        --primary-dark: #FFA000;
+        --primary-light: #FFECB3;
+        --secondary: #212121;
+        --light: #FFFDE7;
+        --dark: #212121;
+        --gray: #757575;
+        --light-gray: #F5F5F5;
+        --border: #E0E0E0;
+        --danger: #D32F2F;
+        --success: #388E3C;
+        --warning: #F57C00;
+        --info: #1976D2;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: var(--light);
+        color: var(--dark);
+        line-height: 1.6;
+        font-size: 14px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 15px;
+    }
+
+    /* ALERT STYLES - PROFESSIONAL */
+    .alert-area {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 400px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .alert {
+        border-radius: 10px;
+        padding: 18px 20px;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: flex-start;
+        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+        .alert:hover {
+            transform: translateX(-5px);
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-color: #b1d8b7;
+        color: #155724;
+        border-left: 5px solid #28a745;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-color: #f1b0b7;
+        color: #721c24;
+        border-left: 5px solid #dc3545;
+    }
+
+    .alert-icon {
+        font-size: 24px;
+        margin-right: 15px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .alert-title {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .alert-message {
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 8px;
+    }
+
+    .alert-stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .stat-success {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #155724;
+    }
+
+    .stat-secondary {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #383d41;
+    }
+
+    .stat-danger {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #721c24;
+    }
+
+    .alert-actions {
+        margin-top: 8px;
+    }
+
+    .btn-download-error {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .btn-download-error:hover {
+            background-color: #dc3545;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
         }
 
-        body {
-            background-color: var(--light);
-            color: var(--dark);
-            line-height: 1.6;
-            font-size: 14px;
+    .btn-close-alert {
+        background: none;
+        border: none;
+        color: inherit;
+        opacity: 0.7;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0;
+        margin-left: 10px;
+        transition: opacity 0.3s ease;
+    }
+
+        .btn-close-alert:hover {
+            opacity: 1;
         }
 
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 15px;
+    .no-error-report {
+        font-size: 13px;
+        color: var(--gray);
+        font-style: italic;
+        padding: 4px 0;
+    }
+
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
         }
 
-        header {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            color: var(--dark);
-            padding: 15px 0;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes fadeOut {
+        from {
+            opacity: 1;
         }
 
-        .menu-bar {
-            display: flex;
-            background-color: white;
-            border-radius: 8px;
-            overflow: hidden;
-            margin-bottom: 20px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+        to {
+            opacity: 0;
+        }
+    }
+
+    /* REST OF YOUR EXISTING STYLES (unchanged) */
+    header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: var(--dark);
+        padding: 15px 0;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-bar {
+        display: flex;
+        background-color: white;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+    }
+
+    .menu-itemlocal {
+        flex: 1;
+        text-align: center;
+        padding: 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        color: var(--gray);
+        font-size: 0.9rem;
+        border-right: 1px solid var(--border);
+    }
+
+        .menu-itemlocal:last-child {
+            border-right: none;
         }
 
-        .menu-itemlocal {
-            flex: 1;
-            text-align: center;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-weight: 600;
-            color: var(--gray);
-            font-size: 0.9rem;
-            border-right: 1px solid var(--border);
-        }
-
-            .menu-itemlocal:last-child {
-                border-right: none;
-            }
-
-            .menu-itemlocal.active {
-                background-color: var(--primary);
-                color: var(--dark);
-            }
-
-            .menu-itemlocal:hover:not(.active) {
-                background-color: var(--primary-light);
-            }
-
-        .content-section {
-            display: none;
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-            min-height: 600px; /* Default min-height for smooth transition */
-        }
-
-            .content-section.active {
-                display: block;
-            }
-
-        .table-container {
-            overflow-x: auto;
-            border-radius: 8px;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            background-color: white;
-            font-size: 0.85rem;
-        }
-
-        th, td {
-            padding: 12px;
-            text-align: left;
-            border-bottom: 1px solid var(--border);
-        }
-
-        th {
-            background-color: var(--light-gray);
-            font-weight: 600;
-            color: var(--dark);
-        }
-
-        tr:hover {
-            background-color: var(--primary-light);
-        }
-
-        .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 5px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.9rem;
-        }
-
-        .btn-primary {
+        .menu-itemlocal.active {
             background-color: var(--primary);
             color: var(--dark);
         }
 
-            .btn-primary:hover {
-                background-color: var(--primary-dark);
-            }
-
-        .btn-secondary {
-            background-color: var(--light-gray);
-            color: var(--dark);
+        .menu-itemlocal:hover:not(.active) {
+            background-color: var(--primary-light);
         }
 
-            .btn-secondary:hover {
-                background-color: var(--border);
-            }
+    .content-section {
+        display: none;
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        min-height: 600px;
+    }
 
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .form-col {
-            flex: 1;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
+        .content-section.active {
             display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            color: var(--dark);
-            font-size: 0.9rem;
         }
 
-        input, select, textarea {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border);
-            border-radius: 5px;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
+    .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        font-size: 0.85rem;
+    }
+
+    th, td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid var(--border);
+    }
+
+    th {
+        background-color: var(--light-gray);
+        font-weight: 600;
+        color: var(--dark);
+    }
+
+    tr:hover {
+        background-color: var(--primary-light);
+    }
+
+    .btn {
+        padding: 10px 18px;
+        border: none;
+        border-radius: 5px;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: var(--primary);
+        color: var(--dark);
+    }
+
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
         }
 
-            input:focus, select:focus, textarea:focus {
-                outline: none;
-                border-color: var(--primary);
-                box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
-            }
+    .btn-secondary {
+        background-color: var(--light-gray);
+        color: var(--dark);
+    }
 
-        .action-bar {
+        .btn-secondary:hover {
+            background-color: var(--border);
+        }
+
+    .btn-danger {
+        background-color: var(--danger);
+        color: white;
+    }
+
+    .btn-warning {
+        background-color: var(--warning);
+        color: white;
+    }
+
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
+
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-col {
+        flex: 1;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.9rem;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+        }
+
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Modal Styles */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+        .modal.show {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--border);
+            justify-content: center;
+            opacity: 1;
         }
 
-        .section-title {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
+    .modal-content {
+        background-color: white;
+        width: 90%;
+        max-width: 900px;
+        max-height: 90vh;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal-header {
+        padding: 20px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        margin: 0;
+        font-size: 1.3rem;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: var(--gray);
+        line-height: 1;
+        transition: color 0.3s ease;
+    }
+
+        .modal-close:hover {
             color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
         }
 
-    </style>
+    .modal-body {
+        padding: 20px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    .modal-footer {
+        padding: 15px 20px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    /* Upload Area Styles */
+    .upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 40px 20px;
+        text-align: center;
+        margin: 20px 0;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background-color: var(--light-gray);
+    }
+
+        .upload-area:hover,
+        .upload-area.drag-over {
+            border-color: var(--primary);
+            background-color: var(--primary-light);
+        }
+
+    .upload-icon {
+        font-size: 48px;
+        color: var(--gray);
+        margin-bottom: 15px;
+    }
+
+    .upload-area h3 {
+        margin: 10px 0;
+        color: var(--dark);
+    }
+
+    .upload-area p {
+        margin: 10px 0;
+        color: var(--gray);
+    }
+
+    /* Preview Table Styles */
+    #previewTable {
+        font-size: 0.8rem;
+    }
+
+        #previewTable th {
+            background-color: var(--light-gray);
+            position: sticky;
+            top: 0;
+        }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-danger {
+        color: var(--danger);
+    }
+
+    .is-invalid {
+        border-color: var(--danger) !important;
+    }
+
+    .loading-text {
+        text-align: center;
+        padding: 20px;
+        color: var(--gray);
+        font-style: italic;
+    }
+</style>
+
+<!-- FIXED: Removed duplicate alert-area, only one at the top right corner -->
+<div class="alert-area">
+    <!-- Success and error messages will appear here -->
+</div>
+
 <div class="container">
-
     <div class="menu-bar">
         <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
         <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
@@ -229,6 +558,11 @@
     <div class="content-section active" id="manage-attendees">
         <div class="action-bar">
             <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
+            <div>
+                <button class="btn btn-primary" id="bulkUploadBtn">
+                    <i class="fas fa-file-upload"></i> Bulk Upload
+                </button>
+            </div>
         </div>
         <form id="attendeeForm">
             <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
@@ -297,219 +631,565 @@
             </table>
         </div>
     </div>
-
 </div>
 
+<!-- Bulk Upload Modal -->
+<div class="modal" id="bulkUploadModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title"><i class="fas fa-file-excel"></i> Excel Bulk Upload</h3>
+            <button class="modal-close" id="modalClose">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Upload an Excel file to create or update multiple attendees at once.</p>
+
+            <div class="upload-area" id="dropZone">
+                <div class="upload-icon">
+                    <i class="fas fa-file-upload"></i>
+                </div>
+                <h3>Drag & Drop your Excel file here</h3>
+                <p>or</p>
+                <button class="btn btn-primary" id="browseBtn">
+                    <i class="fas fa-folder-open"></i> Browse Files
+                </button>
+                <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
+            </div>
+
+            <div class="attendee-list">
+                <h3 class="section-title"><i class="fas fa-list"></i> Preview</h3>
+                <div class="table-container">
+                    <table id="previewTable">
+                        <thead>
+                            <tr>
+                                <th>First Name</th>
+                                <th>Last Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Company</th>
+                                <th>Department</th>
+                                <th>Notes</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Preview data will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-secondary" id="downloadTemplateBtn">
+                <i class="fas fa-download"></i> Download Template
+            </button>
+            <button class="btn btn-primary" id="modalUploadBtn">
+                <i class="fas fa-upload"></i> Upload & Process
+            </button>
+        </div>
+    </div>
+</div>
 @section Scripts {
-<script>
-$(document).ready(function () {
-
-    var isEditing = false;
-
-    // ---------------------------------------------
-    // TAB SWITCHING
-    // ---------------------------------------------
-    $('.menu-itemlocal').click(function () {
-        $('.menu-itemlocal').removeClass('active');
-        $(this).addClass('active');
-
-        $('.content-section').removeClass('active');
-        $('#' + $(this).data('section')).addClass('active');
-
-        if ($(this).data('section') === 'attendees-list') {
-            loadParticipants();
-        }
-
-        if ($(this).data('section') === 'manage-attendees') {
-            $('#attendeeForm')[0].reset();
-            $('#attendeeForm').removeData('participant-id');
-            $('#attendeeForm button[type="submit"]').text('Save Attendee');
-            isEditing = false;
-        }
-    });
-
-    // ---------------------------------------------
-    // FORM VALIDATION
-    // ---------------------------------------------
-    $('#attendeeForm').validate({
-        rules: {
-            FirstName: { required: true, minlength: 2 },
-            LastName: { required: true, minlength: 2 },
-            Email: { required: true, email: true }
-        },
-        messages: {
-            FirstName: {
-                required: "First Name is required",
-                minlength: "First Name must be at least 2 characters"
-            },
-            LastName: {
-                required: "Last Name is required",
-                minlength: "Last Name must be at least 2 characters"
-            },
-            Email: {
-                required: "Email Address is required",
-                email: "Please enter a valid email address"
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Alert functions
+            function showSuccess(message, totalRecords, importedRecords) {
+                const alertId = 'alert-' + Date.now();
+                const successHtml = `
+                    <div id="${alertId}" class="alert alert-success">
+                        <i class="fas fa-check-circle alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">
+                                <span>Import Successful!</span>
+                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="alert-message">${message}</div>
+                            <div class="alert-stats">
+                                <span class="stat-badge stat-success">
+                                    <i class="fas fa-users"></i> Total: ${totalRecords}
+                                </span>
+                                <span class="stat-badge stat-success">
+                                    <i class="fas fa-check-circle"></i> Imported: ${importedRecords}
+                                </span>
+                            </div>
+                        </div>
+                    </div>`;
+                $('.alert-area').append(successHtml);
+                setTimeout(() => closeAlert(alertId), 8000);
             }
-        },
-        errorClass: "text-danger",
-        errorPlacement: function (error, element) {
-            error.insertAfter(element);
-        },
-        highlight: function (element) {
-            $(element).addClass('is-invalid');
-        },
-        unhighlight: function (element) {
-            $(element).removeClass('is-invalid');
-        },
-        submitHandler: function () {
-            saveParticipant();
-        }
-    });
 
-    // ---------------------------------------------
-    // SAVE / UPDATE PARTICIPANT
-    // ---------------------------------------------
+            function showError(message, totalRecords, failedRecords, errorFileUrl) {
+                const alertId = 'alert-' + Date.now();
 
-        function saveParticipant() {
-            var participantId = $('#attendeeForm').data('participant-id') || 0;
+                // Convert to numbers
+                const totalNum = Number(totalRecords) || 0;
+                const failedNum = Number(failedRecords) || 0;
 
-            // Use PascalCase to match DTO properties
-            const dto = {
-                ParticipantId: participantId,
-                EventId: Number($('#EventId').val()) || 0,
-                FirstName: $('#firstName').val(),
-                LastName: $('#lastName').val(),
-                Email: $('#email').val(),
-                Phone: $('#phone').val(),
-                Company: $('#company').val(),
-                Department: $('#department').val(),
-                Notes: $('#notes').val()
+                let errorHtml = `
+                    <div id="${alertId}" class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">
+                                <span>Import Failed</span>
+                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="alert-message">${message || 'Unknown error'}</div>
+                            <div class="alert-stats">
+                                <span class="stat-badge stat-secondary">
+                                    <i class="fas fa-users"></i> Total: ${totalNum}
+                                </span>
+                                <span class="stat-badge stat-danger">
+                                    <i class="fas fa-times-circle"></i> Failed: ${failedNum}
+                                </span>
+                            </div>`;
+
+                if (errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '') {
+                    errorHtml += `
+                        <div class="alert-actions">
+                            <a href="${errorFileUrl}" class="btn-download-error" target="_blank" download>
+                                <i class="fas fa-download"></i> Download Error Report
+                            </a>
+                        </div>`;
+                } else {
+                    errorHtml += `
+                        <div class="no-error-report">
+                            <i class="fas fa-info-circle"></i> No error report available
+                        </div>`;
+                }
+
+                errorHtml += `</div></div>`;
+                $('.alert-area').append(errorHtml);
+                setTimeout(() => closeAlert(alertId), 10000);
+            }
+
+            window.closeAlert = function(alertId) {
+                const alert = $('#' + alertId);
+                if (alert.length) {
+                    alert.css('animation', 'fadeOut 0.5s ease forwards');
+                    setTimeout(() => alert.remove(), 500);
+                }
             };
 
-            $.ajax({
-                url: '@Url.Action("Save", "Participant")',
-                type: 'POST',
-                contentType: 'application/json; charset=utf-8',
-                data: JSON.stringify(dto),
-                success: function () {
-                    debugger;
-                    alert('Participant saved successfully!');
+            // Tab switching
+            $('.menu-itemlocal').click(function () {
+                $('.menu-itemlocal').removeClass('active');
+                $(this).addClass('active');
+                $('.content-section').removeClass('active');
+                $('#' + $(this).data('section')).addClass('active');
+
+                if ($(this).data('section') === 'attendees-list') {
+                    loadParticipants();
+                } else if ($(this).data('section') === 'manage-attendees') {
                     $('#attendeeForm')[0].reset();
                     $('#attendeeForm').removeData('participant-id');
                     $('#attendeeForm button[type="submit"]').text('Save Attendee');
-                    // Switch to attendee list tab if needed
-                    $('.menu-itemlocal[data-section="attendees-list"]').click();
-                },
-                error: function (xhr) {
-                    alert('Error: ' + xhr.responseText);
                 }
             });
-        }
 
+            // Form validation
+            $('#attendeeForm').validate({
+                rules: {
+                    FirstName: { required: true, minlength: 2 },
+                    LastName: { required: true, minlength: 2 },
+                    Email: { required: true, email: true }
+                },
+                messages: {
+                    FirstName: { required: "First Name is required", minlength: "First Name must be at least 2 characters" },
+                    LastName: { required: "Last Name is required", minlength: "Last Name must be at least 2 characters" },
+                    Email: { required: "Email Address is required", email: "Please enter a valid email address" }
+                },
+                errorClass: "text-danger",
+                errorPlacement: (error, element) => error.insertAfter(element),
+                highlight: (element) => $(element).addClass('is-invalid'),
+                unhighlight: (element) => $(element).removeClass('is-invalid'),
+                submitHandler: saveParticipant
+            });
 
-    // ---------------------------------------------
-    // LOAD PARTICIPANTS
-    // ---------------------------------------------
-    function loadParticipants() {
-        $.ajax({
-            url: '@Url.Action("LoadParticipants", "Participant")',
-            type: 'GET',
-            data: { eventId: $('#EventId').val() },
-            success: function (participants) {
-                let tbody = $('#attendeesTableBody');
-                tbody.empty();
+            // Save participant
+            function saveParticipant() {
+                const dto = {
+                    ParticipantId: $('#attendeeForm').data('participant-id') || 0,
+                    EventId: Number($('#EventId').val()) || 0,
+                    FirstName: $('#firstName').val(),
+                    LastName: $('#lastName').val(),
+                    Email: $('#email').val(),
+                    Phone: $('#phone').val(),
+                    Company: $('#company').val(),
+                    Department: $('#department').val(),
+                    Notes: $('#notes').val()
+                };
 
-                if (!participants || participants.length === 0) {
-                    tbody.append(`<tr><td colspan="7" class="text-center">No attendees found</td></tr>`);
+                $.ajax({
+                    url: '@Url.Action("Save", "Participant")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(dto),
+                    success: function () {
+                        showSuccess('Participant saved successfully!', 1, 1);
+                        $('#attendeeForm')[0].reset();
+                        $('#attendeeForm').removeData('participant-id');
+                        $('#attendeeForm button[type="submit"]').text('Save Attendee');
+                        $('.menu-itemlocal[data-section="attendees-list"]').click();
+                    },
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'Error saving participant';
+                        showError(errorMessage, 1, 1);
+                    }
+                });
+            }
+
+            // Load participants
+            function loadParticipants() {
+                $.ajax({
+                    url: '@Url.Action("LoadParticipants", "Participant")',
+                    type: 'GET',
+                    data: { eventId: $('#EventId').val() },
+                    success: function (participants) {
+                        const tbody = $('#attendeesTableBody');
+                        tbody.empty();
+
+                        if (!participants?.length) {
+                            tbody.append('<tr><td colspan="7" class="text-center">No attendees found</td></tr>');
+                            return;
+                        }
+
+                        participants.forEach(p => {
+                            tbody.append(`
+                                <tr>
+                                    <td>${p.participantId}</td>
+                                    <td>${p.firstName} ${p.lastName}</td>
+                                    <td>${p.email || ''}</td>
+                                    <td>${p.phone || ''}</td>
+                                    <td>${p.company || ''}</td>
+                                    <td>${p.department || ''}</td>
+                                    <td>
+                                        <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
+                                        <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
+                                    </td>
+                                </tr>`);
+                        });
+                    },
+                    error: function (xhr) {
+                        showError('Error loading participants', 0, 0);
+                    }
+                });
+            }
+
+            // Edit participant
+            $(document).on('click', '.edit-btn', function () {
+                const participantId = $(this).data('id');
+                $.ajax({
+                    url: '@Url.Action("Details", "Participant")',
+                    type: 'GET',
+                    data: { id: participantId },
+                    success: function (participant) {
+                        $('.menu-itemlocal[data-section="manage-attendees"]').click();
+                        $('#EventId').val(participant.eventId);
+                        $('#firstName').val(participant.firstName);
+                        $('#lastName').val(participant.lastName);
+                        $('#email').val(participant.email);
+                        $('#phone').val(participant.phone);
+                        $('#company').val(participant.company);
+                        $('#department').val(participant.department);
+                        $('#notes').val(participant.notes);
+                        $('#attendeeForm').data('participant-id', participant.participantId);
+                        $('#attendeeForm button[type="submit"]').text('Update Attendee');
+                    },
+                    error: function () {
+                        showError('Error fetching participant details.', 0, 0);
+                    }
+                });
+            });
+
+            // Delete participant
+            $(document).on('click', '.delete-btn', function () {
+                if (!confirm('Are you sure you want to delete this participant?')) return;
+
+                const participantId = $(this).data('id');
+                $.ajax({
+                    url: '@Url.Action("Delete", "Participant")',
+                    type: 'POST',
+                    data: { id: participantId },
+                    success: function () {
+                        showSuccess('Participant deleted successfully!', 1, 1);
+                        loadParticipants();
+                    },
+                    error: function (xhr) {
+                        showError('Error deleting participant', 1, 1);
+                    }
+                });
+            });
+
+            // Bulk upload modal
+            const modal = $('#bulkUploadModal');
+            const fileInput = $('#fileInput');
+            const dropZone = $('#dropZone');
+            const modalUploadBtn = $('#modalUploadBtn');
+
+            // Open/close modal
+            $('#bulkUploadBtn').click(() => modal.addClass('show'));
+            $('#modalClose').click(() => modal.removeClass('show'));
+            modal.click((e) => { if ($(e.target).is('#bulkUploadModal')) modal.removeClass('show'); });
+
+            // File handling
+            $('#browseBtn').click(() => fileInput.click());
+            fileInput.change(handleFileSelect);
+
+            // Drag and drop
+            dropZone.on('dragover dragleave drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.type === 'dragover') $(this).addClass('drag-over');
+                else if (e.type === 'dragleave') $(this).removeClass('drag-over');
+                else if (e.type === 'drop') {
+                    $(this).removeClass('drag-over');
+                    const files = e.originalEvent.dataTransfer.files;
+                    if (files.length) {
+                        fileInput[0].files = files;
+                        handleFileSelect({ target: fileInput[0] });
+                    }
+                }
+            });
+
+            function handleFileSelect(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                if (!['.xlsx', '.xls', '.csv'].includes(fileExtension)) {
+                    showError('Please select a valid Excel file (.xlsx, .xls, .csv)', 0, 0);
                     return;
                 }
 
-                participants.forEach(p => {
+                dropZone.html(`
+                    <div class="upload-icon" style="color: var(--primary);">
+                        <i class="fas fa-file-excel"></i>
+                    </div>
+                    <h3>${file.name}</h3>
+                    <p><i class="fas fa-spinner fa-spin"></i> Reading file...</p>
+                    <button class="btn btn-secondary" id="changeFileBtn" style="margin-top: 10px;">
+                        <i class="fas fa-exchange-alt"></i> Change File
+                    </button>`);
+
+                $('#previewTable tbody').html(`
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 30px;">
+                            <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary); margin-bottom: 10px;"></i><br>
+                            <span style="color: var(--gray);">Reading Excel file...</span>
+                        </td>
+                    </tr>`);
+
+                $('#changeFileBtn').click(() => {
+                    fileInput.val('');
+                    dropZone.html(`
+                        <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
+                        <h3>Drag & Drop your Excel file here</h3>
+                        <p>or</p>
+                        <button class="btn btn-primary" id="browseBtn">
+                            <i class="fas fa-folder-open"></i> Browse Files
+                        </button>`);
+                    $('#previewTable tbody').empty();
+                });
+
+                parseExcelFile(file);
+            }
+
+            function parseExcelFile(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                        if (jsonData.length <= 1) {
+                            $('#previewTable tbody').html('<tr><td colspan="7" class="text-center text-warning">Only headers found. No data rows.</td></tr>');
+                            dropZone.find('p').text(`${(file.size/1024).toFixed(2)} KB • No data rows`);
+                            return;
+                        }
+
+                        const headers = jsonData[0] || [];
+                        const attendeeData = [];
+
+                        for (let i = 1; i < jsonData.length; i++) {
+                            const row = jsonData[i];
+                            const hasData = row.some(cell => cell?.toString().trim());
+                            if (!hasData) continue;
+
+                            const attendee = {
+                                firstName: '',
+                                lastName: '',
+                                email: '',
+                                phone: '',
+                                company: '',
+                                department: '',
+                                notes: ''
+                            };
+
+                            for (let j = 0; j < headers.length && j < row.length; j++) {
+                                const header = (headers[j] || '').toString().toLowerCase();
+                                const value = (row[j] || '').toString().trim();
+                                if (!value) continue;
+
+                                if (header.includes('first')) attendee.firstName = value;
+                                else if (header.includes('last')) attendee.lastName = value;
+                                else if (header.includes('email')) attendee.email = value;
+                                else if (header.includes('phone')) attendee.phone = value;
+                                else if (header.includes('company')) attendee.company = value;
+                                else if (header.includes('department') || header.includes('dept')) attendee.department = value;
+                                else if (header.includes('note')) attendee.notes = value;
+                            }
+
+                            if (attendee.firstName || attendee.lastName || attendee.email) {
+                                attendeeData.push(attendee);
+                            }
+                        }
+
+                        dropZone.find('p').html(`
+                            <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                            ${(file.size/1024).toFixed(2)} KB • ${attendeeData.length} attendees found`);
+
+                        renderPreviewTable(attendeeData);
+
+                    } catch (error) {
+                        $('#previewTable tbody').html(`<tr><td colspan="7" class="text-center text-danger">Error: ${error.message}</td></tr>`);
+                        dropZone.find('p').html(`<i class="fas fa-times-circle" style="color: var(--danger);"></i> ${(file.size/1024).toFixed(2)} KB • Error`);
+                    }
+                };
+                reader.onerror = () => {
+                    $('#previewTable tbody').html('<tr><td colspan="7" class="text-center text-danger">Could not read file</td></tr>');
+                    dropZone.find('p').html('<i class="fas fa-times-circle" style="color: var(--danger);"></i> File read error');
+                };
+                reader.readAsArrayBuffer(file);
+            }
+
+            function renderPreviewTable(data) {
+                const tbody = $('#previewTable tbody');
+                tbody.empty();
+
+                if (!data?.length) {
+                    tbody.html('<tr><td colspan="7" class="text-center text-muted">No data to display</td></tr>');
+                    return;
+                }
+
+                const previewRows = Math.min(data.length, 10);
+                for (let i = 0; i < previewRows; i++) {
+                    const row = data[i];
                     tbody.append(`
                         <tr>
-                            <td>${p.participantId}</td>
-                            <td>${p.firstName} ${p.lastName}</td>
-                            <td>${p.email ?? ''}</td>
-                            <td>${p.phone ?? ''}</td>
-                            <td>${p.company ?? ''}</td>
-                            <td>${p.department ?? ''}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
-                                <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
-                            </td>
-                        </tr>
-                    `);
+                            <td>${escapeHtml(row.firstName || '')}</td>
+                            <td>${escapeHtml(row.lastName || '')}</td>
+                            <td>${escapeHtml(row.email || '')}</td>
+                            <td>${escapeHtml(row.phone || '')}</td>
+                            <td>${escapeHtml(row.company || '')}</td>
+                            <td>${escapeHtml(row.department || '')}</td>
+                            <td>${escapeHtml(row.notes || '')}</td>
+                        </tr>`);
+                }
+
+                if (data.length > previewRows) {
+                    tbody.append(`<tr><td colspan="7" class="text-center text-muted"><i class="fas fa-ellipsis-h"></i> and ${data.length - previewRows} more rows</td></tr>`);
+                }
+
+                tbody.append(`<tr><td colspan="7" class="text-center fw-bold bg-primary-light"><i class="fas fa-users"></i> Total: ${data.length} attendees found</td></tr>`);
+            }
+
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Download template
+            $('#downloadTemplateBtn').click(() => window.location.href = '@Url.Action("DownloadTemplate", "Participant")');
+
+            // Upload process - SIMPLIFIED
+            modalUploadBtn.click(function() {
+                const file = fileInput[0].files[0];
+                if (!file) {
+                    showError('Please select a file first.', 0, 0);
+                    return;
+                }
+
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                if (!['.xlsx', '.xls', '.csv'].includes(fileExtension)) {
+                    showError('Please select a valid Excel file (.xlsx, .xls, .csv)', 0, 0);
+                    return;
+                }
+
+                const originalText = modalUploadBtn.html();
+                modalUploadBtn.html('<i class="fas fa-spinner fa-spin"></i> Uploading...').prop('disabled', true);
+
+                const formData = new FormData();
+                formData.append('file', file);
+
+                $.ajax({
+                    url: '/Participant/ImportExcel',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    beforeSend: function(xhr) {
+                        const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+                        if (token) xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+                    },
+                    success: function(response) {
+                        console.log("AJAX Response:", response);
+
+                        if (response.success) {
+                            showSuccess(
+                                response.message,
+                                response.totalRecords || response.TotalRecords || 0,
+                                response.importedRecords || response.ImportedRecords || 0
+                            );
+                            modal.removeClass('show');
+                            fileInput.val('');
+                            loadParticipants();
+                        } else {
+                            showError(
+                                response.message,
+                                response.totalRecords || response.TotalRecords || 0,
+                                response.failedRecords || response.FailedRecords || 0,
+                                response.errorFileUrl || null
+                            );
+                        }
+                    },
+                    error: function(xhr) {
+                        let errorMessage = 'Error during import';
+
+                        if (xhr.status === 401) {
+                            errorMessage = 'Unauthorized. Please login again.';
+                            window.location.href = '/Account/Login';
+                            return;
+                        } else if (xhr.status === 403) {
+                            errorMessage = 'Access denied. You do not have permission.';
+                        } else if (xhr.responseJSON?.message) {
+                            errorMessage = xhr.responseJSON.message;
+                        } else if (xhr.statusText) {
+                            errorMessage = xhr.statusText;
+                        }
+
+                        showError(errorMessage, 0, 0);
+                    },
+                    complete: function() {
+                        modalUploadBtn.html(originalText).prop('disabled', false);
+                    }
                 });
-            },
-            error: function (xhr) {
-                alert('Error loading participants: ' + xhr.responseText);
-            }
+            });
+
+            // Initialize
+            dropZone.html(`
+                <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
+                <h3>Drag & Drop your Excel file here</h3>
+                <p>or</p>
+                <button class="btn btn-primary" id="browseBtn">
+                    <i class="fas fa-folder-open"></i> Browse Files
+                </button>`);
         });
-    }
-
-    // ---------------------------------------------
-    // EDIT PARTICIPANT
-    // ---------------------------------------------
-    $(document).on('click', '.edit-btn', function () {
-        var participantId = $(this).data('id');
-        isEditing = true;
-
-        $.ajax({
-            url: '@Url.Action("Details", "Participant")',
-            type: 'GET',
-            data: { id: participantId },
-            success: function (participant) {
-                $('.menu-itemlocal').removeClass('active');
-                $('.menu-itemlocal[data-section="manage-attendees"]').addClass('active');
-                $('.content-section').removeClass('active');
-                $('#manage-attendees').addClass('active');
-
-                // populate form
-                $('#EventId').val(participant.eventId);
-                $('#firstName').val(participant.firstName);
-                $('#lastName').val(participant.lastName);
-                $('#email').val(participant.email);
-                $('#phone').val(participant.phone);
-                $('#company').val(participant.company);
-                $('#department').val(participant.department);
-                $('#notes').val(participant.notes);
-
-                $('#attendeeForm').data('participant-id', participant.participantId);
-                $('#attendeeForm button[type="submit"]').text('Update Attendee');
-
-                $('html, body').animate({
-                    scrollTop: $('#manage-attendees').offset().top
-                }, 500);
-            },
-            error: function () {
-                alert('Error fetching participant details.');
-            }
-        });
-    });
-
-    // ---------------------------------------------
-    // DELETE PARTICIPANT
-    // ---------------------------------------------
-    $(document).on('click', '.delete-btn', function () {
-        const participantId = $(this).data('id');
-
-        if (!confirm('Are you sure you want to delete this participant?')) return;
-
-        $.ajax({
-            url: '@Url.Action("Delete", "Participant")',
-            type: 'POST',
-            data: { id: participantId },
-            success: function () {
-                alert('Participant deleted successfully!');
-                loadParticipants();
-            },
-            error: function (xhr) {
-                alert('Error deleting participant: ' + xhr.responseText);
-            }
-        });
-    });
-
-});
-</script>
+    </script>
 }
-

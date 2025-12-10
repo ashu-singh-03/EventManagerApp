@@ -4,8 +4,14 @@ using EventManager.Infrastructure.Data;
 using MySql.Data.MySqlClient;
 using System.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using OfficeOpenXml; // Add this using directive
 
 var builder = WebApplication.CreateBuilder(args);
+
+// -------------------------------
+// 0. SET EPPLUS LICENSE (ADD THIS FIRST)
+// -------------------------------
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial; // Add this line
 
 // -------------------------------
 // 1. Register IHttpContextAccessor
@@ -40,6 +46,7 @@ builder.Services.AddAuthentication("EventCookie")
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddLogging();
 
 var app = builder.Build();
 
