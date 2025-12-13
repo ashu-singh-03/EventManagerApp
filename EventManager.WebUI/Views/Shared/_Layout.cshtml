@@ -205,15 +205,6 @@
         {
             <aside class="sidebar">
                 <div class="menu-section">
-                    <div class="menu-title">Dashboard</div>
-                    <a class="menu-itemlocal @(controller == "home" && action == "index" ? "active" : "")"
-                       href="@Url.Action("Index", "Home")">
-                        <i class="fa-solid fa-calendar-check menu-icon"></i>
-                        <span>Event Overview</span>
-                    </a>
-                </div>
-
-                <div class="menu-section">
                     <div class="menu-title">Participants Management</div>
 
                     <a class="menu-itemlocal @(controller == "participant" && action == "index" ? "active" : "")"
@@ -246,7 +237,6 @@
         }
 
         <main role="main" class="main-content">
-            <div class="alert" id="alertBox"></div>
             @RenderBody()
         </main>
     </div>
@@ -263,6 +253,7 @@
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     @RenderSection("Scripts", required: false)
 

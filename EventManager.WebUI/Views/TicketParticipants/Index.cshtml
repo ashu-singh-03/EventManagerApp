@@ -1,0 +1,413 @@
+﻿@model int
+@{
+    Layout = "/Views/Shared/_Layout.cshtml";
+    ViewData["Title"] = "Manage Ticket Participants";
+}
+
+<div class="container-fluid py-4">
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="text-center me-3">
+                        <i class="fas fa-users fa-2x text-primary"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small fw-bold mb-0">Total Participants</p>
+                        <h4 class="fw-bold text-dark mb-0" id="totalCount">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="text-center me-3">
+                        <i class="fas fa-user-check fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small fw-bold mb-0">Assigned Participants</p>
+                        <h4 class="fw-bold text-success mb-0" id="assignedCount">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="text-center me-3">
+                        <i class="fas fa-user-slash fa-2x text-secondary"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small fw-bold mb-0">Unassigned Participants</p>
+                        <h4 class="fw-bold text-secondary mb-0" id="unassignedCount">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-2 mb-lg-0">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-users text-primary me-2"></i>
+                        Participants List
+                    </h5>
+                </div>
+                <div class="col-lg-6">
+                    <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                        <button type="button" class="btn btn-outline-primary btn-sm" id="selectAllBtn">
+                            <i class="fas fa-check-double me-1"></i>Select All Visible
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAllBtn">
+                            <i class="fas fa-times me-1"></i>Clear All Visible
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div id="messageContainer" class="m-3" style="display: none;"></div>
+
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mt-2">Loading participants...</p>
+            </div>
+
+            <div id="assignmentForm" style="display: none;">
+                <input type="hidden" id="ticketTypeId" value="@Model" />
+
+                <div class="table-responsive p-3">
+                    <table class="table table-hover table-striped mb-0" id="participantsTable" style="width:100%">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="5%" class="text-center">
+                                    <!-- Checkbox -->
+                                </th>
+                                <th width="10%">ID</th>
+                                <th width="25%">Name</th>
+                                <th width="25%">Email</th>
+                                <th width="20%">Phone</th>
+                                <th width="15%">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="participantsBody">
+                            <!-- Participants will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="emptyState" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-user-slash fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Participants Found</h5>
+                    <p class="text-muted">There are no participants available for this event.</p>
+                </div>
+
+                <div class="p-3 border-top bg-white sticky-bottom shadow-sm">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary px-4" id="saveBtn">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            const ticketTypeId = @Model;
+            let allParticipants = [];
+            let dataTableInstance = null;
+
+            // --- Utility Functions ---
+            function getParticipantIcon(name) {
+                const nameLower = name.toLowerCase();
+                if (nameLower.includes('vip') || nameLower.includes('special')) return 'fa-crown';
+                if (nameLower.includes('speaker') || nameLower.includes('presenter')) return 'fa-microphone';
+                if (nameLower.includes('staff') || nameLower.includes('organizer')) return 'fa-user-tie';
+                return 'fa-user';
+            }
+
+            function showAlert(type, message) {
+                let alertClass, iconClass, title;
+
+                if (type === 'success') {
+                    alertClass = 'alert-primary border-start border-4 border-success';
+                    iconClass = 'fas fa-check-circle text-success me-2';
+                    title = 'Success!';
+                } else if (type === 'warning') {
+                    alertClass = 'alert-warning border-start border-4 border-warning';
+                    iconClass = 'fas fa-exclamation-triangle text-warning me-2';
+                    title = 'Attention:';
+                } else if (type === 'danger') {
+                    alertClass = 'alert-danger border-start border-4 border-danger';
+                    iconClass = 'fas fa-times-circle text-danger me-2';
+                    title = 'Error:';
+                } else {
+                    alertClass = 'alert-info border-start border-4 border-info';
+                    iconClass = 'fas fa-info-circle text-info me-2';
+                    title = 'Info:';
+                }
+
+                const html = `
+                    <div class="alert ${alertClass} alert-dismissible fade show d-flex align-items-center" role="alert">
+                        <i class="${iconClass} fs-5"></i>
+                        <div>
+                            <strong class="me-1">${title}</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+
+                $('#messageContainer').html(html).show();
+                if (type === 'success' || type === 'info') {
+                    setTimeout(() => { $('.alert').alert('close'); }, 5000);
+                }
+            }
+
+            function updateStats() {
+                const total = allParticipants.length;
+                const assigned = allParticipants.filter(p => p.IsAssigned).length;
+                const unassigned = total - assigned;
+
+                $('#totalCount').text(total);
+                $('#assignedCount').text(assigned);
+                $('#unassignedCount').text(unassigned);
+            }
+
+            function initializeDataTables(data) {
+                // Clear existing DataTable if it exists
+                if ($.fn.DataTable.isDataTable('#participantsTable')) {
+                    dataTableInstance.clear().destroy();
+                    $('#participantsTable').empty();
+                }
+
+                // Clear the table body
+                $('#participantsTable tbody').empty();
+
+                // Populate table with data
+                $.each(data, function(index, participant) {
+                    const fullName = participant.FirstName + ' ' + participant.LastName;
+                    const isAssigned = participant.IsAssigned || false;
+                    const statusClass = isAssigned ? 'bg-success' : 'bg-secondary';
+                    const statusText = isAssigned ? 'Assigned' : 'Unassigned';
+                    const icon = getParticipantIcon(fullName);
+
+                    const row = `
+                        <tr>
+                            <td class="text-center">
+                                <div class="form-check">
+                                    <input class="form-check-input participant-checkbox"
+                                        type="checkbox"
+                                        value="${participant.ParticipantId}"
+                                        ${isAssigned ? 'checked' : ''}
+                                        data-name="${fullName}">
+                                </div>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-primary">#${participant.ParticipantId}</span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas ${icon} fa-fw text-primary me-2"></i>
+                                    <div>${fullName}</div>
+                                </div>
+                            </td>
+                            <td>
+                                ${participant.Email ? `<a href="mailto:${participant.Email}" class="text-decoration-none">${participant.Email}</a>` : '<span class="text-muted">N/A</span>'}
+                            </td>
+                            <td>
+                                ${participant.Phone ? `<a href="tel:${participant.Phone}" class="text-decoration-none">${participant.Phone}</a>` : '<span class="text-muted">N/A</span>'}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge ${statusClass}">${statusText}</span>
+                            </td>
+                        </tr>
+                    `;
+
+                    $('#participantsTable tbody').append(row);
+                });
+
+                // Initialize DataTable
+                dataTableInstance = $('#participantsTable').DataTable({
+                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    pageLength: 25,
+                    dom: '<"top"<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>>rt<"bottom"<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>><"clear">',
+                    responsive: true,
+                    language: {
+                        emptyTable: "No participants found",
+                        zeroRecords: "No matching participants found"
+                    },
+                    columnDefs: [
+                        { targets: 0, width: '5%', orderable: false },
+                        { targets: 1, width: '10%' },
+                        { targets: 5, width: '15%' }
+                    ]
+                });
+
+                // Attach checkbox change events
+                $('#participantsTable tbody').off('change', '.participant-checkbox').on('change', '.participant-checkbox', function() {
+                    const participantId = parseInt($(this).val());
+                    const isChecked = $(this).is(':checked');
+
+                    // Update the participant in allParticipants array
+                    const participant = allParticipants.find(p => p.ParticipantId === participantId);
+                    if (participant) {
+                        participant.IsAssigned = isChecked;
+                    }
+
+                    // Update the status badge
+                    const row = $(this).closest('tr');
+                    const badge = row.find('td:eq(5) .badge');
+                    if (isChecked) {
+                        badge.removeClass('bg-secondary').addClass('bg-success').text('Assigned');
+                    } else {
+                        badge.removeClass('bg-success').addClass('bg-secondary').text('Unassigned');
+                    }
+
+                    updateStats();
+                });
+
+                updateStats();
+            }
+
+            function loadParticipants() {
+                $('#loading').show();
+                $('#assignmentForm').hide();
+                $('#emptyState').hide();
+
+                $.ajax({
+                    url: '@Url.Action("LoadParticipants", "TicketParticipants")',
+                    type: 'GET',
+                    data: { ticketTypeId: ticketTypeId },
+                    success: function(response) {
+                        $('#loading').hide();
+
+                        console.log('Response received:', response);
+
+                        allParticipants = response || [];
+
+                        if (allParticipants.length > 0) {
+                            console.log('First participant data:', allParticipants[0]);
+
+                            // Ensure all properties are set
+                            allParticipants.forEach(p => {
+                                p.ParticipantId = p.ParticipantId || 0;
+                                p.FirstName = p.FirstName || '';
+                                p.LastName = p.LastName || '';
+                                p.Email = p.Email || '';
+                                p.Phone = p.Phone || '';
+                                p.IsAssigned = p.IsAssigned || false;
+                            });
+
+                            initializeDataTables(allParticipants);
+                            $('#assignmentForm').show();
+                        } else {
+                            $('#emptyState').show();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $('#loading').hide();
+                        showAlert('danger', 'Error loading participants. Please try again.');
+                        console.error('AJAX Error:', error);
+                        console.error('Response:', xhr.responseText);
+                    }
+                });
+            }
+
+            // --- Event Handlers ---
+            loadParticipants();
+
+            // Select All Visible
+            $('#selectAllBtn').on('click', function() {
+                $('#participantsTable tbody .participant-checkbox:visible').each(function() {
+                    if (!$(this).prop('checked')) {
+                        $(this).prop('checked', true).trigger('change');
+                    }
+                });
+            });
+
+            // Clear All Visible
+            $('#clearAllBtn').on('click', function() {
+                $('#participantsTable tbody .participant-checkbox:visible').each(function() {
+                    if ($(this).prop('checked')) {
+                        $(this).prop('checked', false).trigger('change');
+                    }
+                });
+            });
+
+            // Save button click
+            $('#saveBtn').on('click', function() {
+                const submitBtn = $(this);
+                const checkedParticipants = allParticipants.filter(p => p.IsAssigned);
+                const selectedCount = checkedParticipants.length;
+                const checkedIds = checkedParticipants.map(p => p.ParticipantId);
+
+                if (selectedCount === 0 && !confirm('No participants selected. This will remove all assignments. Continue?')) {
+                    return;
+                }
+
+                const postData = {
+                    TicketTypeId: ticketTypeId,
+                    ParticipantIds: checkedIds
+                };
+
+                console.log('Saving data:', postData);
+
+                submitBtn.prop('disabled', true);
+                submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
+
+                $.ajax({
+                    url: '@Url.Action("Save", "TicketParticipants")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(postData),
+                    success: function(response) {
+                        console.log('Save response:', response);
+
+                        if (response && response.success) {
+                            let alertMessage;
+                            if (selectedCount === 0) {
+                                alertMessage = 'Successfully cleared all participant assignments.';
+                                showAlert('warning', alertMessage);
+                            } else {
+                                alertMessage = `Successfully assigned ${selectedCount} participant(s) to this ticket type.`;
+                                showAlert('success', alertMessage);
+                            }
+                            // Refresh data
+                            loadParticipants();
+                        } else {
+                            showAlert('danger', 'Save failed: Server returned an error.');
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        console.error('Save error:', error);
+
+                        let errorMessage = 'Error saving assignments. Please try again.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errorMessage = 'Error saving assignments: ' + xhr.responseJSON.message;
+                        }
+                        showAlert('danger', errorMessage);
+                    },
+                    complete: function() {
+                        setTimeout(() => {
+                            submitBtn.prop('disabled', false);
+                            submitBtn.html('<i class="fas fa-save me-2"></i>Save Changes');
+                        }, 1000);
+                    }
+                });
+            });
+        });
+    </script>
+}

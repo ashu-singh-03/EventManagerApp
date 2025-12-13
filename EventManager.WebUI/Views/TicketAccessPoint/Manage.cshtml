@@ -4,129 +4,89 @@
     ViewData["Title"] = "Manage Access Points";
 }
 
-<style>
-    .access-point-icon {
-        background-color: rgba(255, 193, 7, 0.1);
-        border-radius: 8px;
-        padding: 10px;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-    }
+<div class="container-fluid py-4">
 
-    .form-check-input:checked {
-        background-color: #ffc107;
-        border-color: #ffc107;
-    }
-
-    .ticket-type-badge {
-        background-color: #e9ecef;
-        color: #495057;
-        font-size: 0.85em;
-        padding: 0.25rem 0.75rem;
-        border-radius: 20px;
-    }
-</style>
-
-<div class="container-fluid">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <a href="/TicketAccessPoint" class="btn btn-outline-secondary btn-sm">
-                    <i class="fas fa-arrow-left me-2"></i>Back to List
-                </a>
-                <div>
-                    <h1 class="h3 mb-0 fw-bold">
-                        <i class="fas fa-door-open text-warning me-2"></i>
-                        Manage Access Points
-                    </h1>
-                    <p class="text-muted mb-0">
-                        Assigning access points for:
-                        <span id="ticketTypeName" class="fw-bold">Loading...</span>
-                        <span id="ticketTypeDetails" class="ms-2 text-muted small"></span>
-                    </p>
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="text-center me-3">
+                        <i class="fas fa-cubes fa-2x text-warning"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small fw-bold mb-0">Total Access Points</p>
+                        <h4 class="fw-bold text-dark mb-0" id="totalCount">0</h4>
+                    </div>
                 </div>
             </div>
-
-            <!-- Ticket Type Info Card -->
-            <div class="card border-0 shadow-sm mb-4" id="ticketTypeInfoCard" style="display: none;">
-                <div class="card-body p-3">
-                    <div class="row align-items-center">
-                        <div class="col-md-6">
-                            <h6 class="card-title mb-1">
-                                <i class="fas fa-ticket-alt text-warning me-2"></i>
-                                <span id="ticketTypeFullName"></span>
-                            </h6>
-                            <p class="card-text text-muted small mb-0">
-                                <span id="ticketTypeDescription"></span>
-                            </p>
-                        </div>
-                        <div class="col-md-6 text-md-end">
-                            <div class="d-flex flex-column flex-md-row gap-2 justify-content-md-end">
-                                <span class="badge bg-warning text-dark" id="ticketTypeStatus"></span>
-                                <span class="badge bg-info text-dark" id="ticketTypePrice"></span>
-                                <span class="badge bg-secondary" id="ticketTypeCapacity"></span>
-                            </div>
-                        </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="text-center me-3">
+                        <i class="fas fa-check-circle fa-2x text-success"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small fw-bold mb-0">Assigned Access Points</p>
+                        <h4 class="fw-bold text-success mb-0" id="assignedCount">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm h-100 bg-white">
+                <div class="card-body p-3 d-flex align-items-center">
+                    <div class="text-center me-3">
+                        <i class="fas fa-minus-circle fa-2x text-secondary"></i>
+                    </div>
+                    <div>
+                        <p class="text-muted small fw-bold mb-0">Unassigned Access Points</p>
+                        <h4 class="fw-bold text-secondary mb-0" id="unassignedCount">0</h4>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Loading State -->
-    <div id="loading" class="text-center py-5">
-        <div class="spinner-border text-warning" role="status">
-            <span class="visually-hidden">Loading...</span>
-        </div>
-        <p class="text-muted mt-2">Loading ticket type and access points...</p>
-    </div>
-
-    <!-- Success/Error Messages -->
-    <div id="messageContainer" style="display: none;"></div>
-
-    <!-- Form -->
-    <form id="assignmentForm" method="post" action="/TicketAccessPoint/Save" style="display: none;">
-        <input type="hidden" name="TicketTypeId" value="@Model" />
-
-        <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 pb-0">
-                <h5 class="mb-3">
-                    <i class="fas fa-list-check text-warning me-2"></i>
-                    Select Access Points
-                    <small class="text-muted ms-2">Choose which access points this ticket type can use</small>
-                </h5>
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div>
-                        <span class="text-muted small">
-                            <i class="fas fa-info-circle me-1"></i>
-                            <span id="selectedCount">0</span> of <span id="totalCount">0</span> access points selected
-                        </span>
-                    </div>
-                    <div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="selectAllBtn">
-                            <i class="fas fa-check-double me-1"></i>Select All
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="row align-items-center">
+                <div class="col-lg-6 mb-2 mb-lg-0">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-list-check text-warning me-2"></i>
+                        Access Points List
+                    </h5>
+                </div>
+                <div class="col-lg-6">
+                    <div class="d-flex flex-wrap justify-content-lg-end gap-2">
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="selectAllBtn">
+                            <i class="fas fa-check-double me-1"></i>Select All Visible
                         </button>
-                        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearAllBtn">
-                            <i class="fas fa-times me-1"></i>Clear All
+                        <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAllBtn">
+                            <i class="fas fa-times me-1"></i>Clear All Visible
                         </button>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
+        <div class="card-body p-0">
+            <div id="messageContainer" class="m-3" style="display: none;"></div>
+
+            <div id="loading" class="text-center py-5">
+                <div class="spinner-border text-warning" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mt-2">Loading access points...</p>
+            </div>
+
+            <form id="assignmentForm" method="post" action="/TicketAccessPoint/Save" style="display: none;">
+                <input type="hidden" name="TicketTypeId" value="@Model" />
+
+                <div class="table-responsive p-3">
+                    <table class="table table-hover table-striped mb-0" id="accessPointsTable" style="width:100%">
                         <thead class="table-light">
                             <tr>
-                                <th width="5%">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" id="selectAll">
-                                        <label class="form-check-label" for="selectAll"></label>
-                                    </div>
+                                <th width="5%" class="text-center">
                                 </th>
                                 <th width="35%">Access Point</th>
                                 <th width="45%">Description</th>
@@ -134,28 +94,28 @@
                             </tr>
                         </thead>
                         <tbody id="accessPointsBody">
-                            <!-- Data loaded here via API -->
                         </tbody>
                     </table>
                 </div>
 
-                <div class="mt-4 pt-3 border-top">
-                    <button type="submit" class="btn btn-warning px-4">
-                        <i class="fas fa-save me-2"></i>Save Assignments
-                    </button>
-                    <a href="/TicketAccessPoint" class="btn btn-outline-secondary ms-2">
-                        Cancel
-                    </a>
+                <div id="emptyState" class="text-center py-5" style="display: none;">
+                    <i class="fas fa-door-closed fa-4x text-muted mb-3"></i>
+                    <h5 class="text-muted">No Access Points Found</h5>
+                    <p class="text-muted">There are no access points available for this event.</p>
                 </div>
-            </div>
-        </div>
-    </form>
 
-    <!-- Empty State -->
-    <div id="emptyState" class="text-center py-5" style="display: none;">
-        <i class="fas fa-door-closed fa-4x text-muted mb-3"></i>
-        <h5 class="text-muted">No Access Points Found</h5>
-        <p class="text-muted">There are no access points available for this event.</p>
+                <div class="p-3 border-top bg-white sticky-bottom shadow-sm">
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-warning px-4">
+                            <i class="fas fa-save me-2"></i>Save Changes
+                        </button>
+                        <a href="/TicketAccessPoint" class="btn btn-outline-secondary ms-2">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -163,60 +123,186 @@
     <script>
         $(document).ready(function() {
             const ticketTypeId = @Model;
+            let allAccessPoints = [];
+            let dataTableInstance;
 
-            // Load ticket type details first, then access points
-            loadTicketTypeDetails();
-            loadAccessPoints();
+            // --- Utility Functions ---
+            function getAccessPointIcon(name) {
+                const nameLower = name.toLowerCase();
+                if (nameLower.includes('gate')) return 'fa-gate-open';
+                if (nameLower.includes('door')) return 'fa-door-closed';
+                if (nameLower.includes('entrance')) return 'fa-sign-in-alt';
+                if (nameLower.includes('exit')) return 'fa-sign-out-alt';
+                if (nameLower.includes('vip')) return 'fa-star';
+                return 'fa-door-closed';
+            }
 
-            function loadTicketTypeDetails() {
-                $.ajax({
-                    url: '/TicketAccessPoint/GetTicketTypeDetails?ticketTypeId=' + ticketTypeId,
-                    type: 'GET',
-                    success: function(response) {
-                        if (response) {
-                            displayTicketTypeInfo(response);
+            // --- 🎯 MODIFIED SHOW ALERT FUNCTION (Enhanced Styling & Icons) 🎯 ---
+            function showAlert(type, message) {
+                let alertClass, iconClass, title;
+
+                if (type === 'success') {
+                    // Uses warning background for theme consistency, but green checkmark and border for success
+                    alertClass = 'alert-warning border-start border-4 border-success';
+                    iconClass = 'fas fa-check-circle text-success me-2';
+                    title = 'Success!';
+                } else if (type === 'warning') {
+                    alertClass = 'alert-warning border-start border-4 border-warning';
+                    iconClass = 'fas fa-exclamation-triangle text-warning me-2';
+                    title = 'Attention:';
+                } else if (type === 'danger') {
+                    alertClass = 'alert-danger border-start border-4 border-danger';
+                    iconClass = 'fas fa-times-circle text-danger me-2';
+                    title = 'Error:';
+                } else {
+                    alertClass = 'alert-info border-start border-4 border-info';
+                    iconClass = 'fas fa-info-circle text-info me-2';
+                    title = 'Info:';
+                }
+
+                const html = `
+                    <div class="alert ${alertClass} alert-dismissible fade show d-flex align-items-center" role="alert">
+                        <i class="${iconClass} fs-5"></i>
+                        <div>
+                            <strong class="me-1">${title}</strong> ${message}
+                        </div>
+                        <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+
+                $('#messageContainer').html(html).show();
+                // Auto-close success/info alerts
+                if (type === 'success' || type === 'info') {
+                    setTimeout(() => { $('.alert').alert('close'); }, 5000);
+                }
+            }
+            // --- END SHOW ALERT ---
+
+
+            function updateStats() {
+                const total = allAccessPoints.length;
+                const assigned = allAccessPoints.filter(ap => ap.isChecked).length;
+                const unassigned = total - assigned;
+
+                $('#totalCount').text(total);
+                $('#assignedCount').text(assigned);
+                $('#unassignedCount').text(unassigned);
+            }
+
+            function initializeDataTables(data) {
+                if (dataTableInstance) {
+                    dataTableInstance.destroy();
+                    $('#accessPointsBody').empty();
+                }
+
+                const tableData = data.map(ap => [
+                    ap.accessPointId,
+                    ap.name,
+                    ap.description,
+                    ap.isChecked
+                ]);
+
+                dataTableInstance = $('#accessPointsTable').DataTable({
+                    data: tableData,
+                    columns: [
+                        {
+                            data: 0, // Checkbox column
+                            render: function(data, type, row) {
+                                const isChecked = row[3];
+                                return `
+                                    <div class="form-check text-center">
+                                        <input class="form-check-input access-point-checkbox"
+                                            type="checkbox"
+                                            value="${data}"
+                                            ${isChecked ? 'checked' : ''}
+                                            data-name="${row[1]}"
+                                            style="margin: 0 auto;">
+                                    </div>
+                                `;
+                            },
+                            orderable: false,
+                            className: 'ps-3'
+                        },
+                        {
+                            data: 1, // Name column
+                            render: function(data, type, row) {
+                                const icon = getAccessPointIcon(data);
+                                return `
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas ${icon} fa-fw fs-5 text-warning me-3"></i>
+                                        <div class="fw-medium">${data}</div>
+                                    </div>
+                                `;
+                            }
+                        },
+                        {
+                            data: 2, // Description column
+                            className: 'small text-muted text-truncate',
+                            render: function(data) {
+                                return data || 'No description';
+                            }
+                        },
+                        {
+                            data: 3, // Status column
+                            render: function(data) {
+                                const statusText = data ? 'Assigned' : 'Unassigned';
+                                const statusClass = data ? 'bg-success' : 'bg-secondary';
+                                return `<span class="badge ${statusClass}">${statusText}</span>`;
+                            }
                         }
-                    },
-                    error: function(xhr, status, error) {
-                        console.error('Error loading ticket type:', error);
-                    }
+                    ],
+                    lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
+                    pageLength: 25,
+                    dom: 'lfrtip',
+                    responsive: true
+                });
+
+                // Event delegation for checkbox changes
+                $('#accessPointsBody').off('change', '.access-point-checkbox').on('change', '.access-point-checkbox', function() {
+                    updateGlobalState($(this).val(), $(this).is(':checked'));
+                    updateStats();
                 });
             }
 
-            function displayTicketTypeInfo(ticketType) {
-                $('#ticketTypeName').text(ticketType.name);
-                $('#ticketTypeFullName').text(ticketType.name);
-                $('#ticketTypeDescription').text(ticketType.description || 'No description');
-                $('#ticketTypeStatus').text(ticketType.active ? 'Active' : 'Inactive');
-                $('#ticketTypeStatus').removeClass('bg-warning bg-danger').addClass(ticketType.active ? 'bg-warning' : 'bg-danger');
-
-                if (ticketType.price) {
-                    $('#ticketTypePrice').text('$' + parseFloat(ticketType.price).toFixed(2));
-                } else {
-                    $('#ticketTypePrice').text('Free');
+            function updateGlobalState(id, isChecked) {
+                const ap = allAccessPoints.find(item => item.accessPointId.toString() === id.toString());
+                if (ap) {
+                    ap.isChecked = isChecked;
                 }
 
-                if (ticketType.capacity) {
-                    $('#ticketTypeCapacity').text('Capacity: ' + ticketType.capacity);
+                if (dataTableInstance) {
+                    dataTableInstance.rows().every(function() {
+                        const rowData = this.data();
+                        if (rowData[0].toString() === id.toString()) {
+                            rowData[3] = isChecked;
+                            this.data(rowData);
+                            this.invalidate();
+                        }
+                    });
+                    dataTableInstance.draw(false);
                 }
-
-                $('#ticketTypeInfoCard').show();
             }
 
             function loadAccessPoints() {
+                $('#loading').show();
+                $('#assignmentForm').hide();
+                $('#emptyState').hide();
+
                 $.ajax({
                     url: '/TicketAccessPoint/LoadAccessPoints?ticketTypeId=' + ticketTypeId,
                     type: 'GET',
                     success: function(response) {
                         $('#loading').hide();
+                        allAccessPoints = response || [];
 
-                        if (response && response.length > 0) {
-                            renderAccessPoints(response);
+                        if (allAccessPoints.length > 0) {
+                            allAccessPoints.forEach(ap => ap.isChecked = ap.isAssigned);
+                            initializeDataTables(allAccessPoints);
                             $('#assignmentForm').show();
-                            updateSelectionCount();
                         } else {
                             $('#emptyState').show();
                         }
+                        updateStats();
                     },
                     error: function(xhr, status, error) {
                         $('#loading').hide();
@@ -226,249 +312,91 @@
                 });
             }
 
-            function renderAccessPoints(accessPoints) {
-                let html = '';
+            // --- Event Handlers ---
+            loadAccessPoints();
 
-                accessPoints.forEach(function(ap) {
-                    html += `
-                        <tr>
-                            <td>
-                                <div class="form-check">
-                                    <input class="form-check-input access-point-checkbox"
-                                           type="checkbox"
-                                           name="AccessPointIds"
-                                           value="${ap.accessPointId}"
-                                           ${ap.isAssigned ? 'checked' : ''}
-                                           data-name="${ap.name}">
-                                </div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="access-point-icon me-3">
-                                        <i class="fas ${getAccessPointIcon(ap.name)} text-warning"></i>
-                                    </div>
-                                    <div>
-                                        <div class="fw-medium">${ap.name}</div>
-                                        <small class="text-muted">ID: ${ap.accessPointId}</small>
-                                    </div>
-                                </div>
-                            </td>
-                            <td>
-                                <div class="small">${ap.description || 'No description'}</div>
-                                ${ap.isAssigned ? '<span class="badge bg-warning text-dark small mt-1">Currently Assigned</span>' : ''}
-                            </td>
-                            <td>
-                                <span class="badge ${ap.active ? 'bg-success' : 'bg-secondary'}">
-                                    <i class="fas ${ap.active ? 'fa-check' : 'fa-times'} me-1"></i>
-                                    ${ap.active ? 'Active' : 'Inactive'}
-                                </span>
-                            </td>
-                        </tr>
-                    `;
-                });
-
-                $('#accessPointsBody').html(html);
-                $('#totalCount').text(accessPoints.length);
-                setupCheckboxEvents();
-            }
-
-            function getAccessPointIcon(name) {
-                const nameLower = name.toLowerCase();
-                if (nameLower.includes('gate')) return 'fa-gate';
-                if (nameLower.includes('door')) return 'fa-door-closed';
-                if (nameLower.includes('entrance')) return 'fa-sign-in-alt';
-                if (nameLower.includes('exit')) return 'fa-sign-out-alt';
-                if (nameLower.includes('vip')) return 'fa-crown';
-                if (nameLower.includes('main')) return 'fa-building';
-                if (nameLower.includes('back')) return 'fa-door-open';
-                return 'fa-door-closed';
-            }
-
-            function setupCheckboxEvents() {
-                // Select All functionality
-                $('#selectAll').on('change', function() {
-                    const isChecked = $(this).is(':checked');
-                    $('.access-point-checkbox').prop('checked', isChecked);
-                    updateSelectionCount();
-                    $('#selectAllBtn').toggleClass('btn-secondary', isChecked);
-                    $('#clearAllBtn').toggleClass('btn-secondary', !isChecked);
-                });
-
-                // Individual checkbox events
-                $('.access-point-checkbox').on('change', function() {
-                    updateSelectAllCheckbox();
-                    updateSelectionCount();
-                });
-
-                // Select All button
-                $('#selectAllBtn').on('click', function() {
-                    $('.access-point-checkbox').prop('checked', true);
-                    $('#selectAll').prop('checked', true);
-                    updateSelectionCount();
-                    $(this).addClass('btn-secondary');
-                    $('#clearAllBtn').removeClass('btn-secondary');
-                });
-
-                // Clear All button
-                $('#clearAllBtn').on('click', function() {
-                    $('.access-point-checkbox').prop('checked', false);
-                    $('#selectAll').prop('checked', false);
-                    updateSelectionCount();
-                    $(this).addClass('btn-secondary');
-                    $('#selectAllBtn').removeClass('btn-secondary');
-                });
-            }
-
-            function updateSelectAllCheckbox() {
-                const allCheckboxes = $('.access-point-checkbox');
-                const checkedCount = $('.access-point-checkbox:checked').length;
-                $('#selectAll').prop('checked', allCheckboxes.length === checkedCount);
-            }
-
-            function updateSelectionCount() {
-                const selectedCount = $('.access-point-checkbox:checked').length;
-                const totalCount = $('.access-point-checkbox').length;
-                $('#selectedCount').text(selectedCount);
-
-                // Update button text
-                const saveBtn = $('#assignmentForm button[type="submit"]');
-                if (selectedCount === 0) {
-                    saveBtn.html('<i class="fas fa-save me-2"></i>Save (Remove All)');
-                } else {
-                    saveBtn.html(`<i class="fas fa-save me-2"></i>Save (${selectedCount} Selected)`);
+            // Select All Visible
+            $('#selectAllBtn').on('click', function() {
+                if (dataTableInstance) {
+                    dataTableInstance.rows({ search: 'applied', page: 'current' }).nodes().to$().find('.access-point-checkbox').each(function() {
+                        const id = $(this).val();
+                        $(this).prop('checked', true);
+                        updateGlobalState(id, true);
+                    });
+                    updateStats();
                 }
-            }
+            });
 
-            // Form submission with proper feedback
+            // Clear All Visible
+            $('#clearAllBtn').on('click', function() {
+                if (dataTableInstance) {
+                    dataTableInstance.rows({ search: 'applied', page: 'current' }).nodes().to$().find('.access-point-checkbox').each(function() {
+                        const id = $(this).val();
+                        $(this).prop('checked', false);
+                        updateGlobalState(id, false);
+                    });
+                    updateStats();
+                }
+            });
+
+            // Form Submission
             $('#assignmentForm').on('submit', function(e) {
                 e.preventDefault();
 
                 const form = $(this);
                 const submitBtn = form.find('button[type="submit"]');
-                const originalText = submitBtn.html();
 
-                // Get selected checkboxes count
-                const selectedCount = $('.access-point-checkbox:checked').length;
+                const checkedPoints = allAccessPoints.filter(ap => ap.isChecked);
+                const selectedCount = checkedPoints.length;
+                const checkedIds = checkedPoints.map(ap => ap.accessPointId);
 
-                // Optional: Show confirmation for no selection
-                if (selectedCount === 0 && !confirm('No access points selected. This will remove all assignments from this ticket type. Continue?')) {
+                // Confirmation for clearing all
+                if (selectedCount === 0 && !confirm('No access points selected. This will remove all assignments. Continue?')) {
                     return;
                 }
 
-                // Disable button and show loading
+                const postData = {
+                    TicketTypeId: ticketTypeId,
+                    AccessPointIds: checkedIds
+                };
+
                 submitBtn.prop('disabled', true);
                 submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
 
                 $.ajax({
                     url: form.attr('action'),
                     type: 'POST',
-                    data: form.serialize(),
+                    data: postData,
                     success: function(response) {
-                        if (selectedCount === 0) {
-                            showAlert('warning',
-                                '<strong>All access points unassigned</strong><br>' +
-                                'This ticket type no longer has access to any entry points.');
+                        if (response && response.success) {
+                            let alertMessage;
+
+                            if (selectedCount === 0) {
+                                alertMessage = 'Successfully cleared all access assignments.';
+                                showAlert('warning', alertMessage);
+                            } else {
+                                alertMessage = `Successfully saved ${selectedCount} access point(s) assigned to this ticket type.`;
+                                showAlert('success', alertMessage);
+                            }
+                            loadAccessPoints();
                         } else {
-                            const selectedNames = [];
-                            $('.access-point-checkbox:checked').each(function() {
-                                selectedNames.push($(this).data('name'));
-                            });
-
-                            showAlert('success',
-                                `<strong>${selectedCount} access point(s) assigned</strong><br>` +
-                                `Ticket type can now use: ${selectedNames.join(', ')}`);
+                             showAlert('danger', 'Save failed: Server returned an error.');
                         }
-
-                        // Reload to reflect changes
-                        loadAccessPoints();
                     },
                     error: function(xhr, status, error) {
-                        let errorMessage = 'Error saving assignments';
-
+                        let errorMessage = 'Error saving assignments. Please try again.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage += ': ' + xhr.responseJSON.message;
-                        } else if (xhr.status === 404) {
-                            errorMessage = 'Ticket type not found.';
-                        } else if (xhr.status === 400) {
-                            errorMessage = 'Invalid request data.';
-                        } else if (xhr.status === 500) {
-                            errorMessage = 'Server error occurred. Please try again later.';
+                            errorMessage = 'Error saving assignments: ' + xhr.responseJSON.message;
                         }
-
                         showAlert('danger', errorMessage);
-                        console.error('Save error:', error, xhr.responseText);
                     },
                     complete: function() {
-                        // Re-enable button after 1 second delay
                         setTimeout(() => {
                             submitBtn.prop('disabled', false);
-                            updateSelectionCount(); // Update button text
+                            submitBtn.html('<i class="fas fa-save me-2"></i>Save Changes');
                         }, 1000);
                     }
                 });
-            });
-
-            // Enhanced alert function
-            function showAlert(type, message) {
-                const alertTypes = {
-                    'success': {
-                        icon: 'fa-check-circle',
-                        title: 'Success!',
-                        class: 'alert-success'
-                    },
-                    'danger': {
-                        icon: 'fa-exclamation-circle',
-                        title: 'Error!',
-                        class: 'alert-danger'
-                    },
-                    'warning': {
-                        icon: 'fa-exclamation-triangle',
-                        title: 'Warning!',
-                        class: 'alert-warning'
-                    },
-                    'info': {
-                        icon: 'fa-info-circle',
-                        title: 'Info',
-                        class: 'alert-info'
-                    }
-                };
-
-                const alertConfig = alertTypes[type] || alertTypes.info;
-
-                const html = `
-                    <div class="alert ${alertConfig.class} alert-dismissible fade show" role="alert">
-                        <div class="d-flex align-items-center">
-                            <i class="fas ${alertConfig.icon} fa-lg me-3"></i>
-                            <div>
-                                ${message}
-                            </div>
-                        </div>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                `;
-
-                // Remove existing alerts
-                $('.alert').alert('close');
-
-                // Add new alert
-                $('#messageContainer').html(html).show();
-
-                // Auto-hide success messages after 5 seconds, keep errors/warnings longer
-                const hideDelay = type === 'success' ? 5000 : 8000;
-
-                if (type === 'success' || type === 'info') {
-                    setTimeout(() => {
-                        $('.alert').alert('close');
-                    }, hideDelay);
-                }
-            }
-
-            // Keyboard shortcut for select all (Ctrl+A)
-            $(document).on('keydown', function(e) {
-                if (e.ctrlKey && e.key === 'a') {
-                    e.preventDefault();
-                    $('#selectAll').click();
-                }
             });
         });
     </script>

@@ -1,77 +1,48 @@
-﻿@{
+﻿@model object
+@{
     Layout = "/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Ticket Types Management";
 }
 
-<style>
-    .ticket-type-card {
-        transition: transform 0.2s, box-shadow 0.2s;
-        border: 1px solid #e9ecef;
-    }
+<div class="container py-5">
 
-        .ticket-type-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
-            border-color: #ffc107;
-        }
-
-    .manage-btn:hover {
-        background-color: #ffc107 !important;
-        border-color: #ffc107 !important;
-        color: #212529 !important;
-    }
-</style>
-
-<div class="container">
-    <!-- Page Header -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex align-items-center gap-3 mb-2">
-                <i class="fas fa-ticket-alt fa-2x text-warning"></i>
-                <h1 class="h3 mb-0 fw-bold">Ticket Types Management</h1>
+    <div class="row mb-5">
+        <div class="col-12 d-flex justify-content-between align-items-center">
+            <div>
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <i class="fas fa-tags fa-3x text-warning"></i>
+                    <h1 class="h2 mb-0 fw-bolder text-dark">Ticket Types Management</h1>
+                </div>
+                <p class="text-secondary-emphasis lead-sm mb-0">Manage your ticket types, pricing, capacity, and access permissions.</p>
             </div>
-            <p class="text-muted">Manage your ticket types and their access permissions</p>
         </div>
     </div>
 
-    <!-- Ticket Types Section -->
     <div class="row">
         <div class="col-12">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-bottom py-3">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h5 class="mb-0">
-                                <i class="fas fa-list text-warning me-2"></i>
-                                Ticket Types
-                            </h5>
-                        </div>
-                        <div>
-                            <button class="btn btn-sm btn-outline-warning" id="refreshBtn">
-                                <i class="fas fa-sync-alt me-1"></i> Refresh
-                            </button>
-                        </div>
-                    </div>
+            <div class="card border-0 shadow-lg rounded-4">
+                <div class="card-header bg-white border-bottom py-4 px-4 rounded-top-4">
+                    <h5 class="mb-0 fw-bold">
+                        <i class="fas fa-layer-group text-warning me-2"></i>
+                        Available Ticket Types
+                    </h5>
                 </div>
-                <div class="card-body p-4">
-                    <!-- Loading -->
+
+                <div class="card-body p-4 p-md-5">
+
                     <div id="loadingTicketTypes" class="text-center py-5">
                         <div class="spinner-border text-warning" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <p class="text-muted mt-2">Loading ticket types...</p>
+                        <p class="text-muted mt-3 fw-bold">Fetching ticket types...</p>
                     </div>
 
-                    <!-- Ticket Types Grid -->
-                    <div id="ticketTypesContainer" class="row g-3" style="display: none;">
-                        <!-- Dynamic content from YOUR API -->
+                    <div id="ticketTypesContainer" class="row g-4" style="display: none;">
                     </div>
 
-                    <!-- Empty State -->
                     <div id="emptyTicketTypes" class="text-center py-5" style="display: none;">
-                        <i class="fas fa-ticket-alt fa-4x text-muted opacity-25 mb-3"></i>
-                        <h5 class="text-muted">No Ticket Types Found</h5>
-                        <p class="text-muted mb-3">There are no ticket types available for this event</p>
+                        <i class="fas fa-ticket-alt fa-5x text-muted opacity-50 mb-4"></i>
+                        <h4 class="text-muted fw-bold">No Ticket Types Found</h4>
                     </div>
                 </div>
             </div>
@@ -79,11 +50,11 @@
     </div>
 </div>
 
-<!-- Toast Notification -->
 <div class="toast-container position-fixed top-0 end-0 p-3">
     <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-        <div class="toast-header bg-warning text-dark">
-            <strong class="me-auto">Notification</strong>
+        <div class="toast-header">
+            <i id="toastIcon" class="me-2"></i>
+            <strong class="me-auto" id="toastHeaderTitle">Notification</strong>
             <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
         </div>
         <div class="toast-body" id="toastMessage"></div>
@@ -93,46 +64,74 @@
 @section Scripts {
     <script>
         $(document).ready(function() {
-            // Toast function
+
+            // --- UI FUNCTIONS ---
+
             function showToast(message, type = 'info') {
                 const toastElement = document.getElementById('liveToast');
                 const toastBody = document.getElementById('toastMessage');
-
-                // Set toast color
                 const toastHeader = toastElement.querySelector('.toast-header');
-                toastHeader.className = 'toast-header ';
+                const toastIcon = document.getElementById('toastIcon');
+                const toastHeaderTitle = document.getElementById('toastHeaderTitle');
+
+                // Reset classes and content
+                toastHeader.className = 'toast-header';
+                toastIcon.className = '';
+
+                let iconClass = 'fas fa-info-circle';
+                let headerTitle = 'Notification';
 
                 switch(type) {
                     case 'success':
-                        toastHeader.classList.add('bg-success', 'text-white');
+                        toastHeader.classList.add('text-bg-success');
+                        iconClass = 'fas fa-check-circle';
+                        headerTitle = 'Success';
                         break;
                     case 'error':
-                        toastHeader.classList.add('bg-danger', 'text-white');
+                        toastHeader.classList.add('text-bg-danger');
+                        iconClass = 'fas fa-times-circle';
+                        headerTitle = 'Error';
                         break;
                     case 'warning':
-                        toastHeader.classList.add('bg-warning', 'text-dark');
+                        // Use warning theme for consistency, but keep dark text
+                        toastHeader.classList.add('text-bg-warning', 'text-dark');
+                        iconClass = 'fas fa-exclamation-triangle';
+                        headerTitle = 'Warning';
                         break;
-                    default:
-                        toastHeader.classList.add('bg-info', 'text-white');
+                    default: // info
+                        toastHeader.classList.add('text-bg-info');
+                        iconClass = 'fas fa-info-circle';
+                        headerTitle = 'Information';
                 }
 
+                toastIcon.classList.add(iconClass);
+                toastHeaderTitle.textContent = headerTitle;
                 toastBody.textContent = message;
+
                 const toast = new bootstrap.Toast(toastElement);
                 toast.show();
             }
 
-            // Load ticket types from YOUR API endpoint
+            // --- DATA LOAD/RENDER ---
+
             function loadTicketTypes() {
                 $.ajax({
-                    url: '/TicketAccessPoint/GetTicketTypes',  // ✅ YOUR endpoint
+                    url: '/TicketAccessPoint/GetTicketTypes',
                     type: 'GET',
                     beforeSend: function() {
                         $('#loadingTicketTypes').show();
-                        $('#ticketTypesContainer').hide();
+                        $('#ticketTypesContainer').hide().empty();
                         $('#emptyTicketTypes').hide();
                     },
                     success: function(data) {
                         if (data && data.length > 0) {
+                            // Sort ticket types by name (A-Z)
+                            data.sort((a, b) => {
+                                const nameA = a.ticketName?.toUpperCase() || '';
+                                const nameB = b.ticketName?.toUpperCase() || '';
+                                return nameA.localeCompare(nameB);
+                            });
+
                             renderTicketTypes(data);
                             $('#ticketTypesContainer').show();
                         } else {
@@ -150,61 +149,54 @@
                 });
             }
 
-            // Render ticket types from YOUR database
+            // Render ticket types (Orange-themed Design)
             function renderTicketTypes(ticketTypes) {
                 const container = $('#ticketTypesContainer');
-                container.empty();
 
                 ticketTypes.forEach(function(ticket) {
-                    // Use YOUR DTO properties (ticketTypeId, ticketName, price, description)
+                    const isFree = ticket.price === 0;
+
+                    // Pricing Badge: Free is Green, Paid uses the Warning/Orange theme
+                    const priceBadge = `
+                        <span class="badge ${isFree ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'} px-3 py-2 fw-bold rounded-pill shadow-sm">
+                            ${isFree ? 'FREE' : '$' + (ticket.price ? ticket.price.toFixed(2) : '0.00')}
+                        </span>`;
+
+                    // Capacity
+                    const capacityContent = ticket.maxCapacity
+                        ? `<span class="text-secondary small fw-medium"><i class="fas fa-users me-1"></i>Capacity: ${ticket.maxCapacity}</span>`
+                        : `<span class="text-secondary small fw-medium"><i class="fas fa-infinity me-1"></i>Unlimited Capacity</span>`;
+
+                    // Card structure
                     const card = `
-                        <div class="col-md-6 col-lg-4 col-xl-3">
-                            <div class="card ticket-type-card h-100 border">
-                                <div class="card-body d-flex flex-column">
-                                    <div class="d-flex justify-content-between align-items-start mb-3">
-                                        <div>
-                                            <span class="badge ${ticket.price === 0 ? 'bg-success' : 'bg-warning'} bg-opacity-10 ${ticket.price === 0 ? 'text-success' : 'text-warning'} mb-2">
-                                                ${ticket.price === 0 ? 'FREE' : '$' + ticket.price}
-                                            </span>
-                                            <h6 class="card-title mb-1 mt-2 fw-bold">${ticket.ticketName}</h6>
-                                            ${ticket.maxCapacity ?
-                                                `<p class="text-muted small mb-0">
-                                                    <i class="fas fa-users me-1"></i>Capacity: ${ticket.maxCapacity}
-                                                </p>` : ''
-                                            }
-                                        </div>
-                                        <div class="dropdown">
-                                            <button class="btn btn-sm btn-outline-secondary border-0" type="button"
-                                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                                <i class="fas fa-ellipsis-v"></i>
-                                            </button>
-                                            <ul class="dropdown-menu dropdown-menu-end">
-                                                <li>
-                                                    <a class="dropdown-item" href="/TicketAccessPoint/Manage/${ticket.ticketTypeId}">
-                                                        <i class="fas fa-door-open me-2"></i>Manage Access
-                                                    </a>
-                                                </li>
-                                                <li><hr class="dropdown-divider"></li>
-                                                <li>
-                                                    <a class="dropdown-item text-warning" href="#">
-                                                        <i class="fas fa-edit me-2"></i>Edit
-                                                    </a>
-                                                </li>
-                                                <li>
-                                                    <a class="dropdown-item text-danger" href="#" onclick="deleteTicketType(${ticket.ticketTypeId})">
-                                                        <i class="fas fa-trash me-2"></i>Delete
-                                                    </a>
-                                                </li>
-                                            </ul>
-                                        </div>
+                        <div class="col-sm-6 col-md-4 col-lg-3">
+                            <div class="card h-100 shadow-hover border-warning-subtle rounded-3">
+                                <div class="card-body d-flex flex-column p-4">
+
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        ${priceBadge}
                                     </div>
-                                    <p class="card-text small text-muted mb-3 flex-grow-1">
-                                        ${ticket.description || 'No description available'}
+
+                                    <h5 class="card-title mb-2 fw-bolder text-dark">${ticket.ticketName}</h5>
+
+                                    <div class="mb-3">
+                                        ${capacityContent}
+                                    </div>
+
+                                    <p class="card-text small text-secondary mb-4 flex-grow-1">
+                                        ${ticket.description ? ticket.description.substring(0, 100) + (ticket.description.length > 100 ? '...' : '') : 'No description provided.'}
                                     </p>
-                                    <a href="/TicketAccessPoint/Manage/${ticket.ticketTypeId}"
-                                       class="btn btn-outline-warning w-100 manage-btn">
-                                        <i class="fas fa-cog me-2"></i>Manage Access Points
-                                    </a>
+
+                                    <div class="d-flex gap-2 mt-auto">
+                                        <a href="/TicketAccessPoint/Manage/${ticket.ticketTypeId}"
+                                           class="btn btn-sm btn-warning text-dark w-100 fw-bold shadow-sm">
+                                            <i class="fas fa-user-shield me-2"></i>Access Points
+                                        </a>
+                                        <a href="/TicketParticipants/Index/${ticket.ticketTypeId}"
+                                           class="btn btn-sm btn-outline-warning text-dark w-100 fw-bold shadow-sm">
+                                            <i class="fas fa-users me-2"></i>Participants
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -213,35 +205,42 @@
                 });
             }
 
-            // Delete ticket type - Update to use YOUR endpoint
-            window.deleteTicketType = function(id) {
-                if (confirm('Are you sure you want to delete this ticket type?')) {
-                    $.ajax({
-                        url: `/TicketAccessPoint/DeleteTicketType?id=${id}`,  // You need to create this endpoint
-                        type: 'DELETE',
-                        success: function() {
-                            showToast('Ticket type deleted successfully', 'success');
-                            loadTicketTypes(); // Reload the list
-                        },
-                        error: function() {
-                            showToast('Failed to delete ticket type', 'error');
-                        }
-                    });
-                }
-            };
-
-            // Refresh button
-            $('#refreshBtn').click(function() {
-                const icon = $(this).find('i');
-                icon.addClass('fa-spin');
-                loadTicketTypes();
-                setTimeout(() => {
-                    icon.removeClass('fa-spin');
-                }, 1000);
-            });
-
             // Initialize
             loadTicketTypes();
         });
     </script>
+
+    <style>
+        .shadow-hover {
+            transition: box-shadow 0.3s ease-in-out, transform 0.2s ease-in-out;
+        }
+
+            .shadow-hover:hover {
+                /* Deeper shadow on hover */
+                box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+                /* Slight lift effect, and use the warning color border */
+                transform: translateY(-2px);
+                border-color: #ffc107 !important; /* Warning color border on hover */
+            }
+
+        .text-secondary-emphasis {
+            color: #5c636a; /* Secondary dark color */
+        }
+
+        .lead-sm {
+            font-size: 1rem;
+        }
+
+        /* Button hover effects */
+        .btn-outline-warning:hover {
+            background-color: #ffc107;
+            color: #212529 !important;
+            border-color: #ffc107;
+        }
+
+        /* Adjust button sizing for two buttons */
+        .card-body .d-flex.gap-2 {
+            gap: 0.5rem !important;
+        }
+    </style>
 }

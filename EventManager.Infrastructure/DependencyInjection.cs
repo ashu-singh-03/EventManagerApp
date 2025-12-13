@@ -18,7 +18,7 @@ namespace EventManager.Infrastructure
             services.AddScoped<ITicketTypeRepository, TicketTypeRepository>(); // <-- Add this
             services.AddScoped<IAccessPointRepository, AccessPointRepository>();
             services.AddScoped<ITicketAccessPointRepository, TicketAccessPointRepository>();
-
+            services.AddScoped<ITicketParticipantsRepository, TicketParticipantsRepository>();
             return services;
         }
     }
