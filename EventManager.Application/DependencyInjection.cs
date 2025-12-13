@@ -13,6 +13,7 @@ namespace EventManager.Application
             services.AddScoped<IParticipantService, ParticipantService>();
             services.AddScoped<ITicketTypeService, TicketTypeService>();
             services.AddScoped<IAccessPointService, AccessPointService>();
+            services.AddScoped<ITicketAccessPointService, TicketAccessPointService>();
             services.AddScoped<IEventClaimService, EventClaimService>();
             services.AddScoped<ExcelHelper>();
 

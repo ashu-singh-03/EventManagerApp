@@ -5,8 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - EventManagerApp</title>
 
+    <!-- Bootstrap & Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
+
+    <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/event.css" />
 
@@ -142,6 +150,23 @@
             max-width: 1200px;
             margin: 0 auto;
         }
+
+        /* DataTables custom styling */
+        .dataTables_wrapper {
+            padding: 20px 0;
+        }
+
+        .dataTables_filter input {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 6px 12px;
+        }
+
+        .dataTables_length select {
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 6px 12px;
+        }
     </style>
 
     @RenderSection("Styles", required: false)
@@ -169,7 +194,8 @@
     @{
         var controller = ViewContext.RouteData.Values["controller"]?.ToString().ToLower();
         var action = ViewContext.RouteData.Values["action"]?.ToString().ToLower();
-        bool showSidebar = controller != "event";
+        // Check if the current page is 'Event' or a page where sidebar should be hidden
+        bool showSidebar = (controller != "event");
         var bodyClass = showSidebar ? "" : "no-sidebar";
     }
 
@@ -190,7 +216,7 @@
                 <div class="menu-section">
                     <div class="menu-title">Participants Management</div>
 
-                    <a class="menu-itemlocal @(controller == "participant" && action == "create" ? "active" : "")"
+                    <a class="menu-itemlocal @(controller == "participant" && action == "index" ? "active" : "")"
                        href="@Url.Action("Index", "Participant")">
                         <i class="fa-solid fa-user-plus menu-icon"></i>
                         <span>Add Participant</span>
@@ -200,6 +226,11 @@
                        href="@Url.Action("Index", "AccessPoint")">
                         <i class="fa-solid fa-door-open menu-icon"></i>
                         <span>Access Points</span>
+                    </a>
+                    <a class="menu-itemlocal @(controller == "ticketaccesspoint" ? "active" : "")"
+                       href="@Url.Action("Index", "TicketAccessPoint")">
+                        <i class="fa-solid fa-door-open menu-icon"></i>
+                        <span>Assign Access Point</span>
                     </a>
                 </div>
 
@@ -220,10 +251,20 @@
         </main>
     </div>
 
-    <!-- Scripts -->
+    <!-- Scripts (MUST BE IN THIS ORDER) -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.5/jquery.validate.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables JS (MUST come after jQuery) -->
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.colVis.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.print.min.js"></script>
+
     @RenderSection("Scripts", required: false)
+
 </body>
 </html>
