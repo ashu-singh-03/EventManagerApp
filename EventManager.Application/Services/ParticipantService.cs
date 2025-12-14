@@ -38,7 +38,8 @@ namespace EventManager.Application.Services
                 Phone = p.Phone,
                 Company = p.Company,
                 Department = p.Department,
-                Notes = p.Notes
+                Notes = p.Notes,
+                participants_code= p.participants_code,
             }).ToList();
 
         }
