@@ -41,7 +41,7 @@ namespace EventManager.WebUI.Controllers
 
         // POST: /TicketParticipants/Save
         [HttpPost]
-        public async Task<IActionResult> Save([FromBody] SaveParticipantsDto dto)
+        public async Task<IActionResult> Save([FromForm] SaveParticipantsDto dto)
         {
             if (dto == null || dto.TicketTypeId <= 0)
                 return BadRequest(new { message = "Invalid request data" });

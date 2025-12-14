@@ -5,12 +5,34 @@
 }
 
 <div class="container-fluid py-4">
+    <div class="container-fluid py-4">
+        <!-- Elegant Back Button in Card Header -->
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body p-3">
+                <div class="d-flex align-items-center">
+                    <a href="/TicketAccessPoint/Index"
+                       class="btn btn-outline-warning d-flex align-items-center me-3">
+                        <i class="fas fa-arrow-left me-2"></i>
+                        Back
+                    </a>
+                    <div class="vr me-3"></div>
+                    <div>
+                        <h5 class="mb-0 text-dark">
+                            <i class="fas fa-users text-warning me-2"></i>
+                            Participants Management
+                        </h5>
+                        <small class="text-muted">Manage participant assignments for this event</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- End Back Button -->
     <div class="row g-3 mb-4">
         <div class="col-md-4">
             <div class="card border-0 shadow-sm h-100 bg-white">
                 <div class="card-body p-3 d-flex align-items-center">
                     <div class="text-center me-3">
-                        <i class="fas fa-users fa-2x text-primary"></i>
+                        <i class="fas fa-users fa-2x text-warning"></i> <!-- Changed from text-primary to text-warning -->
                     </div>
                     <div>
                         <p class="text-muted small fw-bold mb-0">Total Participants</p>
@@ -52,13 +74,14 @@
             <div class="row align-items-center">
                 <div class="col-lg-6 mb-2 mb-lg-0">
                     <h5 class="mb-0 text-dark">
-                        <i class="fas fa-users text-primary me-2"></i>
+                        <i class="fas fa-users text-warning me-2"></i> <!-- Changed from text-primary to text-warning -->
                         Participants List
                     </h5>
                 </div>
                 <div class="col-lg-6">
                     <div class="d-flex flex-wrap justify-content-lg-end gap-2">
-                        <button type="button" class="btn btn-outline-primary btn-sm" id="selectAllBtn">
+                        <button type="button" class="btn btn-outline-warning btn-sm" id="selectAllBtn">
+                            <!-- Changed from btn-outline-primary to btn-outline-warning -->
                             <i class="fas fa-check-double me-1"></i>Select All Visible
                         </button>
                         <button type="button" class="btn btn-outline-secondary btn-sm" id="clearAllBtn">
@@ -73,14 +96,15 @@
             <div id="messageContainer" class="m-3" style="display: none;"></div>
 
             <div id="loading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
+                <div class="spinner-border text-warning" role="status">
+                    <!-- Changed from text-primary to text-warning -->
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p class="text-muted mt-2">Loading participants...</p>
             </div>
 
-            <div id="assignmentForm" style="display: none;">
-                <input type="hidden" id="ticketTypeId" value="@Model" />
+            <form id="assignmentForm" method="post" action="/TicketParticipants/Save" style="display: none;">
+                <input type="hidden" name="TicketTypeId" value="@Model" />
 
                 <div class="table-responsive p-3">
                     <table class="table table-hover table-striped mb-0" id="participantsTable" style="width:100%">
@@ -89,11 +113,11 @@
                                 <th width="5%" class="text-center">
                                     <!-- Checkbox -->
                                 </th>
-                                <th width="10%">ID</th>
                                 <th width="25%">Name</th>
                                 <th width="25%">Email</th>
-                                <th width="20%">Phone</th>
-                                <th width="15%">Status</th>
+                                <th width="25%">Phone</th>
+                                <th width="10%">Company</th>
+                                <th width="10%">Status</th>
                             </tr>
                         </thead>
                         <tbody id="participantsBody">
@@ -110,25 +134,26 @@
 
                 <div class="p-3 border-top bg-white sticky-bottom shadow-sm">
                     <div class="d-flex justify-content-end">
-                        <button type="button" class="btn btn-primary px-4" id="saveBtn">
+                        <button type="submit" class="btn btn-warning px-4">
+                            <!-- Changed from btn-primary to btn-warning -->
                             <i class="fas fa-save me-2"></i>Save Changes
                         </button>
-                        <a href="javascript:history.back()" class="btn btn-outline-secondary ms-2">
+                        <a href="/TicketParticipants" class="btn btn-outline-secondary ms-2">
                             Cancel
                         </a>
                     </div>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
-
+</div>
 @section Scripts {
     <script>
         $(document).ready(function() {
             const ticketTypeId = @Model;
             let allParticipants = [];
-            let dataTableInstance = null;
+            let dataTableInstance;
 
             // --- Utility Functions ---
             function getParticipantIcon(name) {
@@ -139,11 +164,12 @@
                 return 'fa-user';
             }
 
+            // --- SHOW ALERT FUNCTION (Same as Access Points) ---
             function showAlert(type, message) {
                 let alertClass, iconClass, title;
 
                 if (type === 'success') {
-                    alertClass = 'alert-primary border-start border-4 border-success';
+                    alertClass = 'alert-warning border-start border-4 border-success';
                     iconClass = 'fas fa-check-circle text-success me-2';
                     title = 'Success!';
                 } else if (type === 'warning') {
@@ -171,14 +197,16 @@
                 `;
 
                 $('#messageContainer').html(html).show();
+                // Auto-close success/info alerts
                 if (type === 'success' || type === 'info') {
                     setTimeout(() => { $('.alert').alert('close'); }, 5000);
                 }
             }
+            // --- END SHOW ALERT ---
 
             function updateStats() {
                 const total = allParticipants.length;
-                const assigned = allParticipants.filter(p => p.IsAssigned).length;
+                const assigned = allParticipants.filter(p => p.isChecked).length;
                 const unassigned = total - assigned;
 
                 $('#totalCount').text(total);
@@ -187,99 +215,116 @@
             }
 
             function initializeDataTables(data) {
-                // Clear existing DataTable if it exists
-                if ($.fn.DataTable.isDataTable('#participantsTable')) {
-                    dataTableInstance.clear().destroy();
-                    $('#participantsTable').empty();
+                if (dataTableInstance) {
+                    dataTableInstance.destroy();
+                    $('#participantsBody').empty();
                 }
 
-                // Clear the table body
-                $('#participantsTable tbody').empty();
+                const tableData = data.map(p => [
+                    p.participantId,
+                    p.fullName,
+                    p.email,
+                    p.phone,
+                    p.company,
+                    p.isChecked
+                ]);
 
-                // Populate table with data
-                $.each(data, function(index, participant) {
-                    const fullName = participant.FirstName + ' ' + participant.LastName;
-                    const isAssigned = participant.IsAssigned || false;
-                    const statusClass = isAssigned ? 'bg-success' : 'bg-secondary';
-                    const statusText = isAssigned ? 'Assigned' : 'Unassigned';
-                    const icon = getParticipantIcon(fullName);
-
-                    const row = `
-                        <tr>
-                            <td class="text-center">
-                                <div class="form-check">
-                                    <input class="form-check-input participant-checkbox"
-                                        type="checkbox"
-                                        value="${participant.ParticipantId}"
-                                        ${isAssigned ? 'checked' : ''}
-                                        data-name="${fullName}">
-                                </div>
-                            </td>
-                            <td class="text-center">
-                                <span class="badge bg-primary">#${participant.ParticipantId}</span>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas ${icon} fa-fw text-primary me-2"></i>
-                                    <div>${fullName}</div>
-                                </div>
-                            </td>
-                            <td>
-                                ${participant.Email ? `<a href="mailto:${participant.Email}" class="text-decoration-none">${participant.Email}</a>` : '<span class="text-muted">N/A</span>'}
-                            </td>
-                            <td>
-                                ${participant.Phone ? `<a href="tel:${participant.Phone}" class="text-decoration-none">${participant.Phone}</a>` : '<span class="text-muted">N/A</span>'}
-                            </td>
-                            <td class="text-center">
-                                <span class="badge ${statusClass}">${statusText}</span>
-                            </td>
-                        </tr>
-                    `;
-
-                    $('#participantsTable tbody').append(row);
-                });
-
-                // Initialize DataTable
                 dataTableInstance = $('#participantsTable').DataTable({
-                    lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                    data: tableData,
+                    columns: [
+                        {
+                            data: 0, // Checkbox column
+                            render: function(data, type, row) {
+                                const isChecked = row[5];
+                                return `
+                                    <div class="form-check text-center">
+                                        <input class="form-check-input participant-checkbox"
+                                            type="checkbox"
+                                            value="${data}"
+                                            ${isChecked ? 'checked' : ''}
+                                            data-name="${row[1]}"
+                                            style="margin: 0 auto;">
+                                    </div>
+                                `;
+                            },
+                            orderable: false,
+                            className: 'ps-3'
+                        },
+                        {
+                            data: 1, // Name column
+                            render: function(data, type, row) {
+                                const icon = getParticipantIcon(data);
+                                return `
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas ${icon} fa-fw fs-5 text-warning me-3"></i> <!-- Changed to text-warning -->
+                                        <div class="fw-medium">${data}</div>
+                                    </div>
+                                `;
+                            }
+                        },
+                        {
+                            data: 2, // Email column
+                            render: function(data) {
+                                if (data) {
+                                    return `<a href="mailto:${data}" class="text-decoration-none">${data}</a>`;
+                                }
+                                return '<span class="text-muted">N/A</span>';
+                            }
+                        },
+                        {
+                            data: 3, // Phone column
+                            render: function(data) {
+                                if (data) {
+                                    return `<a href="tel:${data}" class="text-decoration-none">${data}</a>`;
+                                }
+                                return '<span class="text-muted">N/A</span>';
+                            }
+                        },
+                        {
+                            data: 4, // Company column
+                            render: function(data) {
+                                return data || '<span class="text-muted">N/A</span>';
+                            }
+                        },
+                        {
+                            data: 5, // Status column
+                            render: function(data) {
+                                const statusText = data ? 'Assigned' : 'Unassigned';
+                                const statusClass = data ? 'bg-success' : 'bg-secondary';
+                                return `<span class="badge ${statusClass}">${statusText}</span>`;
+                            }
+                        }
+                    ],
+                    lengthMenu: [ [10, 25, 50, -1], [10, 25, 50, "All"] ],
                     pageLength: 25,
-                    dom: '<"top"<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>>rt<"bottom"<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>><"clear">',
-                    responsive: true,
-                    language: {
-                        emptyTable: "No participants found",
-                        zeroRecords: "No matching participants found"
-                    },
-                    columnDefs: [
-                        { targets: 0, width: '5%', orderable: false },
-                        { targets: 1, width: '10%' },
-                        { targets: 5, width: '15%' }
-                    ]
+                    dom: 'lfrtip',
+                    responsive: true
                 });
 
-                // Attach checkbox change events
-                $('#participantsTable tbody').off('change', '.participant-checkbox').on('change', '.participant-checkbox', function() {
-                    const participantId = parseInt($(this).val());
-                    const isChecked = $(this).is(':checked');
-
-                    // Update the participant in allParticipants array
-                    const participant = allParticipants.find(p => p.ParticipantId === participantId);
-                    if (participant) {
-                        participant.IsAssigned = isChecked;
-                    }
-
-                    // Update the status badge
-                    const row = $(this).closest('tr');
-                    const badge = row.find('td:eq(5) .badge');
-                    if (isChecked) {
-                        badge.removeClass('bg-secondary').addClass('bg-success').text('Assigned');
-                    } else {
-                        badge.removeClass('bg-success').addClass('bg-secondary').text('Unassigned');
-                    }
-
+                // Event delegation for checkbox changes
+                $('#participantsBody').off('change', '.participant-checkbox').on('change', '.participant-checkbox', function() {
+                    updateGlobalState($(this).val(), $(this).is(':checked'));
                     updateStats();
                 });
+            }
 
-                updateStats();
+            function updateGlobalState(id, isChecked) {
+                const participant = allParticipants.find(item => item.participantId.toString() === id.toString());
+                if (participant) {
+                    participant.isChecked = isChecked;
+                }
+
+                if (dataTableInstance) {
+                    dataTableInstance.rows().every(function() {
+                        const rowData = this.data();
+                        if (rowData[0].toString() === id.toString()) {
+                            rowData[5] = isChecked;
+                            this.data(rowData);
+                            this.invalidate();
+                        }
+                    });
+                    dataTableInstance.draw(false);
+                }
             }
 
             function loadParticipants() {
@@ -288,27 +333,27 @@
                 $('#emptyState').hide();
 
                 $.ajax({
-                    url: '@Url.Action("LoadParticipants", "TicketParticipants")',
+                    url: '/TicketParticipants/LoadParticipants?ticketTypeId=' + ticketTypeId,
                     type: 'GET',
-                    data: { ticketTypeId: ticketTypeId },
                     success: function(response) {
                         $('#loading').hide();
-
-                        console.log('Response received:', response);
-
                         allParticipants = response || [];
 
                         if (allParticipants.length > 0) {
-                            console.log('First participant data:', allParticipants[0]);
-
-                            // Ensure all properties are set
-                            allParticipants.forEach(p => {
-                                p.ParticipantId = p.ParticipantId || 0;
-                                p.FirstName = p.FirstName || '';
-                                p.LastName = p.LastName || '';
-                                p.Email = p.Email || '';
-                                p.Phone = p.Phone || '';
-                                p.IsAssigned = p.IsAssigned || false;
+                            // Process participants to match expected format
+                            allParticipants = allParticipants.map(p => {
+                                const processed = {
+                                    participantId: p.participantId || p.ParticipantId || 0,
+                                    fullName: (p.firstName || p.FirstName || '') + ' ' + (p.lastName || p.LastName || ''),
+                                    email: p.email || p.Email || '',
+                                    phone: p.phone || p.Phone || '',
+                                    company: p.company || p.Company || '',
+                                    department: p.department || p.Department || '',
+                                    isChecked: p.isAssigned || p.IsAssigned || false
+                                };
+                                // Trim fullName
+                                processed.fullName = processed.fullName.trim();
+                                return processed;
                             });
 
                             initializeDataTables(allParticipants);
@@ -316,12 +361,12 @@
                         } else {
                             $('#emptyState').show();
                         }
+                        updateStats();
                     },
                     error: function(xhr, status, error) {
                         $('#loading').hide();
                         showAlert('danger', 'Error loading participants. Please try again.');
-                        console.error('AJAX Error:', error);
-                        console.error('Response:', xhr.responseText);
+                        console.error('Error:', error);
                     }
                 });
             }
@@ -331,29 +376,40 @@
 
             // Select All Visible
             $('#selectAllBtn').on('click', function() {
-                $('#participantsTable tbody .participant-checkbox:visible').each(function() {
-                    if (!$(this).prop('checked')) {
-                        $(this).prop('checked', true).trigger('change');
-                    }
-                });
+                if (dataTableInstance) {
+                    dataTableInstance.rows({ search: 'applied', page: 'current' }).nodes().to$().find('.participant-checkbox').each(function() {
+                        const id = $(this).val();
+                        $(this).prop('checked', true);
+                        updateGlobalState(id, true);
+                    });
+                    updateStats();
+                }
             });
 
             // Clear All Visible
             $('#clearAllBtn').on('click', function() {
-                $('#participantsTable tbody .participant-checkbox:visible').each(function() {
-                    if ($(this).prop('checked')) {
-                        $(this).prop('checked', false).trigger('change');
-                    }
-                });
+                if (dataTableInstance) {
+                    dataTableInstance.rows({ search: 'applied', page: 'current' }).nodes().to$().find('.participant-checkbox').each(function() {
+                        const id = $(this).val();
+                        $(this).prop('checked', false);
+                        updateGlobalState(id, false);
+                    });
+                    updateStats();
+                }
             });
 
-            // Save button click
-            $('#saveBtn').on('click', function() {
-                const submitBtn = $(this);
-                const checkedParticipants = allParticipants.filter(p => p.IsAssigned);
-                const selectedCount = checkedParticipants.length;
-                const checkedIds = checkedParticipants.map(p => p.ParticipantId);
+            // Form Submission
+            $('#assignmentForm').on('submit', function(e) {
+                e.preventDefault();
 
+                const form = $(this);
+                const submitBtn = form.find('button[type="submit"]');
+
+                const checkedParticipants = allParticipants.filter(p => p.isChecked);
+                const selectedCount = checkedParticipants.length;
+                const checkedIds = checkedParticipants.map(p => p.participantId);
+
+                // Confirmation for clearing all
                 if (selectedCount === 0 && !confirm('No participants selected. This will remove all assignments. Continue?')) {
                     return;
                 }
@@ -363,37 +419,30 @@
                     ParticipantIds: checkedIds
                 };
 
-                console.log('Saving data:', postData);
-
                 submitBtn.prop('disabled', true);
                 submitBtn.html('<span class="spinner-border spinner-border-sm me-2"></span>Saving...');
 
                 $.ajax({
-                    url: '@Url.Action("Save", "TicketParticipants")',
+                    url: form.attr('action'),
                     type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(postData),
+                    data: postData,
                     success: function(response) {
-                        console.log('Save response:', response);
-
                         if (response && response.success) {
                             let alertMessage;
+
                             if (selectedCount === 0) {
                                 alertMessage = 'Successfully cleared all participant assignments.';
                                 showAlert('warning', alertMessage);
                             } else {
-                                alertMessage = `Successfully assigned ${selectedCount} participant(s) to this ticket type.`;
+                                alertMessage = `Successfully saved ${selectedCount} participant(s) assigned to this ticket type.`;
                                 showAlert('success', alertMessage);
                             }
-                            // Refresh data
                             loadParticipants();
                         } else {
                             showAlert('danger', 'Save failed: Server returned an error.');
                         }
                     },
                     error: function(xhr, status, error) {
-                        console.error('Save error:', error);
-
                         let errorMessage = 'Error saving assignments. Please try again.';
                         if (xhr.responseJSON && xhr.responseJSON.message) {
                             errorMessage = 'Error saving assignments: ' + xhr.responseJSON.message;
