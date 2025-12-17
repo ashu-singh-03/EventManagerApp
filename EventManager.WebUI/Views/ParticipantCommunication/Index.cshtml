@@ -1,0 +1,232 @@
+﻿@{
+    ViewData["Title"] = "Participants Communication";
+    Layout = "/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container-fluid py-4">
+    <!-- Header Card -->
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body p-3">
+            <div class="d-flex align-items-center">
+                <a href="/Event/Index" class="btn btn-outline-warning d-flex align-items-center me-3">
+                    <i class="fas fa-arrow-left me-2"></i> Back
+                </a>
+                <div class="vr me-3"></div>
+                <div>
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-users text-warning me-2"></i>
+                        Participants Communication
+                    </h5>
+                    <small class="text-muted">View all participants with their ticket types and access points</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Table Card -->
+    <div class="card border-0 shadow-lg">
+        <div class="card-header bg-white border-bottom py-3">
+            <div class="row align-items-center">
+                <div class="col-lg-12">
+                    <h5 class="mb-0 text-dark">
+                        <i class="fas fa-list-check text-warning me-2"></i>
+                        Participants List with Assignments
+                    </h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0" id="participantsTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Participant Code</th>
+                            <th>Participant</th>
+                            <th>Contact</th>
+                            <th>Company</th>
+                            <th>Ticket Type</th>
+                            <th>Access Points</th>
+                            <th class="text-center">Actions</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let participantsTable;
+
+            // Initialize DataTable
+            function initializeDataTable() {
+                participantsTable = $('#participantsTable').DataTable({
+                    ajax: {
+                        url: '/ParticipantCommunication/LoadParticipantsWithAssignments',
+                        type: 'GET',
+                        dataSrc: function(response) {
+                            return response.success ? response.data : [];
+                        }
+                    },
+                    columns: [
+                        {
+                            data: 'participantCode',
+                            className: 'text-center',
+                            render: function(data) {
+                                return data ?
+                                    `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">
+                                        <i class="fas fa-id-badge me-2"></i>${data}
+                                    </span>` :
+                                    '<span class="text-muted">N/A</span>';
+                            }
+                        },
+                        {
+                            data: null,
+                            render: function(data) {
+                                return `
+                                    <div class="d-flex align-items-center">
+                                        <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                            <i class="fas fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">${data.fullName}</div>
+                                            <small class="text-muted">${data.email}</small>
+                                        </div>
+                                    </div>
+                                `;
+                            }
+                        },
+                        {
+                            data: 'phone',
+                            render: function(data) {
+                                return data || '<span class="text-muted">N/A</span>';
+                            }
+                        },
+                        {
+                            data: 'company',
+                            render: function(data) {
+                                return data ?
+                                    `<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">
+                                        <i class="fas fa-building me-1"></i>${data}
+                                    </span>` :
+                                    '<span class="text-muted">N/A</span>';
+                            }
+                        },
+                        {
+                            data: 'ticketTypes',
+                            render: function(data) {
+                                return data && data !== 'Not Assigned' ? `
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-ticket-alt fa-fw text-warning me-2"></i>
+                                        <div>
+                                            <div class="fw-medium small">${data}</div>
+                                        </div>
+                                    </div>
+                                ` : `
+                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                        <i class="fas fa-times me-1"></i>Not Assigned
+                                    </span>
+                                `;
+                            }
+                        },
+                        {
+                            data: 'accessPoints',
+                            render: function(data) {
+                                if (!data || data === 'No Access') {
+                                    return `
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
+                                            <i class="fas fa-times me-1"></i>No Access
+                                        </span>
+                                    `;
+                                }
+
+                                const points = data.split(', ');
+                                return points.map(point => `
+                                    <span class="badge bg-info bg-opacity-10 text-info border border-info me-1 mb-1">
+                                        <i class="fas fa-door-open me-1"></i>${point}
+                                    </span>
+                                `).join('');
+                            }
+                        },
+                        {
+                            data: null,
+                            className: 'text-center',
+                            orderable: false,
+                            render: function(data) {
+                                return `
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-warning send-email-btn"
+                                                data-id="${data.participantId}"
+                                                data-email="${data.email}"
+                                                data-name="${data.fullName}">
+                                            <i class="fas fa-envelope"></i>
+                                        </button>
+                                    </div>
+                                `;
+                            }
+                        }
+                    ],
+                    language: {
+                        emptyTable: "No participants found",
+                        zeroRecords: "No matching participants found"
+                    },
+                    responsive: true,
+                    pageLength: 10,
+                    lengthMenu: [5, 10, 25, 50],
+                    order: [[0, 'asc']]
+                });
+            }
+
+            initializeDataTable();
+
+            // Handle email button clicks
+            $(document).on('click', '.send-email-btn', function(e) {
+                e.preventDefault();
+
+                const button = $(this);
+                const participantId = button.data('id');
+                const participantEmail = button.data('email');
+                const participantName = button.data('name');
+
+                // Show loading
+                const originalHtml = button.html();
+                button.html('<i class="fas fa-spinner fa-spin"></i>');
+                button.prop('disabled', true);
+
+                // Send request
+                $.ajax({
+                    url: '/ParticipantCommunication/SendEmailToParticipant',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        participantId: participantId
+                    }),
+                    success: function(response) {
+                        if (response.success) {
+                            // Show success message
+                            alert('Email sent successfully to ' + participantName);
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to send email');
+                    },
+                    complete: function() {
+                        // Restore button
+                        button.html(originalHtml);
+                        button.prop('disabled', false);
+                    }
+                });
+            });
+
+            // Refresh table every 60 seconds
+            setInterval(() => {
+                participantsTable.ajax.reload(null, false);
+            }, 60000);
+        });
+    </script>
+}

@@ -16,6 +16,9 @@ namespace EventManager.Application
             services.AddScoped<ITicketAccessPointService, TicketAccessPointService>();
             services.AddScoped<IEventClaimService, EventClaimService>();
             services.AddScoped<ITicketParticipantsService, TicketParticipantsService>();
+            services.AddScoped<IParticipantCommunicationService, ParticipantCommunicationService>();
+
+            services.AddHttpClient<IMailgunService, MailgunService>();
             services.AddScoped<ExcelHelper>();
 
             return services;

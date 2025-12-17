@@ -13,7 +13,10 @@
         public Dictionary<string, string> CustomVariables { get; set; }
         public string Tag { get; set; }
     }
-
+    public class EmailRequestDto
+    {
+        public int ParticipantId { get; set; }
+    }
     public class EmailAttachment
     {
         public string FileName { get; set; }

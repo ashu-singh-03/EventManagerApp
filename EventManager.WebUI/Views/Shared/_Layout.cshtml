@@ -14,7 +14,6 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.dataTables.min.css" />
     <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" />
 
-    <!-- Custom CSS -->
     <link rel="stylesheet" href="~/css/site.css" />
     <link rel="stylesheet" href="~/css/event.css" />
 
@@ -351,6 +350,11 @@
                        href="@Url.Action("Index", "TicketAccessPoint")">
                         <i class="fa-solid fa-door-open menu-icon"></i>
                         <span class="menu-text">Assign Access Point</span>
+                    </a>
+                    <a class="menu-itemlocal @(controller == "Participantcommunication" ? "active" : "")"
+                       href="@Url.Action("Index", "ParticipantCommunication")">
+                        <i class="fa-solid fa-door-open menu-icon"></i>
+                        <span class="menu-text">Participant Communication</span>
                     </a>
                 </div>
 

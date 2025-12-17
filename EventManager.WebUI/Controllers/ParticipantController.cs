@@ -64,13 +64,24 @@ namespace EventManager.WebUI.Controllers
                 return BadRequest(new { error = "EventId must be greater than 0" });
 
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+            {
+                // Extract validation errors and return them in a consistent format
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage)
+                    .ToList();
+
+                return BadRequest(new
+                {
+                    message = "Validation failed",
+                    errors = errors
+                });
+            }
 
             await _service.SaveParticipantAsync(dto);
 
             return Ok(new { message = "Participant saved successfully" });
         }
-
 
         // DELETE
         [HttpPost]
