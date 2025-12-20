@@ -1,5 +1,6 @@
 ﻿using EventManager.Application.DTOs;
 using EventManager.Application.Interfaces;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -20,12 +21,14 @@ namespace EventManager.Application.Services
 {
     public class MailgunService : IMailgunService
     {
+        private readonly IConfiguration _configuration;
         public readonly MailgunSettings _settings;
         private readonly HttpClient _httpClient;
         private readonly ILogger<MailgunService> _logger;
 
-        public MailgunService(IOptions<MailgunSettings> settings, HttpClient httpClient, ILogger<MailgunService> logger)
+        public MailgunService(IConfiguration configuration, IOptions<MailgunSettings> settings, HttpClient httpClient, ILogger<MailgunService> logger)
         {
+            _configuration = configuration;
             _settings = settings.Value;
             _httpClient = httpClient;
             _logger = logger;
@@ -40,13 +43,27 @@ namespace EventManager.Application.Services
         {
             try
             {
+                // Get Mailgun credentials from configuration
+                var apiKey = _configuration["Mailgun:ApiKey"];
+                var domain = _configuration["Mailgun:Domain"];
+
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    throw new InvalidOperationException("Mailgun API key is not configured.");
+                }
+
+                if (string.IsNullOrEmpty(domain))
+                {
+                    throw new InvalidOperationException("Mailgun domain is not configured.");
+                }
+
                 var options = new RestClientOptions("https://api.mailgun.net")
                 {
-                    Authenticator = new HttpBasicAuthenticator("api", "b8494c5f494ba7375db96e6f6f45adbc-04af4ed8-0d1ffb35")
+                    Authenticator = new HttpBasicAuthenticator("api", apiKey)
                 };
 
                 var client = new RestClient(options);
-                var request = new RestRequest("/v3/sandbox9436a5ace7524a81a718b2e3dd399978.mailgun.org/messages", Method.Post);
+                var request = new RestRequest($"/v3/{domain}/messages", Method.Post);
                 request.AlwaysMultipartFormData = true;
 
                 // Construct From address with name and email
@@ -214,7 +231,6 @@ namespace EventManager.Application.Services
                 };
             }
         }
-
         // Helper method to strip HTML tags for text version (optional)
         private string StripHtmlTags(string html)
         {
