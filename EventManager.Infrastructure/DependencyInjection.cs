@@ -20,6 +20,8 @@ namespace EventManager.Infrastructure
             services.AddScoped<ITicketAccessPointRepository, TicketAccessPointRepository>();
             services.AddScoped<ITicketParticipantsRepository, TicketParticipantsRepository>();
             services.AddScoped<IParticipantCommunicationRepository, ParticipantCommunicationRepository>();
+            services.AddScoped<CommonRepository>();
+
             return services;
         }
     }

@@ -1,0 +1,44 @@
+﻿@model List<EventManager.WebUI.Controllers.ScanLogViewModel>
+
+<div class="table-responsive">
+    <table id="scanLogTable" class="table table-hover table-sm" style="width:100%">
+        <thead>
+            <tr>
+                <th>Ticket ID</th>
+                <th>Holder Name</th>
+                <th>Scan Time</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null && Model.Any())
+            {
+                @foreach (var scan in Model)
+                {
+                    <tr>
+                        <td><strong>@scan.TicketId</strong></td>
+                        <td>@scan.HolderName</td>
+                        <td><small class="text-muted">@scan.ScanTime</small></td>
+                        <td>
+                            @if (scan.Status == "valid")
+                            {
+                                <span class="badge bg-success">✓ Valid</span>
+                            }
+                            else if (scan.Status == "invalid")
+                            {
+                                <span class="badge bg-danger">✗ Invalid</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-warning">↻ Duplicate</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+            else
+            {
+            }
+        </tbody>
+    </table>
+</div>
