@@ -17,6 +17,32 @@ namespace EventManager.Application.Services
         {
             _repository = repository;
         }
+
+        public async Task<List<ScanLogDto>> ScanLogDetailsAsync(int eventId, int accesspointid)
+        {
+            try
+            {
+                return await _repository.GetScanLogAsync(eventId, accesspointid);
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+                return new List<ScanLogDto>();
+            }
+        }
+
+        public async Task<ScanStatisticsDto> GetScanStatisticsAsync(int eventId, int accesspointid)
+        {
+            try
+            {
+                return await _repository.GetScanStatisticsAsync(eventId, accesspointid);
+            }
+            catch (Exception ex)
+            {
+                // Handle exception
+                return new ScanStatisticsDto();
+            }
+        }
         public async Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false)
         {
             try

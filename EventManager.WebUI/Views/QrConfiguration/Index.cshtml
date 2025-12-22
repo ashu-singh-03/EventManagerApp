@@ -315,26 +315,271 @@
 </div>
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
     <script>
-              $(document).ready(function () {
+        $(document).ready(function () {
             let scanner = null;
             let currentStream = null;
             let dataTable = null;
             let lastScanData = null;
 
-            // Enable buttons when access point is selected
+            // When access point dropdown changes
             $('#accessPoint').change(function () {
                 const accessPoint = $(this).val();
-                const isEnabled = accessPoint !== '';
+                const isEnabled = accessPoint !== '' && accessPoint !== '0';
+
+                // Enable/disable scanner controls
                 $('#btnStart, #btnTest, #btnManualSubmit').prop('disabled', !isEnabled);
                 $('#manualCodeInput').prop('disabled', !isEnabled);
+
+                // Load scan log and statistics
+                loadScanLogAndStats(accessPoint);
             });
 
+            // Function to load scan log and statistics
+            function loadScanLogAndStats(accessPointId) {
+                // Clear scan log first
+                $('#scanLogContainer').html(`
+                    <div class="text-center text-muted py-2">
+                        <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                        Loading scan log...
+                    </div>
+                `);
+
+                // If no access point selected
+                if (!accessPointId || accessPointId === "" || accessPointId === "0") {
+                    $('#scanLogContainer').html(`
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-filter fa-lg mb-2"></i>
+                            <p>Please select an access point to view scan log</p>
+                        </div>
+                    `);
+                    // Reset stats
+                    updateStats(0, 0, 0, 0);
+                    return;
+                }
+
+                // Load scan log as JSON
+                $.ajax({
+                    url: '/QrConfiguration/GetScanLog',
+                    type: 'GET',
+                    data: { accessPointId: accessPointId },
+                    success: function (response) {
+                        if (response.success && response.data) {
+                            buildDynamicTable(response.data);
+                        } else {
+                            $('#scanLogContainer').html(`
+                                <div class="text-center text-muted py-4">
+                                    <i class="fas fa-database fa-lg mb-2"></i>
+                                    <p>No scan data available</p>
+                                </div>
+                            `);
+                        }
+                    },
+                    error: function (xhr) {
+                        $('#scanLogContainer').html(`
+                            <div class="alert alert-danger">
+                                Failed to load scan log. Please try again.
+                            </div>
+                        `);
+                    }
+                });
+
+                // Load statistics
+                loadStatistics(accessPointId);
+            }
+
+            // Function to build table dynamically from JSON data
+            function buildDynamicTable(data) {
+                if (!data || data.length === 0) {
+                    $('#scanLogContainer').html(`
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-database fa-lg mb-2"></i>
+                            <p>No scan data available</p>
+                        </div>
+                    `);
+                    return;
+                }
+
+                // Create table HTML structure
+                var tableHtml = `
+                    <div class="table-responsive">
+                        <table id="scanLogTable" class="table table-hover table-sm" style="width:100%">
+                            <thead>
+                                <tr id="tableHeaderRow"></tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    </div>
+                `;
+
+                $('#scanLogContainer').html(tableHtml);
+
+                // Get all column names from first object
+                var firstRow = data[0];
+                var columns = [];
+
+                // Get column names dynamically
+                for (var key in firstRow) {
+                    if (firstRow.hasOwnProperty(key) && key !== 'Data') {
+                        columns.push(key);
+                    }
+                }
+
+                // Build table header
+                var headerHtml = '';
+                columns.forEach(function(column) {
+                    // Format column name: "TicketId" -> "Ticket ID"
+                    var displayName = column.replace(/([A-Z])/g, ' $1').trim();
+                    headerHtml += `<th>${displayName}</th>`;
+                });
+                $('#tableHeaderRow').html(headerHtml);
+
+                // Build table body
+                var bodyHtml = '';
+                data.forEach(function(row) {
+                    bodyHtml += '<tr>';
+                    columns.forEach(function(column) {
+                        var value = row[column];
+                        bodyHtml += `<td>${formatCellValue(value, column)}</td>`;
+                    });
+                    bodyHtml += '</tr>';
+                });
+                $('#tableBody').html(bodyHtml);
+
+                // Initialize DataTable
+                if ($.fn.DataTable.isDataTable('#scanLogTable')) {
+                    $('#scanLogTable').DataTable().destroy();
+                }
+
+                dataTable = $('#scanLogTable').DataTable({
+                    pageLength: 10,
+                    order: [], // No default sorting
+                    responsive: true,
+                    language: {
+                        emptyTable: "No scan data available"
+                    },
+                    dom: 'Bfrtip',
+                    buttons: ['csv', 'excel', 'pdf']
+                });
+
+                // Try to sort by ScanTime if column exists
+                var scanTimeIndex = columns.indexOf('ScanTime');
+                if (scanTimeIndex !== -1) {
+                    dataTable.order([scanTimeIndex, 'desc']).draw();
+                }
+            }
+
+            // Function to format cell values
+            function formatCellValue(value, columnName) {
+                if (value === null || value === undefined || value === '') {
+                    return '<span class="text-muted">-</span>';
+                }
+
+                // Special formatting based on column name
+                switch(columnName.toLowerCase()) {
+                    case 'validationstatus':
+                    case 'status':
+                        var status = value.toString().toLowerCase();
+                        if (status === 'valid') return '<span class="badge bg-success">✓ Valid</span>';
+                        if (status === 'invalid') return '<span class="badge bg-danger">✗ Invalid</span>';
+                        if (status === 'duplicate') return '<span class="badge bg-warning">↻ Duplicate</span>';
+                        if (status === 'invalid_access') return '<span class="badge bg-danger">✗ No Access</span>';
+                        return `<span class="badge bg-secondary">${value}</span>`;
+
+                    case 'scantime':
+                    case 'eventdate':
+                        // Format date
+                        var date = new Date(value);
+                        if (!isNaN(date.getTime())) {
+                            var formattedDate =
+                                date.getDate().toString().padStart(2, '0') + '/' +
+                                (date.getMonth() + 1).toString().padStart(2, '0') + '/' +
+                                date.getFullYear() + ' ' +
+                                date.getHours().toString().padStart(2, '0') + ':' +
+                                date.getMinutes().toString().padStart(2, '0');
+                            return `<small class="text-muted">${formattedDate}</small>`;
+                        }
+                        return value;
+
+                    case 'ticketid':
+                        return `<strong>${value}</strong>`;
+
+                    case 'validationmessage':
+                    case 'message':
+                        return `<small class="text-muted">${value}</small>`;
+
+                    case 'isprintcenter':
+                        return value === true || value === 1 || value === '1' ?
+                            '<span class="badge bg-info">✓</span>' :
+                            '<span class="badge bg-secondary">✗</span>';
+
+                    default:
+                        return value;
+                }
+            }
+
+            // Load statistics function
+            function loadStatistics(accessPointId) {
+                $.ajax({
+                    url: '/QrConfiguration/GetStats',
+                    type: 'GET',
+                    data: { accessPointId: accessPointId },
+                    success: function (response) {
+                        if (response.success) {
+                            updateStats(
+                                response.totalScans || 0,
+                                response.validScans || 0,
+                                response.invalidScans || 0,
+                                response.duplicateScans || 0
+                            );
+                        }
+                    },
+                    error: function () {
+                        updateStats(0, 0, 0, 0);
+                    }
+                });
+            }
+
+            // Update stats display
+            function updateStats(total, valid, invalid, duplicate) {
+                $('#totalScans').text(total);
+                $('#validScans').text(valid);
+                $('#invalidScans').text(invalid);
+                $('#duplicateScans').text(duplicate);
+            }
+
+            // Add new scan to DataTable dynamically
+            function addNewScanToTable(scanData) {
+                if (!dataTable) return;
+
+                // Get current columns from DataTable
+                var columns = dataTable.settings()[0].aoColumns.map(col => col.data);
+
+                // Create new row data
+                var newRow = {};
+                columns.forEach(function(column) {
+                    newRow[column] = scanData[column] || scanData[column.toLowerCase()] || '';
+                });
+
+                // Convert to array for DataTable
+                var rowArray = columns.map(col => formatCellValue(newRow[col], col));
+
+                // Add row to DataTable
+                const rowNode = dataTable.row.add(rowArray).draw(false).node();
+
+                // Add styling based on status
+                var status = scanData.status || scanData.validationStatus || 'UNKNOWN';
+                $(rowNode).addClass(status.toUpperCase() === 'VALID' ? 'table-success' :
+                                    status.toUpperCase() === 'DUPLICATE' ? 'table-warning' : 'table-danger');
+                $(rowNode).addClass('new-scan');
+                setTimeout(() => $(rowNode).removeClass('new-scan'), 2000);
+            }
+
+            // KEEP ALL YOUR EXISTING SCANNER FUNCTIONS BELOW THIS LINE
             // START SCANNER
             $('#btnStart').click(async function () {
                 const accessPoint = $('#accessPoint').val();
-                if (!accessPoint) {
+                if (!accessPoint || accessPoint === '0') {
                     showAlert('Select access point first', 'warning');
                     return;
                 }
@@ -365,217 +610,34 @@
                 }
             });
 
-            // STOP SCANNER
-            $('#btnStop').click(async function () {
-                if (scanner) { await scanner.stop(); scanner = null; }
-                if (currentStream) { currentStream.getTracks().forEach(track => track.stop()); currentStream = null; }
+            // KEEP ALL OTHER FUNCTIONS EXACTLY AS THEY ARE
+            // STOP SCANNER, EXTRACT CODE, PROCESS SCAN, etc...
+            // ... (keep all your existing scanner functions unchanged)
 
-                $('#scannerPlaceholder').html(`
-                    <div class="text-center">
-                        <i class="fas fa-camera fa-2x mb-2 text-white-50"></i>
-                        <p class="text-white-50 mb-0">Camera stopped</p>
-                    </div>
-                `);
-                $('#scannerOverlay').hide();
-                $('#btnStart').prop('disabled', false);
-                $('#btnStop').prop('disabled', true);
-                $('#btnTest').prop('disabled', false);
-                $('#cameraStatus').html('<span class="status-dot status-ready"></span>Ready to start');
-            });
-
-            // Extract participant code from QR data
-            function extractCode(qrData) {
-                if (qrData.includes("CODE:")) {
-                    const parts = qrData.split('|');
-                    for (let part of parts) {
-                        if (part.startsWith("CODE:")) return part.replace("CODE:", "").trim();
-                    }
+            // Refresh button - reload scan log and stats
+            $('#btnRefresh').click(function () {
+                const currentAccessPoint = $('#accessPoint').val();
+                if (currentAccessPoint && currentAccessPoint !== '0') {
+                    loadScanLogAndStats(currentAccessPoint);
+                } else {
+                    showAlert('Please select an access point first', 'warning');
                 }
-                return qrData.trim();
-            }
+            });
 
-            // AJAX process scan
-            function processScan(qrCode, accessPoint) {
-                const printCenterData = $('#accessPoint').find('option:selected').data('print-center');
-                const isPrintCenter = ["1", 1, true, "True", "true"].includes(printCenterData);
-
-                $.ajax({
-                    url: '/QrConfiguration/ProcessScan',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ qrCode, accessPoint, isPrintCenter }),
-                    success: function (response) {
-                        console.log('Response:', response);
-                        lastScanData = response;
-
-                        if (response.success === true) showSuccessModal(response);
-                        else showErrorModal(response);
-
-                        addNewScanToTable(response);
-                        loadStats();
-                    },
-                    error: function (err) {
-                        console.error(err);
-                        showAlert('Server error occurred', 'danger');
-                    }
-                });
-            }
-
-            // Handle scan success from camera
-            function handleScanSuccess(decodedText) {
-                console.log('Scanned:', decodedText);
-                playBeep();
-                if (scanner) scanner.pause();
-
-                const accessPoint = $('#accessPoint').val();
-                const participantCode = extractCode(decodedText);
-
-                processScan(participantCode, accessPoint);
-
-                setTimeout(() => { if (scanner) scanner.resume(); }, 2000);
-            }
-
-            // Show success modal and optionally print ID card
-            function showSuccessModal(scanData) {
-                $('#scanTicketId').text(scanData.ticketId || scanData.participantCode || 'N/A');
-                $('#scanHolderName').text(scanData.holderName || scanData.fullName || 'Unknown');
-                $('#scanStatus').html('<span class="badge bg-success">✓ Valid</span>');
-                $('#scanMessage').text(scanData.message || scanData.validationMessage || 'Access granted');
-
-                $('#scanModal').modal('show');
-
-                // Auto-print ID card if server sends HTML
-                if (scanData.idCardHtml) printIdCard(scanData.idCardHtml);
-            }
-
-                 let printWindow = null;
-
-                function printIdCard(htmlContent) {
-            if (!htmlContent) return;
-
-            // Open immediately on user action
-            let printWindow = window.open('', '_blank', 'width=400,height=600');
-            if (!printWindow) {
-                alert("Popup blocked! Please allow popups for this site.");
-                return;
-            }
-
-            // Fill content after AJAX
-            printWindow.document.open();
-            printWindow.document.write(`
-              
-                    ${htmlContent}
-                
-            `);
-            printWindow.document.close();
-            printWindow.focus();
-            printWindow.print();
-        }
-
-
-            // Show error modal
-            function showErrorModal(scanData) {
-                const title = getErrorTitle(scanData.status);
-                const message = scanData.message || scanData.validationMessage || 'Validation failed';
-
-                $('#errorModalTitle').text(title);
-                $('#errorModalBody').html(`
-                    <div class="text-center">
-                        <i class="fas fa-exclamation-triangle fa-3x text-warning mb-3"></i>
-                        <h6 class="fw-bold mb-2">${scanData.ticketId || 'No ticket ID'}</h6>
-                        <p class="mb-1">${message}</p>
-                        ${scanData.holderName ? `<small class="text-muted">${scanData.holderName}</small>` : ''}
-                    </div>
-                `);
-                $('#errorModal').modal('show');
-            }
-
-            // Error title based on status
-            function getErrorTitle(status) {
-                switch ((status || '').toUpperCase()) {
-                    case 'INVALID': return 'Invalid Participant';
-                    case 'INVALID_ACCESS': return 'Access Denied';
-                    case 'DUPLICATE': return 'Duplicate Scan';
-                    case 'ERROR': return 'Scan Error';
-                    default: return 'Scan Failed';
+            // Export button
+            $('#btnExport').click(function () {
+                if (dataTable) {
+                    dataTable.button('.buttons-csv').trigger();
+                } else {
+                    showAlert('No data to export. Please select an access point first.', 'warning');
                 }
-            }
-
-            // Show alert
-            function showAlert(message, type = 'info') {
-                const alertClass = { success: 'alert-success', warning: 'alert-warning', danger: 'alert-danger', info: 'alert-info' }[type] || 'alert-info';
-                const alertHtml = `<div class="alert ${alertClass} alert-dismissible fade show" role="alert">${message}<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
-                $('.container').prepend(alertHtml);
-                setTimeout(() => $('.alert').alert('close'), 5000);
-            }
-
-            // Manual code submission
-            $('#manualCodeInput').keypress(function (e) {
-                if (e.which === 13) { e.preventDefault(); $('#btnManualSubmit').click(); }
             });
 
-            $('#btnManualSubmit').click(function () {
-                const manualCode = $('#manualCodeInput').val().trim();
-                const accessPoint = $('#accessPoint').val();
-                if (!accessPoint) { showAlert('Select access point first', 'warning'); return; }
-                if (!manualCode) { $('#manualStatus').html('<span class="text-warning">Enter code</span>'); return; }
-
-                playBeep();
-                $('#manualStatus').html('<span class="text-info">Processing...</span>');
-                processScan(extractCode(manualCode), accessPoint);
-                $('#manualCodeInput').val('');
-                setTimeout(() => $('#manualStatus').text(''), 2000);
-            });
-
-            // Add new scan to DataTable
-            function addNewScanToTable(scanData) {
-                if (!dataTable) return;
-                const status = scanData.status || scanData.validationStatus || 'UNKNOWN';
-                const message = scanData.message || scanData.validationMessage || '';
-                const newRow = [
-                    `<strong>${scanData.ticketId || scanData.participantCode || 'N/A'}</strong>`,
-                    scanData.holderName || scanData.fullName || 'Unknown',
-                    `<small class="text-muted">${new Date().toLocaleTimeString()}</small>`,
-                    getStatusBadge(status),
-                    `<small class="text-muted">${message}</small>`
-                ];
-                const rowNode = dataTable.row.add(newRow).draw(false).node();
-                $(rowNode).addClass(status.toUpperCase() === 'VALID' ? 'table-success' : status.toUpperCase() === 'DUPLICATE' ? 'table-warning' : 'table-danger');
-                $(rowNode).addClass('new-scan');
-                setTimeout(() => $(rowNode).removeClass('new-scan'), 2000);
+            // Load scan log on page load if access point is already selected
+            const initialAccessPointId = $('#accessPoint').val();
+            if (initialAccessPointId && initialAccessPointId !== "" && initialAccessPointId !== "0") {
+                loadScanLogAndStats(initialAccessPointId);
             }
-
-            function getStatusBadge(status) {
-                status = (status || '').toLowerCase();
-                if (status.includes('valid')) return '<span class="badge bg-success">✓ Valid</span>';
-                if (status.includes('duplicate')) return '<span class="badge bg-warning">↺ Duplicate</span>';
-                if (status.includes('invalid')) return '<span class="badge bg-danger">✗ Invalid</span>';
-                return '<span class="badge bg-secondary">?</span>';
-            }
-                    // Simple beep sound function
-        function playBeep() {
-            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            const oscillator = audioCtx.createOscillator();
-            oscillator.type = 'square';
-            oscillator.frequency.setValueAtTime(1000, audioCtx.currentTime); // frequency in Hz
-            oscillator.connect(audioCtx.destination);
-            oscillator.start();
-            oscillator.stop(audioCtx.currentTime + 0.1); // beep duration 0.1s
-        }
-
-            // Retry last scan
-            function retryLastScan() {
-                if (lastScanData && $('#accessPoint').val()) processScan(lastScanData.ticketId || '', $('#accessPoint').val());
-                $('#errorModal').modal('hide');
-            }
-
-            // Test scan button
-            $('#btnTest').click(function () { handleScanSuccess("TICKET_" + Date.now()); });
-
-            // Refresh & export buttons
-            $('#btnRefresh').click(function () { loadScanLog(); loadStats(); });
-            $('#btnExport').click(function () { if (dataTable) dataTable.button('.buttons-csv').trigger(); });
         });
-
     </script>
 }

@@ -29,15 +29,47 @@ namespace EventManager.WebUI.Controllers
             return View();
         }
 
-        public async Task<IActionResult> GetScanLog()
+        [HttpGet]
+        public async Task<JsonResult> GetScanLog(int accessPointId)
         {
             int eventId = _eventClaimService.GetEventIdFromClaim();
-            if (eventId == 0) return BadRequest("Invalid event");
+            if (eventId == 0)
+                return Json(new { success = false, message = "Invalid event" });
 
-         
-            return PartialView("_ScanLogPartial");
+            if (accessPointId <= 0)
+                return Json(new { success = false, message = "Please select an access point" });
+
+            var result = await _scanService.ScanLogDetailsAsync(eventId, accessPointId);
+
+            // CHANGE: Return JSON instead of PartialView
+            return Json(new
+            {
+                success = true,
+                data = result
+            });
         }
 
+        [HttpGet]
+        public async Task<JsonResult> GetStats(int accessPointId)
+        {
+            int eventId = _eventClaimService.GetEventIdFromClaim();
+            if (eventId == 0)
+                return Json(new { success = false, message = "Invalid event" });
+
+            if (accessPointId <= 0)
+                return Json(new { success = false, message = "Please select an access point" });
+
+            var stats = await _scanService.GetScanStatisticsAsync(eventId, accessPointId);
+
+            return Json(new
+            {
+                success = true,
+                totalScans = stats.TotalScans,
+                validScans = stats.ValidScans,
+                invalidScans = stats.InvalidScans,
+                duplicateScans = stats.DuplicateScans
+            });
+        }
         [HttpPost]
         public async Task<JsonResult> ProcessScan([FromBody] ScanRequestDto request)
         {
@@ -67,22 +99,6 @@ namespace EventManager.WebUI.Controllers
             });
         }
 
-        //public async Task<JsonResult> GetStats()
-        //{
-        //    int eventId = _eventClaimService.GetEventIdFromClaim();
-        //    if (eventId == 0)
-        //        return Json(new { success = false, message = "Invalid event" });
-
-        //    var stats = await _scanService.GetScanStatisticsAsync(eventId);
-
-        //    return Json(new
-        //    {
-        //        success = true,
-        //        totalScans = stats.TotalScans,
-        //        validScans = stats.ValidScans,
-        //        invalidScans = stats.InvalidScans,
-        //        duplicateScans = stats.DuplicateScans
-        //    });
-        //}
+        
     }
 }

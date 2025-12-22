@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace EventManager.Application.DTOs
 {
@@ -30,22 +29,9 @@ namespace EventManager.Application.DTOs
             public string ValidationMessage { get; set; }
             public string FullName { get; set; }
             public string ParticipantCode { get; set; }
-
-            // Optional: Add more details from the stored procedure
-            public string EventName { get; set; }
-            public string EventDate { get; set; }
-            public string EventTime { get; set; }
-            public string Location { get; set; }
-            public string Email { get; set; }
-            public string Company { get; set; }
-            public string Department { get; set; }
-            public string Phone { get; set; }
-            public string TicketTypes { get; set; }
-            public string AccessPoints { get; set; }
-            public bool? AllowMultipleScans { get; set; }
-            public DateTime? LastScanTime { get; set; }
         }
-        public class ScanStatsDto
+
+        public class ScanStatisticsDto
         {
             public int TotalScans { get; set; }
             public int ValidScans { get; set; }
@@ -55,12 +41,21 @@ namespace EventManager.Application.DTOs
 
         public class ScanLogDto
         {
-            public int Id { get; set; }
-            public string TicketId { get; set; }
-            public string HolderName { get; set; }
-            public string ScanTime { get; set; }
-            public string Status { get; set; }
+            // Keep only properties you want to show
+            public string EventName { get; set; }
+            public DateTime? EventDate { get; set; }
+            //public string TicketId { get; set; }
+            public string ParticipantName { get; set; }
             public string AccessPoint { get; set; }
+            public DateTime ScanTime { get; set; }
+            public string ValidationStatus { get; set; }
+            public string ValidationMessage { get; set; }
+            //public int? ScannedBy { get; set; }
+            //public bool? IsPrintCenter { get; set; }
+
+            // Remove these:
+            // public int ScanId { get; set; }
+            // public int EventId { get; set; }
         }
     }
 }

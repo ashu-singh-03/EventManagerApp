@@ -10,6 +10,9 @@ namespace EventManager.Application.Interfaces
     {
         Task <dynamic> GetPassConfigurationAsync(int eventId);
         Task<dynamic> GetQRDetailsAsync(int eventId, string participantId, int accesspointid, int scannedByUserId);
+        Task<List<ScanLogDto>> GetScanLogAsync(int eventId, int accesspointid);
+
+        Task<ScanStatisticsDto> GetScanStatisticsAsync(int eventId, int accesspointid);
 
     }
 

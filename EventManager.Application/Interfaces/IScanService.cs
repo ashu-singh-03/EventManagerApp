@@ -9,8 +9,8 @@ namespace EventManager.Application.Interfaces
     public interface IScanService
     {
         Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false);
-        //Task<List<ScanDtos.ScanLogDto>> GetRecentScansAsync(int eventId);
-        //Task<ScanDtos.ScanStatsDto> GetScanStatisticsAsync(int eventId);
+        Task<List<ScanLogDto>> ScanLogDetailsAsync(int eventId, int accesspointid);
+        Task<ScanStatisticsDto> GetScanStatisticsAsync(int eventId, int accesspointid);
     }
 
 }
