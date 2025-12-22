@@ -1,19 +1,11 @@
-﻿@using EventManager.Application.DTOs
-@model List<DropdownItemDto>
+﻿@model List<EventManager.Application.DTOs.DropdownItemDto>
 
-@if (Model == null || !Model.Any())
-{
-    <select class="form-select">
-        <option value="">No options available</option>
-    </select>
-}
-else
-{
-    <select id="@ViewBag.Id" name="@ViewBag.Id" class="form-select">
-        <option value="">@ViewBag.Placeholder</option>
-        @foreach (var item in Model)
-        {
-            <option value="@item.Id">@item.Text</option>
-        }
-    </select>
-}
+<select id="@ViewBag.Id" class="form-select">
+    <option value="">@ViewBag.Placeholder</option>
+    @foreach (var item in Model)
+    {
+        <option value="@item.Id" data-print-center="@item.DataAttributes">
+            @item.Text
+        </option>
+    }
+</select>

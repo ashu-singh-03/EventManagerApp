@@ -67,7 +67,7 @@ namespace EventManager.Application.Services
                 string eventDate = participantData.EventDate?.ToString() ?? "";
                 string eventTime = participantData.EventTime?.ToString() ?? "";
                 string location = participantData.Location?.ToString() ?? "";
-                string ticketType = participantData.TicketTypes?.ToString() ?? ""; // ADD THIS LINE
+                string ticketType = participantData.TicketTypes?.ToString() ?? ""; 
 
                 // 6. Replace placeholders in email template
                 var subjectProcessed = ReplacePlaceholders(subject, eventName, eventDate, eventTime,

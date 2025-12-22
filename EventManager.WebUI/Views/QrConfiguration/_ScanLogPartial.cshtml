@@ -1,4 +1,4 @@
-﻿@model List<EventManager.WebUI.Controllers.ScanLogViewModel>
+﻿@model List<EventManager.Application.DTOs.ScanDtos.ScanLogDto>
 
 <div class="table-responsive">
     <table id="scanLogTable" class="table table-hover table-sm" style="width:100%">
@@ -6,6 +6,7 @@
             <tr>
                 <th>Ticket ID</th>
                 <th>Holder Name</th>
+                <th>Access Point</th>
                 <th>Scan Time</th>
                 <th>Status</th>
             </tr>
@@ -18,19 +19,28 @@
                     <tr>
                         <td><strong>@scan.TicketId</strong></td>
                         <td>@scan.HolderName</td>
+                        <td>@scan.AccessPoint</td>
                         <td><small class="text-muted">@scan.ScanTime</small></td>
                         <td>
-                            @if (scan.Status == "valid")
+                            @if (scan.Status?.ToLower() == "valid")
                             {
                                 <span class="badge bg-success">✓ Valid</span>
                             }
-                            else if (scan.Status == "invalid")
+                            else if (scan.Status?.ToLower() == "invalid")
                             {
                                 <span class="badge bg-danger">✗ Invalid</span>
                             }
-                            else
+                            else if (scan.Status?.ToLower() == "duplicate")
                             {
                                 <span class="badge bg-warning">↻ Duplicate</span>
+                            }
+                            else if (scan.Status?.ToLower() == "invalid_access")
+                            {
+                                <span class="badge bg-danger">✗ No Access</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">@scan.Status</span>
                             }
                         </td>
                     </tr>
@@ -38,6 +48,11 @@
             }
             else
             {
+                <tr>
+                    <td colspan="5" class="text-center text-muted">
+                        No scan data available
+                    </td>
+                </tr>
             }
         </tbody>
     </table>
