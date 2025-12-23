@@ -1,5 +1,6 @@
 ﻿using EventManager.Application.DTOs;
 using EventManager.Application.Interfaces;
+using EventManager.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using static EventManager.Application.DTOs.ScanDtos;
@@ -29,6 +30,19 @@ namespace EventManager.WebUI.Controllers
             return View();
         }
 
+
+        [HttpGet]
+        public async Task<IActionResult> AdminScanLog(int? accessPointId = null)
+        {
+            int eventId = _eventClaimService.GetEventIdFromClaim();
+            if (eventId == 0)
+                return BadRequest("Invalid event");
+
+            ViewBag.EventId = eventId;
+            ViewBag.AccessPointId = accessPointId;
+            return View();
+        }
+
         [HttpGet]
         public async Task<JsonResult> GetScanLog(int accessPointId)
         {
@@ -36,9 +50,7 @@ namespace EventManager.WebUI.Controllers
             if (eventId == 0)
                 return Json(new { success = false, message = "Invalid event" });
 
-            if (accessPointId <= 0)
-                return Json(new { success = false, message = "Please select an access point" });
-
+        
             var result = await _scanService.ScanLogDetailsAsync(eventId, accessPointId);
 
             // CHANGE: Return JSON instead of PartialView
@@ -55,9 +67,6 @@ namespace EventManager.WebUI.Controllers
             int eventId = _eventClaimService.GetEventIdFromClaim();
             if (eventId == 0)
                 return Json(new { success = false, message = "Invalid event" });
-
-            if (accessPointId <= 0)
-                return Json(new { success = false, message = "Please select an access point" });
 
             var stats = await _scanService.GetScanStatisticsAsync(eventId, accessPointId);
 

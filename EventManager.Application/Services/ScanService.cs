@@ -18,7 +18,7 @@ namespace EventManager.Application.Services
             _repository = repository;
         }
 
-        public async Task<List<ScanLogDto>> ScanLogDetailsAsync(int eventId, int accesspointid)
+        public async Task<List<object>> ScanLogDetailsAsync(int eventId, int accesspointid)
         {
             try
             {
@@ -26,8 +26,7 @@ namespace EventManager.Application.Services
             }
             catch (Exception ex)
             {
-                // Handle exception
-                return new List<ScanLogDto>();
+                return new List<object>();
             }
         }
 
@@ -148,10 +147,15 @@ namespace EventManager.Application.Services
                 .Replace("@Email@", participant.Email?.ToString() ?? "")
                 .Replace("@EventDate@", participant.EventDate?.ToString() ?? "");
 
-            // Replace QR code if provided
+            // IMPORTANT: Replace @QR_BASE64@ with JUST the base64 string, not the whole img tag
             if (!string.IsNullOrEmpty(qrCodeBase64))
             {
-                html = html.Replace("@QR_BASE64@", $"<img src=\"{qrCodeBase64}\" alt=\"QR Code\" width=\"100\" height=\"100\">");
+                html = html.Replace("@QR_BASE64@", qrCodeBase64);
+            }
+            else
+            {
+                // If no QR code, use empty string
+                html = html.Replace("@QR_BASE64@", "");
             }
 
             return html;
@@ -161,7 +165,7 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var qrData = $"EVENT:{eventId}|CODE:{participantCode}|TIME:{DateTime.Now:yyyyMMddHHmmss}";
+                var qrData = $"EVENT:{eventId}|CODE:{participantCode}";
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
                 var qrCode = new Base64QRCode(qrCodeData);
@@ -173,6 +177,8 @@ namespace EventManager.Application.Services
                 return null;
             }
         }
+
+       
 
         //public async Task<List<ScanDtos.ScanLogDto>> GetRecentScansAsync(int eventId)
         //{

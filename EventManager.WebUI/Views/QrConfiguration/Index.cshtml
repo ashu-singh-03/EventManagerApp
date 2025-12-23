@@ -11,6 +11,7 @@
         overflow: hidden;
         position: relative;
         height: 300px;
+        min-height: 300px;
     }
 
     .scanner-overlay {
@@ -37,6 +38,7 @@
         justify-content: center;
         color: #fff;
         background: #000;
+        min-height: 200px;
     }
 
     .status-dot {
@@ -57,6 +59,148 @@
 
     .status-error {
         background-color: #dc3545;
+    }
+
+    /* Scanner container styling */
+    #qr-reader {
+        background: #000 !important;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+        #qr-reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+        }
+
+    #qr-reader__dashboard_section {
+        display: none !important;
+    }
+
+    /* Professional Popup Styles */
+    .scan-popup {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+        .scan-popup .modal-header {
+            border-bottom: none;
+            padding: 1.5rem 1.5rem 0.5rem;
+        }
+
+        .scan-popup .modal-body {
+            padding: 1rem 1.5rem 1.5rem;
+        }
+
+    .scan-success .modal-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+    }
+
+    .scan-error .modal-header {
+        background: linear-gradient(135deg, #dc3545 0%, #e83e8c 100%);
+        color: white;
+    }
+
+    .scan-warning .modal-header {
+        background: linear-gradient(135deg, #ffc107 0%, #fd7e14 100%);
+        color: #212529;
+    }
+
+    .scan-info .modal-header {
+        background: linear-gradient(135deg, #17a2b8 0%, #20c997 100%);
+        color: white;
+    }
+
+    .scan-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .scan-success .scan-icon {
+        color: #28a745;
+        animation: pulse 2s infinite;
+    }
+
+    .scan-error .scan-icon {
+        color: #dc3545;
+    }
+
+    .scan-warning .scan-icon {
+        color: #ffc107;
+        animation: pulse 2s infinite;
+    }
+
+    .scan-info .scan-icon {
+        color: #17a2b8;
+    }
+
+    @@keyframes pulse {
+        0% {
+            transform: scale(1);
+        }
+
+        50% {
+            transform: scale(1.05);
+        }
+
+        100% {
+            transform: scale(1);
+        }
+    }
+
+    .participant-card {
+        background: #f8f9fa;
+        border-radius: 10px;
+        padding: 15px;
+        margin: 15px 0;
+        border-left: 4px solid #007bff;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+    }
+
+    .detail-label {
+        font-weight: 600;
+        color: #495057;
+        min-width: 100px;
+    }
+
+    .detail-value {
+        color: #212529;
+        text-align: right;
+        flex: 1;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        margin: 5px 0;
+    }
+
+    .status-valid {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #28a745;
+    }
+
+    .status-invalid {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #dc3545;
+    }
+
+    .status-duplicate {
+        background-color: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
     }
 
     /* DataTables Custom Styling */
@@ -114,12 +258,23 @@
             .stat-card h4 {
                 font-size: 1.25rem !important;
             }
-        /* Responsive table for mobile */
-        .dataTables_wrapper .dataTables_length,
-        .dataTables_wrapper .dataTables_filter {
-            float: none;
-            text-align: center;
+
+        .scan-icon {
+            font-size: 3rem;
+        }
+
+        .detail-item {
+            flex-direction: column;
             margin-bottom: 10px;
+        }
+
+        .detail-label {
+            min-width: auto;
+            margin-bottom: 2px;
+        }
+
+        .detail-value {
+            text-align: left;
         }
     }
 
@@ -139,205 +294,350 @@
     }
 </style>
 
-<div class="container py-3">
-    <!-- Header -->
-    <div class="mb-4">
-        <h4 class="fw-bold mb-1">QR Scanner</h4>
-        <p class="text-muted mb-0">Scan event tickets quickly</p>
-    </div>
+<div class="container-fluid">
+    <div class="row mb-3">
+        <div class="col-12">
+            <!-- Scanner Camera -->
+            <div class="card">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-history me-2"></i>QR Scanner
+                    </h4>
+                </div>
 
-    <!-- Access Point Selector -->
+                <div class="card-body">
+                    <div class="mb-4">
+                        <label class="form-label">Select Access Point</label>
+                        <div class="input-group" style="max-width: 400px;">
+                            @await Component.InvokeAsync("CommonDropdown", new {
+                            id = "accessPoint",
+                                                        flag = "ACCESS_POINT",
+                                                        placeholder = "Select Access Point",
+                                                        eventId = ViewBag.EventId
+                                                        })
+                        </div>
+                    </div>
 
-    <div class="mb-3" style="max-width: 300px;">
-        @await Component.InvokeAsync("CommonDropdown", new {
-        id = "accessPoint",
-                flag = "ACCESS_POINT",
-                placeholder = "Select Access Point", 
-                eventId = ViewBag.EventId
-                })
-    </div>
-    <!-- Scanner Camera -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <div class="scanner-container mb-3">
-                <div id="scannerPlaceholder" class="scanner-placeholder">
-                    <div class="text-center">
-                        <i class="fas fa-camera fa-2x mb-2 text-white-50"></i>
-                        <p class="text-white-50 mb-0">Camera ready</p>
+                    <div class="scanner-container mb-3">
+                        <div id="scannerPlaceholder" class="scanner-placeholder">
+                            <div class="text-center">
+                                <i class="fas fa-camera fa-2x mb-2 text-white-50"></i>
+                                <p class="text-white-50 mb-0">Camera ready</p>
+                            </div>
+                        </div>
+                        <div id="scannerOverlay" class="scanner-overlay" style="display: none;"></div>
+                    </div>
+
+                    <!-- Camera Status -->
+                    <div class="text-center mb-3">
+                        <small id="cameraStatus" class="text-muted">
+                            <span class="status-dot status-ready"></span>Ready to start
+                        </small>
+                    </div>
+
+                    <!-- Scanner Controls -->
+                    <div class="d-flex flex-wrap gap-2 justify-content-center mb-4">
+                        <button class="btn btn-success px-4" id="btnStart" disabled>
+                            <i class="fas fa-play me-2"></i>Start
+                        </button>
+                        <button class="btn btn-danger px-4" id="btnStop" disabled>
+                            <i class="fas fa-stop me-2"></i>Stop
+                        </button>
+                        <button class="btn btn-warning px-4" id="btnTest" disabled>
+                            <i class="fas fa-bolt me-2"></i>Test
+                        </button>
                     </div>
                 </div>
-                <div id="scannerOverlay" class="scanner-overlay" style="display: none;"></div>
             </div>
 
-            <!-- Camera Status -->
-            <div class="text-center mb-3">
-                <small id="cameraStatus" class="text-muted">
-                    <span class="status-dot status-ready"></span>Ready to start
-                </small>
-            </div>
-
-            <!-- Scanner Controls -->
-            <div class="d-flex flex-wrap gap-2 justify-content-center">
-                <button class="btn btn-success px-4" id="btnStart" disabled>
-                    <i class="fas fa-play me-2"></i>Start
-                </button>
-                <button class="btn btn-danger px-4" id="btnStop" disabled>
-                    <i class="fas fa-stop me-2"></i>Stop
-                </button>
-                <button class="btn btn-warning px-4" id="btnTest" disabled>
-                    <i class="fas fa-bolt me-2"></i>Test
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Manual Code Input -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <div class="input-group">
-                <input type="text" class="form-control" id="manualCodeInput" placeholder="Enter participant code (e.g., A00-2)" disabled>
-                <button class="btn btn-primary" id="btnManualSubmit" disabled>
-                    <i class="fas fa-paper-plane me-1"></i>Submit
-                </button>
-            </div>
-            <div class="mt-2">
-                <small id="manualStatus" class="text-muted"></small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Quick Stats -->
-    <div class="row g-2 mb-4">
-        <div class="col-3">
-            <div class="stat-card border rounded p-3 text-center">
-                <div class="text-primary fw-bold fs-4" id="totalScans">0</div>
-                <small class="text-muted">Total</small>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="stat-card border rounded p-3 text-center">
-                <div class="text-success fw-bold fs-4" id="validScans">0</div>
-                <small class="text-muted">Valid</small>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="stat-card border rounded p-3 text-center">
-                <div class="text-danger fw-bold fs-4" id="invalidScans">0</div>
-                <small class="text-muted">Invalid</small>
-            </div>
-        </div>
-        <div class="col-3">
-            <div class="stat-card border rounded p-3 text-center">
-                <div class="text-warning fw-bold fs-4" id="duplicateScans">0</div>
-                <small class="text-muted">Duplicate</small>
-            </div>
-        </div>
-    </div>
-
-    <!-- Live Scan Log with DataTables -->
-    <div class="card border-0 shadow-sm">
-        <div class="card-body p-3">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h6 class="fw-bold mb-0">Recent Scans</h6>
-                    <small class="text-muted">Live scan log with search & sort</small>
-                </div>
-                <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-primary" id="btnRefresh">
-                        <i class="fas fa-sync-alt"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-success" id="btnExport">
-                        <i class="fas fa-download"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- Scan Log Table Container -->
-            <div id="scanLogContainer">
-                <!-- Will load via AJAX -->
-                <div class="text-center text-muted py-4">
-                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
-                    Loading scan log...
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Scan Result Modal -->
-
-<!-- Error Modal -->
-<div class="modal fade" id="errorModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header bg-warning text-dark">
-                <h5 class="modal-title" id="errorModalTitle">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    Scan Failed
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body" id="errorModalBody">
-                <!-- Error message will be inserted here -->
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    Close
-                </button>
-                <button type="button" class="btn btn-primary" onclick="retryLastScan()">
-                    <i class="fas fa-redo me-2"></i>Retry
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Update Success Modal to show more info -->
-<div class="modal fade" id="scanModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-sm">
-        <div class="modal-content">
-            <div class="modal-body text-center p-4">
-                <div class="mb-3">
-                    <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                    <h6 class="fw-bold mb-1" id="scanTicketId">#TKT-123456</h6>
-                    <small class="text-muted" id="scanHolderName">John Smith</small>
+            <!-- Manual Code Input -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Manual Entry</h5>
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="manualCodeInput" placeholder="Enter participant code (e.g., A00-2)" disabled>
+                        <button class="btn btn-primary" id="btnManualSubmit" disabled>
+                            <i class="fas fa-paper-plane me-1"></i>Submit
+                        </button>
+                    </div>
                     <div class="mt-2">
-                        <span id="scanStatus" class="badge bg-success">✓ Valid</span>
+                        <small id="manualStatus" class="text-muted"></small>
                     </div>
-                    <p class="small text-muted mt-2 mb-0" id="scanMessage"></p>
                 </div>
-                <button class="btn btn-primary w-100" data-bs-dismiss="modal">
-                    Continue Scanning
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="row g-2 mt-4 mb-4">
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-primary h-100">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">Total Scans</h6>
+                            <h3 id="totalScans" class="text-primary">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-success h-100">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">Valid Scans</h6>
+                            <h3 id="validScans" class="text-success">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-danger h-100">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">Invalid Scans</h6>
+                            <h3 id="invalidScans" class="text-danger">0</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-3 col-md-6 mb-3">
+                    <div class="card border-warning h-100">
+                        <div class="card-body text-center">
+                            <h6 class="text-muted mb-1">Duplicate Scans</h6>
+                            <h3 id="duplicateScans" class="text-warning">0</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Scan Log -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Scans</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <small class="text-muted" id="scanLogSubtitle">Select access point to view scans</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" id="btnRefresh">
+                                <i class="fas fa-redo me-1"></i>Refresh
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary" id="btnExport">
+                                <i class="fas fa-download me-1"></i>Export
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scan Log Table Container -->
+                    <div id="scanLogContainer">
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-qrcode fa-3x text-light mb-3"></i>
+                            <h6 class="text-muted">Scan Log</h6>
+                            <p class="mb-0">Select an access point to view scan history</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Professional Popup Modal -->
+<div class="modal fade scan-popup" id="scanResultModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="scanResultModalContent">
+            <div class="modal-header">
+                <h5 class="modal-title" id="scanResultModalTitle">
+                    <i class="fas fa-qrcode me-2"></i>Scan Result
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center p-4">
+                <!-- Status Icon -->
+                <div class="scan-icon mb-3" id="scanResultIcon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+
+                <!-- Status Badge -->
+                <div id="statusBadge" class="mb-2">
+                    <span class="status-badge status-valid">VALID</span>
+                </div>
+
+                <!-- Main Message -->
+                <h5 class="mb-2" id="scanResultMessage">Scan Successful</h5>
+
+                <!-- Participant Details -->
+                <div class="participant-card" id="participantDetails" style="display: none;">
+                    <div class="detail-item">
+                        <span class="detail-label">Participant:</span>
+                        <span class="detail-value" id="detailParticipantName"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Time:</span>
+                        <span class="detail-value" id="detailScanTime"></span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Validation:</span>
+                        <span class="detail-value" id="detailValidationMessage"></span>
+                    </div>
+                </div>
+
+                <!-- Error Details (for failures) -->
+                <div id="errorDetails" style="display: none;">
+                    <div class="alert alert-danger mt-2" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+
+                <!-- Continue Button -->
+                <button class="btn btn-primary w-100 mt-3" id="modalContinueBtn" data-bs-dismiss="modal">
+                    <i class="fas fa-check me-2"></i>Continue
                 </button>
             </div>
         </div>
     </div>
 </div>
+
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
     <script>
         $(document).ready(function () {
             let scanner = null;
             let currentStream = null;
             let dataTable = null;
             let lastScanData = null;
+            let autoCloseInterval = null;
+            let stopScannerFunction = null;
+            let isScanning = false;
 
             // When access point dropdown changes
             $('#accessPoint').change(function () {
                 const accessPoint = $(this).val();
                 const isEnabled = accessPoint !== '' && accessPoint !== '0';
 
-                // Enable/disable scanner controls
                 $('#btnStart, #btnTest, #btnManualSubmit').prop('disabled', !isEnabled);
                 $('#manualCodeInput').prop('disabled', !isEnabled);
 
-                // Load scan log and statistics
-                loadScanLogAndStats(accessPoint);
+                if (isEnabled) {
+                    loadScanLogAndStats(accessPoint);
+                }
             });
+
+            // Function to show professional popup
+            function showScanResultPopup(response) {
+                const modal = $('#scanResultModal');
+                const modalContent = $('#scanResultModalContent');
+                const modalTitle = $('#scanResultModalTitle');
+                const modalIcon = $('#scanResultIcon');
+                const modalMessage = $('#scanResultMessage');
+                const statusBadge = $('#statusBadge');
+                const participantDetails = $('#participantDetails');
+                const errorDetails = $('#errorDetails');
+                const modalContinueBtn = $('#modalContinueBtn');
+
+                if (autoCloseInterval) {
+                    clearInterval(autoCloseInterval);
+                }
+
+                let statusClass = 'scan-info';
+                let iconClass = 'fas fa-info-circle';
+                let statusText = 'INFO';
+                let message = response.message || 'Scan processed';
+                let buttonClass = 'btn-primary';
+
+                if (response.success) {
+                    const status = (response.status || response.validationStatus || '').toUpperCase();
+
+                    if (status === 'VALID') {
+                        statusClass = 'scan-success';
+                        iconClass = 'fas fa-check-circle';
+                        statusText = 'VALID';
+                        message = response.message || 'Access granted successfully';
+                        buttonClass = 'btn-success';
+                    } else if (status === 'DUPLICATE') {
+                        statusClass = 'scan-warning';
+                        iconClass = 'fas fa-exclamation-triangle';
+                        statusText = 'DUPLICATE';
+                        message = response.message || 'Already scanned';
+                        buttonClass = 'btn-warning';
+                    } else {
+                        statusClass = 'scan-error';
+                        iconClass = 'fas fa-times-circle';
+                        statusText = 'INVALID';
+                        message = response.message || 'Access denied';
+                        buttonClass = 'btn-danger';
+                    }
+                } else {
+                    statusClass = 'scan-error';
+                    iconClass = 'fas fa-times-circle';
+                    statusText = 'ERROR';
+                    message = response.message || 'Scan failed';
+                    buttonClass = 'btn-danger';
+                }
+
+                modalContent.removeClass('scan-success scan-error scan-warning scan-info')
+                           .addClass(statusClass);
+
+                modalIcon.find('i').removeClass().addClass(iconClass);
+
+                let badgeClass = 'status-valid';
+                if (statusText === 'ERROR' || statusText === 'INVALID') badgeClass = 'status-invalid';
+                else if (statusText === 'DUPLICATE') badgeClass = 'status-duplicate';
+
+                statusBadge.html(`<span class="status-badge ${badgeClass}">${statusText}</span>`);
+                modalMessage.text(message);
+
+                if (response.success && (response.ticketId || response.holderName)) {
+                    participantDetails.show();
+                    $('#detailParticipantName').text(response.holderName || response.fullName || 'N/A');
+                    $('#detailScanTime').text(new Date().toLocaleTimeString());
+                    $('#detailValidationMessage').text(response.message || '');
+                    errorDetails.hide();
+                } else {
+                    participantDetails.hide();
+                    errorDetails.show();
+                    $('#errorMessage').text(response.message || 'An error occurred');
+                }
+
+                modalContinueBtn.removeClass('btn-primary btn-success btn-danger btn-warning')
+                               .addClass(buttonClass);
+
+                modal.modal('show');
+
+                autoCloseInterval = setTimeout(function() {
+                    modal.modal('hide');
+                }, 3000);
+            }
+
+            // Print ID card automatically
+            function printIdCard(htmlContent) {
+                if (!htmlContent || htmlContent.trim() === '') return;
+                
+                console.log('Auto-printing ID card...');
+                
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+                
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(`
+                
+                        ${htmlContent}
+                    
+                `);
+                iframeDoc.close();
+                
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+                        
+                        setTimeout(() => {
+                            document.body.removeChild(iframe);
+                        }, 1000);
+                    }, 500);
+                };
+            }
 
             // Function to load scan log and statistics
             function loadScanLogAndStats(accessPointId) {
-                // Clear scan log first
                 $('#scanLogContainer').html(`
                     <div class="text-center text-muted py-2">
                         <div class="spinner-border spinner-border-sm text-primary me-2"></div>
@@ -345,7 +645,6 @@
                     </div>
                 `);
 
-                // If no access point selected
                 if (!accessPointId || accessPointId === "" || accessPointId === "0") {
                     $('#scanLogContainer').html(`
                         <div class="text-center text-muted py-4">
@@ -353,38 +652,37 @@
                             <p>Please select an access point to view scan log</p>
                         </div>
                     `);
-                    // Reset stats
                     updateStats(0, 0, 0, 0);
                     return;
                 }
 
-                // Load scan log as JSON
                 $.ajax({
                     url: '/QrConfiguration/GetScanLog',
                     type: 'GET',
                     data: { accessPointId: accessPointId },
                     success: function (response) {
-                        if (response.success && response.data) {
+                        if (response.success && response.data && response.data.length > 0) {
                             buildDynamicTable(response.data);
                         } else {
                             $('#scanLogContainer').html(`
                                 <div class="text-center text-muted py-4">
                                     <i class="fas fa-database fa-lg mb-2"></i>
-                                    <p>No scan data available</p>
+                                    <p>No scan data available for this access point</p>
                                 </div>
                             `);
                         }
                     },
                     error: function (xhr) {
+                        console.error('Error loading scan log:', xhr);
                         $('#scanLogContainer').html(`
                             <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
                                 Failed to load scan log. Please try again.
                             </div>
                         `);
                     }
                 });
 
-                // Load statistics
                 loadStatistics(accessPointId);
             }
 
@@ -400,7 +698,6 @@
                     return;
                 }
 
-                // Create table HTML structure
                 var tableHtml = `
                     <div class="table-responsive">
                         <table id="scanLogTable" class="table table-hover table-sm" style="width:100%">
@@ -414,55 +711,87 @@
 
                 $('#scanLogContainer').html(tableHtml);
 
-                // Get all column names from first object
                 var firstRow = data[0];
                 var columns = [];
+                var columnOrder = ['ScanTime', 'TicketId', 'ParticipantCode', 'ValidationStatus', 'ValidationMessage', 'AccessPointName'];
 
-                // Get column names dynamically
-                for (var key in firstRow) {
-                    if (firstRow.hasOwnProperty(key) && key !== 'Data') {
-                        columns.push(key);
+                columnOrder.forEach(function(column) {
+                    if (firstRow.hasOwnProperty(column) || firstRow[column.toLowerCase()]) {
+                        var actualKey = firstRow.hasOwnProperty(column) ? column : column.toLowerCase();
+                        columns.push(actualKey);
+                    }
+                });
+
+                if (columns.length === 0) {
+                    for (var key in firstRow) {
+                        if (firstRow.hasOwnProperty(key) && key !== 'Data') {
+                            columns.push(key);
+                        }
                     }
                 }
 
-                // Build table header
                 var headerHtml = '';
                 columns.forEach(function(column) {
-                    // Format column name: "TicketId" -> "Ticket ID"
-                    var displayName = column.replace(/([A-Z])/g, ' $1').trim();
+                    var displayName = column
+                        .replace(/([A-Z])/g, ' $1')
+                        .replace(/([a-z])([A-Z])/g, '$1 $2')
+                        .trim();
                     headerHtml += `<th>${displayName}</th>`;
                 });
                 $('#tableHeaderRow').html(headerHtml);
 
-                // Build table body
                 var bodyHtml = '';
                 data.forEach(function(row) {
                     bodyHtml += '<tr>';
                     columns.forEach(function(column) {
-                        var value = row[column];
+                        var value = row[column] !== undefined ? row[column] : '';
                         bodyHtml += `<td>${formatCellValue(value, column)}</td>`;
                     });
                     bodyHtml += '</tr>';
                 });
                 $('#tableBody').html(bodyHtml);
 
-                // Initialize DataTable
                 if ($.fn.DataTable.isDataTable('#scanLogTable')) {
                     $('#scanLogTable').DataTable().destroy();
                 }
 
                 dataTable = $('#scanLogTable').DataTable({
                     pageLength: 10,
-                    order: [], // No default sorting
+                    order: [],
                     responsive: true,
                     language: {
-                        emptyTable: "No scan data available"
+                        emptyTable: "No scan data available",
+                        search: "_INPUT_",
+                        searchPlaceholder: "Search scans...",
+                        lengthMenu: "Show _MENU_ entries",
+                        info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                        paginate: {
+                            first: "First",
+                            last: "Last",
+                            next: "Next",
+                            previous: "Previous"
+                        }
                     },
                     dom: 'Bfrtip',
-                    buttons: ['csv', 'excel', 'pdf']
+                    buttons: [
+                        {
+                            extend: 'csv',
+                            text: '<i class="fas fa-file-csv"></i> CSV',
+                            className: 'btn btn-sm btn-outline-secondary'
+                        },
+                        {
+                            extend: 'excel',
+                            text: '<i class="fas fa-file-excel"></i> Excel',
+                            className: 'btn btn-sm btn-outline-secondary'
+                        },
+                        {
+                            extend: 'pdf',
+                            text: '<i class="fas fa-file-pdf"></i> PDF',
+                            className: 'btn btn-sm btn-outline-secondary'
+                        }
+                    ]
                 });
 
-                // Try to sort by ScanTime if column exists
                 var scanTimeIndex = columns.indexOf('ScanTime');
                 if (scanTimeIndex !== -1) {
                     dataTable.order([scanTimeIndex, 'desc']).draw();
@@ -475,21 +804,22 @@
                     return '<span class="text-muted">-</span>';
                 }
 
-                // Special formatting based on column name
+                var stringValue = value.toString();
+
                 switch(columnName.toLowerCase()) {
                     case 'validationstatus':
                     case 'status':
-                        var status = value.toString().toLowerCase();
+                        var status = stringValue.toLowerCase();
                         if (status === 'valid') return '<span class="badge bg-success">✓ Valid</span>';
                         if (status === 'invalid') return '<span class="badge bg-danger">✗ Invalid</span>';
                         if (status === 'duplicate') return '<span class="badge bg-warning">↻ Duplicate</span>';
-                        if (status === 'invalid_access') return '<span class="badge bg-danger">✗ No Access</span>';
-                        return `<span class="badge bg-secondary">${value}</span>`;
+                        if (status.includes('invalid') || status.includes('error'))
+                            return '<span class="badge bg-danger">✗ Invalid</span>';
+                        return `<span class="badge bg-secondary">${stringValue}</span>`;
 
                     case 'scantime':
-                    case 'eventdate':
-                        // Format date
-                        var date = new Date(value);
+                    case 'scandate':
+                        var date = new Date(stringValue);
                         if (!isNaN(date.getTime())) {
                             var formattedDate =
                                 date.getDate().toString().padStart(2, '0') + '/' +
@@ -499,22 +829,18 @@
                                 date.getMinutes().toString().padStart(2, '0');
                             return `<small class="text-muted">${formattedDate}</small>`;
                         }
-                        return value;
+                        return stringValue;
 
                     case 'ticketid':
-                        return `<strong>${value}</strong>`;
+                    case 'ticketcode':
+                        return `<strong>${stringValue}</strong>`;
 
                     case 'validationmessage':
                     case 'message':
-                        return `<small class="text-muted">${value}</small>`;
-
-                    case 'isprintcenter':
-                        return value === true || value === 1 || value === '1' ?
-                            '<span class="badge bg-info">✓</span>' :
-                            '<span class="badge bg-secondary">✗</span>';
+                        return `<small class="text-muted">${stringValue}</small>`;
 
                     default:
-                        return value;
+                        return stringValue;
                 }
             }
 
@@ -550,24 +876,20 @@
 
             // Add new scan to DataTable dynamically
             function addNewScanToTable(scanData) {
-                if (!dataTable) return;
+                if (!dataTable || !scanData) return;
 
-                // Get current columns from DataTable
                 var columns = dataTable.settings()[0].aoColumns.map(col => col.data);
 
-                // Create new row data
                 var newRow = {};
                 columns.forEach(function(column) {
-                    newRow[column] = scanData[column] || scanData[column.toLowerCase()] || '';
+                    var key = Object.keys(scanData).find(k => k.toLowerCase() === column.toLowerCase());
+                    newRow[column] = key ? scanData[key] : '';
                 });
 
-                // Convert to array for DataTable
                 var rowArray = columns.map(col => formatCellValue(newRow[col], col));
 
-                // Add row to DataTable
                 const rowNode = dataTable.row.add(rowArray).draw(false).node();
 
-                // Add styling based on status
                 var status = scanData.status || scanData.validationStatus || 'UNKNOWN';
                 $(rowNode).addClass(status.toUpperCase() === 'VALID' ? 'table-success' :
                                     status.toUpperCase() === 'DUPLICATE' ? 'table-warning' : 'table-danger');
@@ -575,46 +897,464 @@
                 setTimeout(() => $(rowNode).removeClass('new-scan'), 2000);
             }
 
-            // KEEP ALL YOUR EXISTING SCANNER FUNCTIONS BELOW THIS LINE
-            // START SCANNER
+            // ========== CAMERA FUNCTIONS ==========
+
+            // FUNCTION TO STOP EVERYTHING
+            async function stopEverything() {
+                console.log('Stopping everything...');
+
+                isScanning = false;
+
+                if (stopScannerFunction) {
+                    stopScannerFunction();
+                    stopScannerFunction = null;
+                }
+
+                if (window.html5QrCode) {
+                    try {
+                        await window.html5QrCode.stop();
+                    } catch (e) {
+                        // Ignore errors
+                    }
+                    window.html5QrCode = null;
+                }
+
+                if (scanner) {
+                    try {
+                        scanner.clear();
+                    } catch (e) {
+                        // Ignore errors
+                    }
+                    scanner = null;
+                }
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => {
+                        track.stop();
+                        track.enabled = false;
+                    });
+                    currentStream = null;
+                }
+
+                $('#scannerPlaceholder').html('');
+                await new Promise(resolve => setTimeout(resolve, 300));
+            }
+
+            // SIMPLE QR SCANNER USING jsQR LIBRARY - FIXED VERSION
+            function startSimpleQrScanner(videoElement) {
+                console.log('Starting simple QR scanner...');
+
+                if (typeof jsQR === 'undefined') {
+                    console.error('jsQR library not loaded!');
+                    showAlert('QR scanning library failed to load. Please refresh the page.', 'danger');
+                    return null;
+                }
+
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d', {
+                    willReadFrequently: true
+                });
+
+                canvas.width = 400;
+                canvas.height = 400;
+
+                let scanningActive = true;
+                let isProcessing = false;
+
+                // Scan function - FIXED: Now calls handleScanSuccess
+                function scanQRFrame() {
+                    if (!scanningActive || !videoElement || !videoElement.srcObject || isProcessing) {
+                        return;
+                    }
+
+                    try {
+                        if (videoElement.readyState !== videoElement.HAVE_ENOUGH_DATA) {
+                            requestAnimationFrame(scanQRFrame);
+                            return;
+                        }
+
+                        isProcessing = true;
+
+                        const videoWidth = videoElement.videoWidth;
+                        const videoHeight = videoElement.videoHeight;
+
+                        if (videoWidth === 0 || videoHeight === 0) {
+                            isProcessing = false;
+                            requestAnimationFrame(scanQRFrame);
+                            return;
+                        }
+
+                        canvas.width = videoWidth;
+                        canvas.height = videoHeight;
+
+                        context.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
+
+                        const scanSize = Math.min(canvas.width, canvas.height) * 0.7;
+                        const centerX = canvas.width / 2;
+                        const centerY = canvas.height / 2;
+
+                        const imageData = context.getImageData(
+                            centerX - scanSize/2,
+                            centerY - scanSize/2,
+                            scanSize,
+                            scanSize
+                        );
+
+                        // Scan for QR code
+                        const code = jsQR(
+                            imageData.data,
+                            imageData.width,
+                            imageData.height,
+                            {
+                                inversionAttempts: "dontInvert",
+                            }
+                        );
+
+                        // FIXED: Call handleScanSuccess when QR detected
+                        if (code && code.data) {
+                            console.log('QR Code detected:', code.data);
+                            handleScanSuccess(code.data); // THIS LINE WAS MISSING!
+
+                            setTimeout(() => {
+                                isProcessing = false;
+                                if (scanningActive) {
+                                    requestAnimationFrame(scanQRFrame);
+                                }
+                            }, 1000);
+                            return;
+                        }
+
+                    } catch (err) {
+                        console.log('Scan error (non-critical):', err);
+                    }
+
+                    isProcessing = false;
+
+                    if (scanningActive) {
+                        setTimeout(() => {
+                            requestAnimationFrame(scanQRFrame);
+                        }, 100);
+                    }
+                }
+
+                videoElement.onplaying = () => {
+                    console.log('Video is playing, starting QR scan...');
+                    isScanning = true;
+                    scanQRFrame();
+                };
+
+                return function stopScanner() {
+                    console.log('Stopping QR scanner...');
+                    scanningActive = false;
+                    isScanning = false;
+                };
+            }
+
+            // START SCANNER - FIXED VERSION
             $('#btnStart').click(async function () {
+                console.log('Start button clicked');
+
+                if ($(this).data('starting')) return;
+                $(this).data('starting', true);
+
                 const accessPoint = $('#accessPoint').val();
                 if (!accessPoint || accessPoint === '0') {
+                    showAlert('Select access point first', 'warning');
+                    $(this).data('starting', false);
+                    return;
+                }
+
+                $(this).prop('disabled', true);
+                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Starting camera...');
+
+                try {
+                    await stopEverything();
+
+                    $('#scannerPlaceholder').html(`
+                        <div class="text-center py-5">
+                            <div class="spinner-border text-light mb-3"></div>
+                            <p class="text-white-50">Starting camera...</p>
+                        </div>
+                    `);
+
+                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                    let stream;
+                    try {
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            video: {
+                                facingMode: { exact: "environment" }
+                            },
+                            audio: false
+                        });
+                    } catch (backError) {
+                        console.log('Back camera failed, trying any camera:', backError);
+                        stream = await navigator.mediaDevices.getUserMedia({
+                            video: true,
+                            audio: false
+                        });
+                    }
+
+                    currentStream = stream;
+
+                    $('#scannerPlaceholder').html(`
+                        <video id="cameraPreview" autoplay playsinline muted
+                               style="width:100%;height:100%;object-fit:cover;">
+                        </video>
+                    `);
+
+                    const videoElement = document.getElementById('cameraPreview');
+                    videoElement.srcObject = stream;
+
+                    await new Promise((resolve) => {
+                        videoElement.onloadedmetadata = () => {
+                            videoElement.play();
+                            resolve();
+                        };
+                    });
+
+                    stopScannerFunction = startSimpleQrScanner(videoElement);
+
+                    $('#scannerOverlay').show();
+                    $('#btnStop').prop('disabled', false);
+                    $('#btnTest').prop('disabled', false);
+                    $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+
+                    console.log('Camera started successfully');
+
+                } catch (err) {
+                    console.error('Camera error:', err);
+
+                    $('#scannerPlaceholder').html(`
+                        <div class="text-center py-5">
+                            <i class="fas fa-camera-slash fa-2x text-danger mb-3"></i>
+                            <p class="text-white">Camera Error</p>
+                            <p class="text-white-50 small">${err.message || 'Check camera permissions'}</p>
+                        </div>
+                    `);
+
+                    $('#btnStart').prop('disabled', false);
+                    $('#cameraStatus').html('<span class="status-dot status-error"></span>Error: ' + err.name);
+                    showAlert('Camera error: ' + err.message, 'danger');
+                } finally {
+                    $(this).data('starting', false);
+                }
+            });
+
+            // STOP SCANNER - FIXED VERSION
+            $('#btnStop').click(function () {
+                console.log('Stop button clicked');
+
+                if (stopScannerFunction) {
+                    stopScannerFunction();
+                    stopScannerFunction = null;
+                }
+
+                if (currentStream) {
+                    currentStream.getTracks().forEach(track => track.stop());
+                    currentStream = null;
+                }
+
+                $('#scannerPlaceholder').html(`
+                    <div class="text-center py-5">
+                        <i class="fas fa-camera fa-2x text-white-50 mb-3"></i>
+                        <p class="text-white-50">Camera ready</p>
+                    </div>
+                `);
+
+                $('#scannerOverlay').hide();
+                $('#btnStart').prop('disabled', false);
+                $(this).prop('disabled', true);
+                $('#cameraStatus').html('<span class="status-dot status-ready"></span>Ready to start');
+            });
+
+            // TEST BUTTON
+            $('#btnTest').click(function () {
+                const accessPointId = $('#accessPoint').val();
+                if (!accessPointId || accessPointId === '0') {
                     showAlert('Select access point first', 'warning');
                     return;
                 }
 
-                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Starting camera...');
-                $('#btnStart').prop('disabled', true);
+                const testCodes = ['TEST-001', 'TEST-002', 'A00-1', 'B12-5'];
+                const randomCode = testCodes[Math.floor(Math.random() * testCodes.length)];
+                processScan(randomCode, 'test');
+            });
 
-                try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
-                    currentStream = stream;
+            // MANUAL CODE SUBMIT
+            $('#btnManualSubmit').click(function () {
+                const code = $('#manualCodeInput').val().trim();
+                if (!code) {
+                    showAlert('Please enter a code', 'warning');
+                    return;
+                }
+                processScan(code, 'manual');
+                $('#manualCodeInput').val('');
+            });
 
-                    $('#scannerPlaceholder').html('<video id="qrVideo" autoplay playsinline muted class="w-100 h-100" style="object-fit: cover;"></video>');
-                    const video = document.getElementById('qrVideo');
-                    video.srcObject = stream;
-
-                    scanner = new Html5Qrcode("qrVideo");
-                    await scanner.start({ facingMode: "environment" }, { fps: 10, qrbox: 200 }, handleScanSuccess);
-
-                    $('#scannerOverlay').show();
-                    $('#btnStop').prop('disabled', false);
-                    $('#btnTest').prop('disabled', true);
-                    $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
-                } catch (err) {
-                    console.error('Camera error:', err);
-                    $('#cameraStatus').html('<span class="status-dot status-error"></span>Camera error');
-                    $('#btnStart').prop('disabled', false);
-                    showAlert('Camera access denied. Please allow camera permissions.', 'danger');
+            // Manual input enter key
+            $('#manualCodeInput').keypress(function (e) {
+                if (e.which === 13) {
+                    $('#btnManualSubmit').click();
                 }
             });
 
-            // KEEP ALL OTHER FUNCTIONS EXACTLY AS THEY ARE
-            // STOP SCANNER, EXTRACT CODE, PROCESS SCAN, etc...
-            // ... (keep all your existing scanner functions unchanged)
+            // Handle scan success - FIXED: Now extracts correct code
+            async function handleScanSuccess(decodedText) {
+                if (decodedText === lastScanData) return;
+                lastScanData = decodedText;
 
-            // Refresh button - reload scan log and stats
+                const code = extractCodeFromQR(decodedText);
+                if (!code) {
+                    showAlert('Invalid QR code format', 'warning');
+                    return;
+                }
+
+                console.log('QR detected:', decodedText, '-> Sending:', code);
+                processScan(code, 'scanner');
+
+                setTimeout(() => {
+                    lastScanData = null;
+                }, 1000);
+            }
+
+            // Extract code from QR data - FIXED VERSION
+            function extractCodeFromQR(qrData) {
+                console.log('Raw QR data:', qrData);
+                
+                if (!qrData || qrData.trim() === '') {
+                    return null;
+                }
+                
+                const data = qrData.trim();
+                
+                // Format: EVENT:22|CODE:A00-2|TIME:20251217192726
+                if (data.includes('CODE:') && data.includes('|')) {
+                    try {
+                        const parts = data.split('|');
+                        const codePart = parts.find(part => part.includes('CODE:'));
+                        
+                        if (codePart) {
+                            const fullCode = codePart.split(':')[1];
+                            console.log('Full code extracted:', fullCode);
+                            
+                            // Get number after dash
+                            if (fullCode.includes('-')) {
+                                const numberAfterDash = fullCode.split('-')[1];
+                                console.log('Number after dash:', numberAfterDash);
+                                return numberAfterDash; // Returns "2"
+                            }
+                            return fullCode;
+                        }
+                    } catch (e) {
+                        console.log('Error parsing QR format:', e);
+                    }
+                }
+                
+                // Direct input like "A00-2"
+                if (data.includes('-')) {
+                    const numberAfterDash = data.split('-')[1];
+                    console.log('Direct code - number after dash:', numberAfterDash);
+                    return numberAfterDash;
+                }
+                
+                // JSON format
+                try {
+                    const jsonData = JSON.parse(data);
+                    let code = jsonData.code || jsonData.ticketId || jsonData.participantCode ||
+                               jsonData.Code || jsonData.TicketId || jsonData.ParticipantCode;
+
+                    if (code && code.includes('-')) {
+                        const numberAfterDash = code.split('-')[1];
+                        console.log('JSON code - number after dash:', numberAfterDash);
+                        return numberAfterDash;
+                    }
+                    return code;
+                } catch (e) {
+                    // Not JSON
+                }
+                
+                console.log('No dash found, returning original:', data);
+                return data;
+            }
+
+            // Process scan - FIXED: Now sends correct code format
+            function processScan(code, source) {
+                debugger;
+                const accessPointId = $('#accessPoint').val();
+                if (!accessPointId || accessPointId === '0') {
+                    showAlert('Please select an access point first', 'warning');
+                    return;
+                }
+
+                // FIXED: Check for string "True" not boolean true
+                const selectedOption = $('#accessPoint option:selected');
+                const isPrintCenter = selectedOption.data('print-center') === "True" || 
+                                      selectedOption.data('print-center') === true;
+
+                console.log('Print Center Check:', {
+                    dataValue: selectedOption.data('print-center'),
+                    isPrintCenter: isPrintCenter,
+                    selectedText: selectedOption.text()
+                });
+
+                if (source === 'scanner') {
+                    $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Processing scan...');
+                } else if (source === 'manual') {
+                    $('#manualStatus').html('<span class="text-warning">Processing...</span>');
+                }
+
+                const requestData = {
+                    QrCode: code,
+                    AccessPoint: accessPointId,
+                    IsPrintCenter: isPrintCenter
+                };
+
+                console.log('Sending to server:', requestData);
+
+                $.ajax({
+                    url: '/QrConfiguration/ProcessScan',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(requestData),
+                    success: function (response) {
+                        console.log('Server response:', response);
+                        
+                        // AUTO PRINT if HTML is available AND isPrintCenter is true
+                        if (response.success && response.idCardHtml && isPrintCenter) {
+                            console.log('Auto-printing ID card for print center...');
+                            printIdCard(response.idCardHtml);
+                        }
+                        
+                        showScanResultPopup(response);
+
+                        if (response.success) {
+                            if (response.scanData) {
+                                addNewScanToTable(response.scanData);
+                            }
+                            loadStatistics(accessPointId);
+                        }
+
+                        if (source === 'manual') {
+                            $('#manualStatus').html('<span class="text-success">✓ Submitted</span>');
+                            setTimeout(() => $('#manualStatus').html(''), 2000);
+                        } else {
+                            $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('AJAX Error:', error);
+                        showAlert('Network error. Please try again.', 'danger');
+                        if (source === 'manual') {
+                            $('#manualStatus').html('<span class="text-danger">✗ Failed</span>');
+                        } else {
+                            $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+                        }
+                    }
+                });
+            }
+
+            // Refresh button
             $('#btnRefresh').click(function () {
                 const currentAccessPoint = $('#accessPoint').val();
                 if (currentAccessPoint && currentAccessPoint !== '0') {
@@ -632,6 +1372,23 @@
                     showAlert('No data to export. Please select an access point first.', 'warning');
                 }
             });
+
+            // Show alert function
+            function showAlert(message, type) {
+                $('.alert-dismissible').remove();
+
+                const alertHtml = `
+                    <div class="alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3" style="z-index: 1050; max-width: 300px;">
+                        ${message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                `;
+                $('body').append(alertHtml);
+
+                setTimeout(() => {
+                    $('.alert-dismissible').alert('close');
+                }, 3000);
+            }
 
             // Load scan log on page load if access point is already selected
             const initialAccessPointId = $('#accessPoint').val();

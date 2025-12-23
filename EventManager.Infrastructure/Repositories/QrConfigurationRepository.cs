@@ -43,20 +43,22 @@ namespace EventManager.Infrastructure.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
-        public async Task<List<ScanLogDto>> GetScanLogAsync(int eventId, int accesspointid)
+        public async Task<List<object>> GetScanLogAsync(int eventId, int accesspointid)
         {
             using var connection = _context.CreateConnection();
-            var result = await connection.QueryAsync<ScanLogDto>(
+
+            var result = await connection.QueryAsync(
                 "USP_GetScanLogByEventAndAccessPoint",
                 new
                 {
                     p_event_id = eventId,
                     p_access_point_id = accesspointid,
-                    p_user_id = (int?)null // Pass null since user_id is optional
+                    p_user_id = (int?)null
                 },
-                commandType: CommandType.StoredProcedure);
+                commandType: CommandType.StoredProcedure
+            );
 
-            return result.AsList();
+            return result.ToList(); 
         }
 
         public async Task<ScanStatisticsDto> GetScanStatisticsAsync(int eventId, int accesspointid)
