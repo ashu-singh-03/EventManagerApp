@@ -497,6 +497,44 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <script>
+                    function printIdCard(htmlContent) {
+                if (!htmlContent || htmlContent.trim() === '') return;
+
+                console.log('Auto-printing ID card...');
+
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                iframeDoc.open();
+                iframeDoc.write(`
+
+                        ${htmlContent}
+
+                `);
+                iframeDoc.close();
+
+                iframe.onload = function() {
+                    setTimeout(() => {
+                        iframe.contentWindow.focus();
+                        iframe.contentWindow.print();
+
+                        setTimeout(() => {
+                            document.body.removeChild(iframe);
+                        }, 1000);
+                    }, 500);
+                };
+            }
+
+          function reprintLastIdCard() {
+            if (window.lastIdCardHtml && window.lastIdCardHtml.trim() !== '') {
+                printIdCard(window.lastIdCardHtml);
+            } else {
+                alert('No ID card available for reprint');
+            }
+            }
+
         $(document).ready(function () {
             let scanner = null;
             let currentStream = null;
@@ -564,10 +602,11 @@
                         buttonClass = 'btn-danger';
                     }
                 } else {
+                    var responsemsg = response.message ? response.message.replace('@@idCardHtml@@', '') : '';
                     statusClass = 'scan-error';
                     iconClass = 'fas fa-times-circle';
                     statusText = 'ERROR';
-                    message = response.message || 'Scan failed';
+                    message = responsemsg;
                     buttonClass = 'btn-danger';
                 }
 
@@ -581,7 +620,7 @@
                 else if (statusText === 'DUPLICATE') badgeClass = 'status-duplicate';
 
                 statusBadge.html(`<span class="status-badge ${badgeClass}">${statusText}</span>`);
-                modalMessage.text(message);
+                modalMessage.html(message);
 
                 if (response.success && (response.ticketId || response.holderName)) {
                     participantDetails.show();
@@ -592,7 +631,7 @@
                 } else {
                     participantDetails.hide();
                     errorDetails.show();
-                    $('#errorMessage').text(response.message || 'An error occurred');
+                    $('#errorMessage').html(response.message || 'An error occurred');
                 }
 
                 modalContinueBtn.removeClass('btn-primary btn-success btn-danger btn-warning')
@@ -602,39 +641,10 @@
 
                 autoCloseInterval = setTimeout(function() {
                     modal.modal('hide');
-                }, 3000);
+                }, 100000);
             }
-
+           
             // Print ID card automatically
-            function printIdCard(htmlContent) {
-                if (!htmlContent || htmlContent.trim() === '') return;
-                
-                console.log('Auto-printing ID card...');
-                
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-                
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                iframeDoc.open();
-                iframeDoc.write(`
-                
-                        ${htmlContent}
-                    
-                `);
-                iframeDoc.close();
-                
-                iframe.onload = function() {
-                    setTimeout(() => {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-                        
-                        setTimeout(() => {
-                            document.body.removeChild(iframe);
-                        }, 1000);
-                    }, 500);
-                };
-            }
 
             // Function to load scan log and statistics
             function loadScanLogAndStats(accessPointId) {
@@ -1320,12 +1330,13 @@
                     success: function (response) {
                         console.log('Server response:', response);
                         
-                        // AUTO PRINT if HTML is available AND isPrintCenter is true
                         if (response.success && response.idCardHtml && isPrintCenter) {
                             console.log('Auto-printing ID card for print center...');
                             printIdCard(response.idCardHtml);
                         }
-                        
+                        if (response.idCardHtml) {
+                            window.lastIdCardHtml = response.idCardHtml;
+                        }
                         showScanResultPopup(response);
 
                         if (response.success) {
@@ -1334,6 +1345,7 @@
                             }
                             loadStatistics(accessPointId);
                         }
+
 
                         if (source === 'manual') {
                             $('#manualStatus').html('<span class="text-success">✓ Submitted</span>');

@@ -324,7 +324,6 @@
                         if (response.success) {
                             if (response.data && response.data.length > 0) {
                                 buildScanTable(response.data);
-                                showMessage('Loaded all scan data (' + response.data.length + ' records)', 'success');
                             } else {
                                 $('#scanLogContainer').html(`
                                     <div class="text-center text-muted py-5">

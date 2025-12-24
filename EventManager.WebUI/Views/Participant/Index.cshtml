@@ -929,8 +929,13 @@
             $('#modalClose').click(() => modal.removeClass('show'));
             modal.click((e) => { if ($(e.target).is('#bulkUploadModal')) modal.removeClass('show'); });
 
-            // File handling
-            $('#browseBtn').click(() => fileInput.click());
+            // Use event delegation for file handling
+            $(document).on('click', '#browseBtn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInput.click();
+            });
+
             fileInput.change(handleFileSelect);
 
             // Drag and drop
@@ -976,18 +981,6 @@
                             <span style="color: var(--gray);">Reading Excel file...</span>
                         </td>
                     </tr>`);
-
-                $('#changeFileBtn').click(() => {
-                    fileInput.val('');
-                    dropZone.html(`
-                        <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
-                        <h3>Drag & Drop your Excel file here</h3>
-                        <p>or</p>
-                        <button class="btn btn-primary" id="browseBtn">
-                            <i class="fas fa-folder-open"></i> Browse Files
-                        </button>`);
-                    $('#previewTable tbody').empty();
-                });
 
                 parseExcelFile(file);
             }
@@ -1101,9 +1094,12 @@
             }
 
             // Download template
-            $('#downloadTemplateBtn').click(() => window.location.href = '@Url.Action("DownloadTemplate", "Participant")');
+            $(document).on('click', '#downloadTemplateBtn', function(e) {
+                e.preventDefault();
+                window.location.href = '@Url.Action("DownloadTemplate", "Participant")';
+            });
 
-            // Upload process - SIMPLIFIED
+            // Upload process
             modalUploadBtn.click(function() {
                 const file = fileInput[0].files[0];
                 if (!file) {
@@ -1177,14 +1173,21 @@
                 });
             });
 
-            // Initialize
-            dropZone.html(`
-                <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
-                <h3>Drag & Drop your Excel file here</h3>
-                <p>or</p>
-                <button class="btn btn-primary" id="browseBtn">
-                    <i class="fas fa-folder-open"></i> Browse Files
-                </button>`);
+            // Event delegation for change file button
+            $(document).on('click', '#changeFileBtn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                fileInput.val('');
+                dropZone.html(`
+                    <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
+                    <h3>Drag & Drop your Excel file here</h3>
+                    <p>or</p>
+                    <button class="btn btn-primary" id="browseBtn">
+                        <i class="fas fa-folder-open"></i> Browse Files
+                    </button>`);
+                $('#previewTable tbody').empty();
+            });
         });
     </script>
 }

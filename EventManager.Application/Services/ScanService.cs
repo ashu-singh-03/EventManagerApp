@@ -87,7 +87,7 @@ namespace EventManager.Application.Services
 
                 // Generate ID card only for valid scans in print center
                 string idCardHtml = null;
-                if (isScanValid && isPrintCenter)
+                if (isPrintCenter)
                 {
                     // Get pass configuration for ID card template
                     var passConfig = await _repository.GetPassConfigurationAsync(eventId);
@@ -108,7 +108,7 @@ namespace EventManager.Application.Services
 
                 return new ScanResultDto
                 {
-                    Success = isScanValid,  // TRUE only when validationStatus == "VALID"
+                    Success = isScanValid,
                     Status = validationStatus,  // "VALID", "INVALID", "INVALID_ACCESS", "DUPLICATE"
                     Message = validationMessage,  // Message from stored procedure
                     TicketId = participant.ParticipantCode,
@@ -117,7 +117,7 @@ namespace EventManager.Application.Services
                     AccessPoint = request.AccessPoint,
                     ParticipantId = participant.ParticipantId,
                     IsPrintCenter = isPrintCenter,
-                    IdCardHtml = isScanValid ? idCardHtml : null,
+                    IdCardHtml = idCardHtml,
                     ValidationStatus = validationStatus,  // Add these
                     ValidationMessage = validationMessage
                 };
