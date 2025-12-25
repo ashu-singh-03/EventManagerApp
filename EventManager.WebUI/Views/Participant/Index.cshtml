@@ -557,6 +557,102 @@
         color: var(--gray);
         font-style: italic;
     }
+    /* DataTable specific styles */
+    #previewTable_wrapper .dataTables_scrollBody {
+        max-height: 400px !important;
+        min-height: 200px !important;
+    }
+
+    .dataTables_wrapper {
+        margin: 10px 0;
+    }
+
+    .dataTables_length,
+    .dataTables_filter {
+        margin-bottom: 10px;
+    }
+
+    .dataTables_info {
+        margin-top: 10px;
+    }
+
+    .dataTables_paginate {
+        margin-top: 10px;
+    }
+
+    table.dataTable {
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+        font-size: 0.85rem;
+    }
+
+    .dataTables_processing {
+        background-color: rgba(255, 193, 7, 0.8) !important;
+        color: #212121 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Ensure table header stays visible */
+    #previewTable thead th {
+        position: sticky;
+        top: 0;
+        background-color: var(--light-gray);
+        z-index: 10;
+    }
+
+    /* Style for DataTable buttons and controls */
+    .dataTables_filter input {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        width: 200px;
+    }
+
+    .dataTables_length select {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+    }
+
+    .paginate_button {
+        padding: 6px 12px !important;
+        margin: 0 2px !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 4px !important;
+    }
+
+        .paginate_button.current {
+            background-color: var(--primary) !important;
+            color: var(--dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        .paginate_button:hover {
+            background-color: var(--primary-light) !important;
+            color: var(--dark) !important;
+        }
+        
+    /* Attendees List DataTable Styles */
+    #attendeesTable_wrapper {
+        margin-top: 15px;
+    }
+
+    #attendeesTable_wrapper .dataTables_filter {
+        margin-bottom: 15px;
+    }
+
+    #attendeesTable_wrapper .dataTables_length {
+        margin-bottom: 15px;
+    }
+
+    /* Make sure action buttons don't wrap */
+    #attendeesTable td:last-child {
+        white-space: nowrap;
+    }
 </style>
 
 
@@ -633,7 +729,7 @@
         <div class="content-section" id="attendees-list">
             <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
             <div class="table-container" id="attendeesTableContainer">
-                <table class="table" id="attendeesTable">
+                <table class="table display nowrap" id="attendeesTable" style="width:100%">
                     <thead>
                         <tr>
                             <th>ID</th>
@@ -645,7 +741,9 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody id="attendeesTableBody"></tbody>
+                    <tbody id="attendeesTableBody">
+                        <!-- Data will be loaded dynamically -->
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -725,9 +823,143 @@
         </div>
     </div>
 </div>
+
 @section Scripts {
     <script>
         $(document).ready(function () {
+            // Initialize DataTable variables
+            let previewDataTable = null;
+            let attendeesDataTable = null;
+
+            // Initialize Preview DataTable (empty initially)
+            function initializeDataTable() {
+                // Destroy existing DataTable if it exists
+                if ($.fn.DataTable.isDataTable('#previewTable')) {
+                    previewDataTable.destroy();
+                    $('#previewTable').empty();
+                }
+
+                // Recreate table structure
+                $('#previewTable').html(`
+                    <thead>
+                        <tr>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Company</th>
+                            <th>Department</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                `);
+
+                // Initialize new DataTable
+                previewDataTable = $('#previewTable').DataTable({
+                    paging: true,
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    processing: false,
+                    language: {
+                        processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
+                        emptyTable: 'No data available in table',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ entries',
+                        infoEmpty: 'Showing 0 to 0 of 0 entries',
+                        infoFiltered: '(filtered from _MAX_ total entries)',
+                        lengthMenu: 'Show _MENU_ entries',
+                        search: 'Search:',
+                        paginate: {
+                            first: 'First',
+                            last: 'Last',
+                            next: 'Next',
+                            previous: 'Previous'
+                        }
+                    },
+                    dom: '<"top"lf>rt<"bottom"ip><"clear">',
+                    scrollY: '400px',
+                    scrollCollapse: true,
+                    order: [[0, 'asc']]
+                });
+            }
+
+            // Initialize Attendees DataTable
+            function initializeAttendeesDataTable() {
+                if ($.fn.DataTable.isDataTable('#attendeesTable')) {
+                    attendeesDataTable.destroy();
+                    $('#attendeesTable tbody').empty();
+                }
+                
+                attendeesDataTable = $('#attendeesTable').DataTable({
+                    paging: true,
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                    language: {
+                        processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
+                        emptyTable: 'No attendees found',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ attendees',
+                        infoEmpty: 'Showing 0 to 0 of 0 attendees',
+                        infoFiltered: '(filtered from _MAX_ total attendees)',
+                        lengthMenu: 'Show _MENU_ attendees',
+                        search: 'Search:',
+                        paginate: {
+                            first: 'First',
+                            last: 'Last',
+                            next: 'Next',
+                            previous: 'Previous'
+                        }
+                    },
+                    dom: '<"top"lf>rt<"bottom"ip><"clear">',
+                    columnDefs: [
+                        { 
+                            targets: 0, // ID column
+                            width: "5%",
+                            searchable: false
+                        },
+                        { 
+                            targets: 1, // Name column
+                            width: "20%"
+                        },
+                        { 
+                            targets: 2, // Email column
+                            width: "20%"
+                        },
+                        { 
+                            targets: 3, // Phone column
+                            width: "15%"
+                        },
+                        { 
+                            targets: 4, // Company column
+                            width: "15%"
+                        },
+                        { 
+                            targets: 5, // Department column
+                            width: "15%"
+                        },
+                        { 
+                            targets: 6, // Actions column
+                            width: "10%",
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    order: [[0, 'desc']] // Sort by ID descending
+                });
+            }
+
+            // Initialize on page load
+            initializeDataTable();
+            initializeAttendeesDataTable();
+
             // Alert functions for global alerts
             function showSuccess(message, totalRecords, importedRecords) {
                 const alertId = 'alert-' + Date.now();
@@ -811,49 +1043,79 @@
             };
 
             // Modal error functions
-                   // Modal error functions
-        function showModalError(message, totalRecords, failedRecords, errorFileUrl) {
-            const errorArea = $('#modalErrorArea');
-            const messageEl = $('#modalErrorMessage');
-            const statsEl = $('#modalErrorStats');
-            const actionsEl = $('#modalErrorActions');
+            function showModalError(message, totalRecords, failedRecords, errorFileUrl) {
+                const errorArea = $('#modalErrorArea');
+                const messageEl = $('#modalErrorMessage');
+                const statsEl = $('#modalErrorStats');
+                const actionsEl = $('#modalErrorActions');
 
-            // Convert to numbers - FIX: Handle null/undefined properly
-            const totalNum = totalRecords !== undefined && totalRecords !== null ? Number(totalRecords) : 0;
-            const failedNum = failedRecords !== undefined && failedRecords !== null ? Number(failedRecords) : 0;
+                // Convert to numbers
+                const totalNum = totalRecords || 0;
+                const failedNum = failedRecords || 0;
 
-            // Set message
-            messageEl.text(message || 'Unknown error');
+                // Set message
+                messageEl.text(message || 'Unknown error');
 
-            // Set stats - FIX: Use the actual numbers
-            statsEl.html(`
-                <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; background-color: rgba(108, 117, 125, 0.15); color: #383d41;">
-                    <i class="fas fa-users"></i> Total: ${totalNum}
-                </span>
-                <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; background-color: rgba(220, 53, 69, 0.15); color: #721c24;">
-                    <i class="fas fa-times-circle"></i> Failed: ${failedNum}
-                </span>
-            `);
-
-            // Set actions (download link) - FIX: Better URL checking
-            if (errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '' && errorFileUrl !== 'undefined') {
-                console.log("Error file URL:", errorFileUrl); // Debug log
-                actionsEl.html(`
-                    <a href="${errorFileUrl}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid #dc3545; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" target="_blank" download>
-                        <i class="fas fa-download"></i> Download Error Report
-                    </a>
+                // Set stats
+                statsEl.html(`
+                    <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; background-color: rgba(108, 117, 125, 0.15); color: #383d41;">
+                        <i class="fas fa-users"></i> Total: ${totalNum}
+                    </span>
+                    <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; background-color: rgba(220, 53, 69, 0.15); color: #721c24;">
+                        <i class="fas fa-times-circle"></i> Failed: ${failedNum}
+                    </span>
                 `);
-            } else {
-                actionsEl.html(`
-                    <div style="font-size: 13px; color: #757575; font-style: italic; padding: 4px 0;">
-                        <i class="fas fa-info-circle"></i> No error report available
-                    </div>
-                `);
+
+                // Set actions (download link)
+                if (errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '' && errorFileUrl !== 'undefined') {
+                    actionsEl.html(`
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <a href="${errorFileUrl}" style="display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background-color: rgba(220, 53, 69, 0.1); color: #dc3545; border: 1px solid #dc3545; border-radius: 6px; font-size: 13px; font-weight: 600; text-decoration: none; transition: all 0.3s ease;" target="_blank" download>
+                                <i class="fas fa-download"></i> Download Error Report
+                            </a>
+                            <button type="button" class="btn btn-secondary" id="retryUploadBtn" style="padding: 8px 16px; font-size: 13px; border: 1px solid #6c757d; background-color: #f8f9fa; color: #212529; border-radius: 6px; cursor: pointer;">
+                                <i class="fas fa-redo"></i> Try Different File
+                            </button>
+                        </div>
+                    `);
+
+                    // Add click handler for retry button
+                    setTimeout(() => {
+                        $('#retryUploadBtn').off('click').on('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            hideModalError();
+                            fileInput.val('');
+
+                            // Reset drop zone
+                            dropZone.html(`
+                                <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
+                                <h3>Drag & Drop your Excel file here</h3>
+                                <p>or</p>
+                                <button class="btn btn-primary" id="browseBtn">
+                                    <i class="fas fa-folder-open"></i> Browse Files
+                                </button>`);
+
+                            // Clear DataTable
+                            if (previewDataTable) {
+                                previewDataTable.clear().draw();
+                            }
+
+                            // Re-attach browse button click event
+                            setTimeout(() => {
+                                $('#browseBtn').off('click').on('click', function(e) {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    fileInput.click();
+                                });
+                            }, 100);
+                        });
+                    }, 100);
+                }
+
+                // Show error area
+                errorArea.show();
             }
-
-            // Show error area
-            errorArea.show();
-        }
 
             function hideModalError() {
                 $('#modalErrorArea').hide();
@@ -870,6 +1132,10 @@
                 $('#' + $(this).data('section')).addClass('active');
 
                 if ($(this).data('section') === 'attendees-list') {
+                    // Initialize or reload DataTable
+                    if (!attendeesDataTable || !$.fn.DataTable.isDataTable('#attendeesTable')) {
+                        initializeAttendeesDataTable();
+                    }
                     loadParticipants();
                 } else if ($(this).data('section') === 'manage-attendees') {
                     $('#attendeeForm')[0].reset();
@@ -921,6 +1187,8 @@
                         $('#attendeeForm')[0].reset();
                         $('#attendeeForm').removeData('participant-id');
                         $('#attendeeForm button[type="submit"]').text('Save Attendee');
+                        // Reload attendees DataTable
+                        loadParticipants();
                         $('.menu-itemlocal[data-section="attendees-list"]').click();
                     },
                     error: function (xhr) {
@@ -932,37 +1200,53 @@
 
             // Load participants
             function loadParticipants() {
+                // Show loading state
+                if (attendeesDataTable) {
+                    attendeesDataTable.clear().draw();
+                }
+                
                 $.ajax({
                     url: '@Url.Action("LoadParticipants", "Participant")',
                     type: 'GET',
                     data: { eventId: $('#EventId').val() },
                     success: function (participants) {
-                        const tbody = $('#attendeesTableBody');
-                        tbody.empty();
-
+                        // Initialize DataTable if not already initialized
+                        if (!attendeesDataTable || !$.fn.DataTable.isDataTable('#attendeesTable')) {
+                            initializeAttendeesDataTable();
+                        }
+                        
+                        // Clear existing data
+                        attendeesDataTable.clear();
+                        
                         if (!participants?.length) {
-                            tbody.append('<tr><td colspan="7" class="text-center">No attendees found</td></tr>');
+                            attendeesDataTable.draw();
                             return;
                         }
 
+                        // Add data to DataTable
                         participants.forEach(p => {
-                            tbody.append(`
-                                <tr>
-                                    <td>${p.participantId}</td>
-                                    <td>${p.firstName} ${p.lastName}</td>
-                                    <td>${p.email || ''}</td>
-                                    <td>${p.phone || ''}</td>
-                                    <td>${p.company || ''}</td>
-                                    <td>${p.department || ''}</td>
-                                    <td>
-                                        <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
-                                        <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
-                                    </td>
-                                </tr>`);
+                            attendeesDataTable.row.add([
+                                p.participantId,
+                                `${p.firstName} ${p.lastName}`,
+                                p.email || '',
+                                p.phone || '',
+                                p.company || '',
+                                p.department || '',
+                                `
+                                    <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
+                                    <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
+                                `
+                            ]);
                         });
+                        
+                        // Draw the table
+                        attendeesDataTable.draw();
                     },
                     error: function (xhr) {
                         showError('Error loading participants', 0, 0);
+                        if (attendeesDataTable) {
+                            attendeesDataTable.clear().draw();
+                        }
                     }
                 });
             }
@@ -1004,7 +1288,7 @@
                     data: { id: participantId },
                     success: function () {
                         showSuccess('Participant deleted successfully!', 1, 1);
-                        loadParticipants();
+                        loadParticipants(); // This will refresh the DataTable
                     },
                     error: function (xhr) {
                         showError('Error deleting participant', 1, 1);
@@ -1022,11 +1306,15 @@
             $('#bulkUploadBtn').click(() => {
                 hideModalError();
                 modal.addClass('show');
+                // Reset DataTable when opening modal
+                initializeDataTable();
             });
+
             $('#modalClose').click(() => {
                 hideModalError();
                 modal.removeClass('show');
             });
+
             modal.click((e) => {
                 if ($(e.target).is('#bulkUploadModal')) {
                     hideModalError();
@@ -1087,13 +1375,10 @@
                         <i class="fas fa-exchange-alt"></i> Change File
                     </button>`);
 
-                $('#previewTable tbody').html(`
-                    <tr>
-                        <td colspan="7" style="text-align: center; padding: 30px;">
-                            <i class="fas fa-spinner fa-spin fa-2x" style="color: var(--primary); margin-bottom: 10px;"></i><br>
-                            <span style="color: var(--gray);">Reading Excel file...</span>
-                        </td>
-                    </tr>`);
+                // Clear and show loading in DataTable
+                if (previewDataTable) {
+                    previewDataTable.clear().draw();
+                }
 
                 parseExcelFile(file);
             }
@@ -1108,8 +1393,10 @@
                         const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
                         if (jsonData.length <= 1) {
-                            $('#previewTable tbody').html('<tr><td colspan="7" class="text-center text-warning">Only headers found. No data rows.</td></tr>');
                             dropZone.find('p').text(`${(file.size/1024).toFixed(2)} KB • No data rows`);
+                            if (previewDataTable) {
+                                previewDataTable.clear().draw();
+                            }
                             return;
                         }
 
@@ -1154,49 +1441,72 @@
                             <i class="fas fa-check-circle" style="color: var(--success);"></i>
                             ${(file.size/1024).toFixed(2)} KB • ${attendeeData.length} attendees found`);
 
-                        renderPreviewTable(attendeeData);
+                        renderDataTable(attendeeData);
 
                     } catch (error) {
-                        $('#previewTable tbody').html(`<tr><td colspan="7" class="text-center text-danger">Error: ${error.message}</td></tr>`);
                         dropZone.find('p').html(`<i class="fas fa-times-circle" style="color: var(--danger);"></i> ${(file.size/1024).toFixed(2)} KB • Error`);
+                        showModalError(`Error parsing file: ${error.message}`, 0, 0);
                     }
                 };
                 reader.onerror = () => {
-                    $('#previewTable tbody').html('<tr><td colspan="7" class="text-center text-danger">Could not read file</td></tr>');
                     dropZone.find('p').html('<i class="fas fa-times-circle" style="color: var(--danger);"></i> File read error');
+                    showModalError('Could not read the file. Please try again.', 0, 0);
                 };
                 reader.readAsArrayBuffer(file);
             }
 
-            function renderPreviewTable(data) {
-                const tbody = $('#previewTable tbody');
-                tbody.empty();
+            function renderDataTable(data) {
+                if (!previewDataTable) {
+                    initializeDataTable();
+                }
+
+                // Clear existing data
+                previewDataTable.clear();
 
                 if (!data?.length) {
-                    tbody.html('<tr><td colspan="7" class="text-center text-muted">No data to display</td></tr>');
+                    previewDataTable.draw();
                     return;
                 }
 
-                const previewRows = Math.min(data.length, 10);
-                for (let i = 0; i < previewRows; i++) {
-                    const row = data[i];
-                    tbody.append(`
-                        <tr>
-                            <td>${escapeHtml(row.firstName || '')}</td>
-                            <td>${escapeHtml(row.lastName || '')}</td>
-                            <td>${escapeHtml(row.email || '')}</td>
-                            <td>${escapeHtml(row.phone || '')}</td>
-                            <td>${escapeHtml(row.company || '')}</td>
-                            <td>${escapeHtml(row.department || '')}</td>
-                            <td>${escapeHtml(row.notes || '')}</td>
-                        </tr>`);
-                }
+                // Add data to DataTable
+                data.forEach(row => {
+                    previewDataTable.row.add([
+                        escapeHtml(row.firstName || ''),
+                        escapeHtml(row.lastName || ''),
+                        escapeHtml(row.email || ''),
+                        escapeHtml(row.phone || ''),
+                        escapeHtml(row.company || ''),
+                        escapeHtml(row.department || ''),
+                        escapeHtml(row.notes || '')
+                    ]);
+                });
 
-                if (data.length > previewRows) {
-                    tbody.append(`<tr><td colspan="7" class="text-center text-muted"><i class="fas fa-ellipsis-h"></i> and ${data.length - previewRows} more rows</td></tr>`);
-                }
+                // Draw the table
+                previewDataTable.draw();
 
-                tbody.append(`<tr><td colspan="7" class="text-center fw-bold bg-primary-light"><i class="fas fa-users"></i> Total: ${data.length} attendees found</td></tr>`);
+                // Update the info text to show total count
+                updateDataTableInfo(data.length);
+            }
+
+            // Function to update DataTable info with correct count
+            function updateDataTableInfo(totalCount) {
+                // Wait for DataTable to update
+                setTimeout(() => {
+                    // Get the current info element
+                    const infoElement = $('.dataTables_info');
+                    if (infoElement.length) {
+                        if (totalCount === 0) {
+                            infoElement.text('Showing 0 to 0 of 0 entries');
+                        } else {
+                            // Get current page info from DataTable
+                            const pageInfo = previewDataTable.page.info();
+                            const start = pageInfo.start + 1;
+                            const end = pageInfo.end;
+
+                            infoElement.text(`Showing ${start} to ${end} of ${totalCount} attendees`);
+                        }
+                    }
+                }, 100);
             }
 
             function escapeHtml(text) {
@@ -1213,83 +1523,111 @@
             });
 
             // Upload process
-               modalUploadBtn.click(function () {
-            const file = fileInput[0].files[0];
+            modalUploadBtn.click(function () {
+                const file = fileInput[0].files[0];
 
-            if (!file) {
-                showModalError('Please select a file first.', 0, 0);
-                return;
-            }
-
-            const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
-            if (!['.xlsx', '.xls', '.csv'].includes(fileExtension)) {
-                showModalError('Please select a valid Excel file (.xlsx, .xls, .csv)', 0, 0);
-                return;
-            }
-
-            const originalText = modalUploadBtn.html();
-            modalUploadBtn
-                .html('<i class="fas fa-spinner fa-spin"></i> Uploading...')
-                .prop('disabled', true);
-
-            hideModalError();
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            $.ajax({
-                url: '@Url.Action("ImportExcel", "Participant")',
-                type: 'POST',
-                data: formData,
-                contentType: false,
-                processData: false,
-
-                success: function (response) {
-                    hideModalError(); // hide modal error if any
-                    modal.removeClass('show'); // close modal
-
-                    if (response.success) {
-                        // ✅ Show success message here
-                        showSuccess(
-                            response.message || 'File uploaded successfully!',
-                            response.totalRecords || 0,
-                            response.importedRecords || 0
-                        );
-
-                        loadParticipants(); // reload attendees list
-                    } else {
-                        // Show error if response.success = false
-                        showModalError(
-                            response.message || 'Import failed.',
-                            response.totalRecords || 0,
-                            response.failedRecords || 0,
-                            response.errorFileUrl
-                        );
-                    }
-                },
-
-                error: function (xhr) {
-                    console.log("AJAX Error:", xhr.responseJSON);
-
-                    if (xhr.responseJSON) {
-                        showModalError(
-                            xhr.responseJSON.message || 'Import failed',
-                            xhr.responseJSON.totalRecords || 0,
-                            xhr.responseJSON.failedRecords || 0,
-                            xhr.responseJSON.errorFileUrl || null
-                        );
-                    } else {
-                        showModalError('Error during import', 0, 0);
-                    }
-                },
-
-                complete: function () {
-                    // Restore button text and enable
-                    modalUploadBtn.html(originalText).prop('disabled', false);
+                if (!file) {
+                    showModalError('Please select a file first.', 0, 0);
+                    return;
                 }
-            });
-        });
 
+                const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+                if (!['.xlsx', '.xls', '.csv'].includes(fileExtension)) {
+                    showModalError('Please select a valid Excel file (.xlsx, .xls, .csv)', 0, 0);
+                    return;
+                }
+
+                const originalText = modalUploadBtn.html();
+                modalUploadBtn
+                    .html('<i class="fas fa-spinner fa-spin"></i> Uploading...')
+                    .prop('disabled', true);
+
+                hideModalError();
+
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('EventId', $('#EventId').val());
+
+                $.ajax({
+                    url: '@Url.Action("ImportExcel", "Participant")',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+
+                    // Handle both success and error responses
+                    success: function (response) {
+                        hideModalError();
+                        modal.removeClass('show');
+
+                        if (response.success) {
+                            showSuccess(
+                                response.message || 'File uploaded successfully!',
+                                response.totalRecords || 0,
+                                response.importedRecords || 0
+                            );
+                            loadParticipants();
+                        } else {
+                            // Server returned success: false with error details
+                            showModalError(
+                                response.message || 'Import failed.',
+                                response.totalRecords || 0,
+                                response.failedRecords || 0,
+                                response.errorFileUrl
+                            );
+                            // Don't close modal on validation errors
+                            modal.addClass('show');
+                        }
+                    },
+
+                    error: function (xhr, status, error) {
+                        console.log("AJAX Error Status:", status);
+                        console.log("AJAX Error:", error);
+                        console.log("Response:", xhr.responseJSON);
+
+                        // Check if it's a 400 error with JSON response
+                        if (xhr.status === 400 && xhr.responseJSON) {
+                            // This is actually a validation error from server
+                            showModalError(
+                                xhr.responseJSON.message || 'Validation failed',
+                                xhr.responseJSON.totalRecords || 0,
+                                xhr.responseJSON.failedRecords || 0,
+                                xhr.responseJSON.errorFileUrl
+                            );
+                            // Keep modal open to show errors
+                            modal.addClass('show');
+                        }
+                        // Check for 404 (endpoint not found)
+                        else if (xhr.status === 404) {
+                            showModalError(
+                                'Server endpoint not found. Please check the URL.',
+                                0, 0
+                            );
+                            modal.addClass('show');
+                        }
+                        // Check for 500 (server error)
+                        else if (xhr.status === 500) {
+                            showModalError(
+                                'Server error occurred. Please try again later.',
+                                0, 0
+                            );
+                            modal.addClass('show');
+                        }
+                        // Other errors
+                        else {
+                            showModalError(
+                                'Error during import: ' + (error || 'Unknown error'),
+                                0, 0
+                            );
+                            modal.addClass('show');
+                        }
+                    },
+
+                    complete: function () {
+                        modalUploadBtn.html(originalText).prop('disabled', false);
+                    }
+                });
+            });
 
             // Event delegation for change file button
             $(document).on('click', '#changeFileBtn', function(e) {
@@ -1298,14 +1636,61 @@
 
                 hideModalError();
                 fileInput.val('');
+                
+                // Reset drop zone
                 dropZone.html(`
                     <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
                     <h3>Drag & Drop your Excel file here</h3>
                     <p>or</p>
                     <button class="btn btn-primary" id="browseBtn">
                         <i class="fas fa-folder-open"></i> Browse Files
-                    </button>`);
-                $('#previewTable tbody').empty();
+                    </button>
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">`);
+
+                // Clear DataTable
+                if (previewDataTable) {
+                    previewDataTable.clear().draw();
+                    // Reset DataTable info text
+                    setTimeout(() => {
+                        $('.dataTables_info').text('Showing 0 to 0 of 0 entries');
+                    }, 100);
+                }
+
+                // IMPORTANT: Re-attach ALL event handlers
+                setTimeout(() => {
+                    // Re-attach browse button click
+                    $('#browseBtn').off('click').on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        fileInput.click();
+                    });
+                    
+                    // Re-attach file input change event
+                    fileInput.off('change').on('change', handleFileSelect);
+                    
+                    // Re-attach drag and drop events to the NEW drop zone element
+                    dropZone.off('dragover dragleave drop')
+                        .on('dragover', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            $(this).addClass('drag-over');
+                        })
+                        .on('dragleave', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            $(this).removeClass('drag-over');
+                        })
+                        .on('drop', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            $(this).removeClass('drag-over');
+                            const files = e.originalEvent.dataTransfer.files;
+                            if (files.length) {
+                                fileInput[0].files = files;
+                                handleFileSelect({ target: fileInput[0] });
+                            }
+                        });
+                }, 100);
             });
         });
     </script>

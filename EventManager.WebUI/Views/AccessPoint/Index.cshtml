@@ -1,6 +1,6 @@
 ﻿@{
     Layout = "/Views/Shared/_Layout.cshtml";
-    ViewData["Title"] = "Access Point";
+    ViewData["Title"] = "Access Point Management";
 }
 
 <style>
@@ -37,261 +37,253 @@
     .container {
         max-width: 1200px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 15px;
     }
 
+    /* ALERT STYLES - PROFESSIONAL */
+    .alert-area {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        width: 400px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .alert {
+        border-radius: 10px;
+        padding: 18px 20px;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: flex-start;
+        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+        .alert:hover {
+            transform: translateX(-5px);
+        }
+
+    .alert-success {
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+        border-color: #b1d8b7;
+        color: #155724;
+        border-left: 5px solid #28a745;
+    }
+
+    .alert-danger {
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+        border-color: #f1b0b7;
+        color: #721c24;
+        border-left: 5px solid #dc3545;
+    }
+
+    .alert-warning {
+        background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+        border-color: #ffe8a1;
+        color: #856404;
+        border-left: 5px solid #ffc107;
+    }
+
+    .alert-icon {
+        font-size: 24px;
+        margin-right: 15px;
+        margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .alert-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .alert-title {
+        font-weight: 700;
+        font-size: 16px;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .alert-message {
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 8px;
+    }
+
+    .alert-stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .stat-success {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #155724;
+    }
+
+    .stat-secondary {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #383d41;
+    }
+
+    .stat-danger {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #721c24;
+    }
+
+    .btn-close-alert {
+        background: none;
+        border: none;
+        color: inherit;
+        opacity: 0.7;
+        cursor: pointer;
+        font-size: 18px;
+        padding: 0;
+        margin-left: 10px;
+        transition: opacity 0.3s ease;
+    }
+
+        .btn-close-alert:hover {
+            opacity: 1;
+        }
+
+    @@keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    @@keyframes fadeOut {
+        from {
+            opacity: 1;
+        }
+
+        to {
+            opacity: 0;
+        }
+    }
+
+    /* REST OF YOUR EXISTING STYLES */
     header {
         background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         color: var(--dark);
-        padding: 20px 0;
-        border-radius: 12px;
-        margin-bottom: 25px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        padding: 15px 0;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
 
-    .header-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 0 25px;
-    }
-
-    .logo {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-        .logo i {
-            font-size: 1.8rem;
-        }
-
-        .logo h1 {
-            font-size: 1.6rem;
-            font-weight: 700;
-        }
-
-    .user-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        font-weight: 600;
-    }
-
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        background-color: var(--secondary);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        color: var(--primary);
-        font-weight: bold;
-        font-size: 1rem;
-    }
-
-    .dashboard {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 25px;
-        margin-bottom: 25px;
-    }
-
-    .dashboard-card {
-        background-color: white;
-        border-radius: 12px;
-        padding: 20px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
-    .dashboard-icon {
-        width: 60px;
-        height: 60px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.5rem;
-    }
-
-    .dashboard-1 .dashboard-icon {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-    }
-
-    .dashboard-2 .dashboard-icon {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
-    }
-
-    .dashboard-info h3 {
-        font-size: 1.8rem;
-        margin-bottom: 5px;
-    }
-
-    .dashboard-info p {
-        color: var(--gray);
-        font-size: 0.9rem;
-    }
-
-    .content-tabs {
+    .menu-bar {
         display: flex;
         background-color: white;
-        border-radius: 12px;
+        border-radius: 8px;
         overflow: hidden;
-        margin-bottom: 25px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 20px;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
     }
 
-    .tab {
+    .menu-itemlocal {
         flex: 1;
         text-align: center;
-        padding: 18px;
+        padding: 15px;
         cursor: pointer;
         transition: all 0.3s ease;
         font-weight: 600;
         color: var(--gray);
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         border-right: 1px solid var(--border);
-        position: relative;
     }
 
-        .tab:last-child {
+        .menu-itemlocal:last-child {
             border-right: none;
         }
 
-        .tab.active {
+        .menu-itemlocal.active {
             background-color: var(--primary);
             color: var(--dark);
         }
 
-        .tab:hover:not(.active) {
+        .menu-itemlocal:hover:not(.active) {
             background-color: var(--primary-light);
-        }
-
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: var(--primary-dark);
         }
 
     .content-section {
         display: none;
         background-color: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-        margin-bottom: 25px;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+        min-height: 600px;
     }
 
         .content-section.active {
             display: block;
-            animation: fadeIn 0.5s ease;
         }
 
-    @@keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .table-container {
+        overflow-x: auto;
+        border-radius: 8px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
     }
 
-    .section-title {
-        font-size: 1.4rem;
-        margin-bottom: 20px;
-        color: var(--dark);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding-bottom: 15px;
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+        font-size: 0.85rem;
+    }
+
+    th, td {
+        padding: 12px;
+        text-align: left;
         border-bottom: 1px solid var(--border);
     }
 
-        .section-title i {
-            color: var(--primary-dark);
-        }
-
-    .form-container {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 25px;
-    }
-
-    .form-card {
-        background-color: white;
-        border-radius: 12px;
-        padding: 25px;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    }
-
-        .form-card h3 {
-            margin-bottom: 20px;
-            color: var(--dark);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-            .form-card h3 i {
-                color: var(--primary-dark);
-            }
-
-    .form-group {
-        margin-bottom: 20px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 8px;
+    th {
+        background-color: var(--light-gray);
         font-weight: 600;
         color: var(--dark);
-        font-size: 0.9rem;
     }
 
-    .required::after {
-        content: ' *';
-        color: var(--danger);
+    tr:hover {
+        background-color: var(--primary-light);
     }
-
-    input, select, textarea {
-        width: 100%;
-        padding: 12px 15px;
-        border: 1px solid var(--border);
-        border-radius: 8px;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
-        }
 
     .btn {
-        padding: 12px 20px;
+        padding: 10px 18px;
         border: none;
-        border-radius: 8px;
+        border-radius: 5px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.3s ease;
         display: inline-flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         font-size: 0.9rem;
+        transition: all 0.3s ease;
     }
 
     .btn-primary {
@@ -314,126 +306,206 @@
             background-color: var(--border);
         }
 
-    .access-points-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 20px;
-        margin-top: 25px;
+    .btn-danger {
+        background-color: var(--danger);
+        color: white;
     }
 
-    .access-point-card {
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 20px;
-        background-color: white;
-        transition: all 0.3s ease;
-        position: relative;
+    .btn-warning {
+        background-color: var(--warning);
+        color: white;
     }
 
-        .access-point-card:hover {
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transform: translateY(-3px);
-            border-color: var(--primary);
-        }
+    .btn-sm {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+    }
 
-    .access-point-header {
+    .form-row {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
+        gap: 15px;
         margin-bottom: 15px;
     }
 
-    .access-point-name {
+    .form-col {
+        flex: 1;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
         font-weight: 600;
-        font-size: 1.1rem;
         color: var(--dark);
+        font-size: 0.9rem;
     }
 
-    .access-point-status {
-        padding: 5px 12px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
+    .required::after {
+        content: ' *';
+        color: var(--danger);
     }
 
-    .status-active {
-        background-color: var(--primary-light);
-        color: var(--primary-dark);
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
     }
 
-    .access-point-details div {
-        margin-bottom: 8px;
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+        }
+
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        color: var(--dark);
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
-    .access-point-actions {
-        display: flex;
-        gap: 8px;
+    /* DataTable specific styles */
+    #accessPointsTable_wrapper .dataTables_scrollBody {
+        max-height: 400px !important;
+        min-height: 200px !important;
     }
 
-    .action-btn {
+    .dataTables_wrapper {
+        margin: 10px 0;
+    }
+
+    .dataTables_length,
+    .dataTables_filter {
+        margin-bottom: 10px;
+    }
+
+    .dataTables_info {
+        margin-top: 10px;
+    }
+
+    .dataTables_paginate {
+        margin-top: 10px;
+    }
+
+    table.dataTable {
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+        font-size: 0.85rem;
+    }
+
+    .dataTables_processing {
+        background-color: rgba(255, 193, 7, 0.8) !important;
+        color: #212121 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    }
+
+    /* Ensure table header stays visible */
+    #accessPointsTable thead th {
+        position: sticky;
+        top: 0;
+        background-color: var(--light-gray);
+        z-index: 10;
+    }
+
+    /* Style for DataTable buttons and controls */
+    .dataTables_filter input {
         padding: 8px 12px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-size: 0.8rem;
-        display: flex;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        width: 200px;
+    }
+
+    .dataTables_length select {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+    }
+
+    .paginate_button {
+        padding: 6px 12px !important;
+        margin: 0 2px !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 4px !important;
+    }
+
+        .paginate_button.current {
+            background-color: var(--primary) !important;
+            color: var(--dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        .paginate_button:hover {
+            background-color: var(--primary-light) !important;
+            color: var(--dark) !important;
+        }
+
+    /* Make sure action buttons don't wrap */
+    #accessPointsTable td:last-child {
+        white-space: nowrap;
+    }
+
+    /* Status badge styles */
+    .status-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-flex;
         align-items: center;
         gap: 5px;
     }
 
-    .edit-btn {
-        background-color: rgba(255, 193, 7, 0.2);
-        color: var(--warning);
+    .status-active {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #155724;
     }
 
-        .edit-btn:hover {
-            background-color: var(--warning);
-            color: white;
-        }
-
-    .delete-btn {
-        background-color: rgba(211, 47, 47, 0.1);
-        color: var(--danger);
+    .status-inactive {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #383d41;
     }
 
-        .delete-btn:hover {
-            background-color: var(--danger);
-            color: white;
-        }
-
-    .notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        padding: 15px 20px;
+    /* Form card styles */
+    .form-card {
+        background-color: white;
         border-radius: 8px;
-        background-color: var(--success);
-        color: white;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        transform: translateX(150%);
-        transition: transform 0.3s ease;
+        padding: 25px;
+        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
     }
 
-        .notification.show {
-            transform: translateX(0);
+        .form-card h3 {
+            margin-bottom: 20px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .notification.error {
-            background-color: var(--danger);
-        }
-
-        .notification.warning {
-            background-color: var(--warning);
-            color: white;
-        }
+            .form-card h3 i {
+                color: var(--primary-dark);
+            }
 
     .empty-state {
         text-align: center;
@@ -450,247 +522,520 @@
         .empty-state p {
             font-size: 1rem;
         }
-
-    @@media (max-width: 992px) {
-        .form-container {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .dashboard {
-            grid-template-columns: 1fr;
-        }
-
-        .content-tabs {
-            flex-direction: column;
-        }
-
-        .access-points-grid {
-            grid-template-columns: 1fr;
-        }
-    }
 </style>
 
 <div class="container-fluid">
     <div class="card">
-        <div class="card-body p-4">
-            <div class="row">
-                <div class="col-lg-8">
-                    <div class="card border-0 shadow-sm mb-4">
-                        <div class="card-header bg-white border-0 pt-4">
-                            <h4 class="mb-0">
-                                <i class="fas fa-door-open text-warning me-2"></i>
-                                Create New Access Point
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <form id="accessPointForm">
-                                <div class="mb-3">
-                                    <label for="accessPointName" class="form-label fw-semibold">
-                                        <span class="text-danger">*</span> Access Point Name
-                                    </label>
-                                    <input type="text" class="form-control" id="accessPointName"
-                                           name="AccessPointName" placeholder="e.g., Main Entrance" required>
-                                </div>
+        <div class="card-body p-4 p-lg-5">
+            <!-- Global Alert Area -->
+            <div class="alert-area"></div>
 
-                                <div class="mb-4">
-                                    <label for="accessPointDescription" class="form-label fw-semibold">
-                                        Description
-                                    </label>
-                                    <textarea class="form-control" id="accessPointDescription"
-                                              name="AccessPointDescription" rows="3"
-                                              placeholder="Describe this access point..."></textarea>
-                                </div>
+            <!-- Menu Tabs -->
+            <div class="menu-bar">
+                <div class="menu-itemlocal active" data-section="manage-access-points">Create Access Point</div>
+                <div class="menu-itemlocal" data-section="access-points-list">Access Points List</div>
+            </div>
 
-                                <div class="d-flex gap-2">
-                                    <button type="submit" class="btn btn-warning fw-semibold">
-                                        <i class="fas fa-save me-2"></i>Create Access Point
-                                    </button>
-                                    <button type="reset" class="btn btn-outline-secondary">
-                                        <i class="fas fa-times me-2"></i>Reset Form
-                                    </button>
-                                </div>
-                            </form>
+            <!-- Create Access Point Section -->
+            <div class="content-section active" id="manage-access-points">
+                <div class="action-bar">
+                    <h2 class="section-title"><i class="fas fa-door-open"></i> Create New Access Point</h2>
+                </div>
+
+                <div class="form-card">
+                    <h3><i class="fas fa-info-circle"></i> Access Point Details</h3>
+                    <form id="accessPointForm">
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="accessPointName" class="required">Access Point Name</label>
+                                <input type="text" id="accessPointName" name="Name" required
+                                       placeholder="e.g., Main Entrance, Conference Room, Parking Gate">
+                            </div>
                         </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="accessPointDescription">Description</label>
+                                <textarea id="accessPointDescription" name="Description" rows="3"
+                                          placeholder="Describe this access point location, purpose, or any special instructions..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary" id="saveAccessPointBtn">
+                                <i class="fas fa-save"></i> Save Access Point
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Reset Form
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Access Points List Section -->
+            <div class="content-section" id="access-points-list">
+                <div class="action-bar">
+                    <h2 class="section-title"><i class="fas fa-list"></i> Access Points List</h2>
+                    <div>
+                        <button class="btn btn-primary" id="refreshAccessPointsBtn">
+                            <i class="fas fa-sync-alt"></i> Refresh List
+                        </button>
                     </div>
                 </div>
 
-                <div class="col-lg-4">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-header bg-white border-0 pt-4">
-                            <h4 class="mb-0">
-                                <i class="fas fa-list text-warning me-2"></i>
-                                Existing Access Points
-                            </h4>
-                        </div>
-                        <div class="card-body">
-                            <div class="row g-3" id="existingAccessPoints">
-                                <!-- Access points will be dynamically added here -->
-                                <div class="col-12">
-                                    <div class="text-center py-5 text-muted">
-                                        <i class="fas fa-inbox fa-2x mb-3"></i>
-                                        <p class="mb-0">No access points created yet</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="table-container" id="accessPointsTableContainer">
+                    <table class="table display nowrap" id="accessPointsTable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data will be loaded dynamically -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-
 @section Scripts {
+    <!-- Add DataTable JS -->
+
     <script>
         $(document).ready(function () {
-            let editId = 0;
+            // Initialize DataTable
+            let accessPointsDataTable = null;
+            let isDataTableInitialized = false;
 
-            loadAccessPoints();
+            // Initialize DataTable
+            function initializeAccessPointsDataTable() {
+                if ($.fn.DataTable.isDataTable('#accessPointsTable')) {
+                    accessPointsDataTable.destroy();
+                    $('#accessPointsTable tbody').empty();
+                }
 
+                accessPointsDataTable = $('#accessPointsTable').DataTable({
+                    paging: true,
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                    processing: false, // This is just a config option, not a method
+                    language: {
+                        processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
+                        emptyTable: 'No access points found',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ access points',
+                        infoEmpty: 'Showing 0 to 0 of 0 access points',
+                        infoFiltered: '(filtered from _MAX_ total access points)',
+                        lengthMenu: 'Show _MENU_ access points',
+                        search: 'Search:',
+                        paginate: {
+                            first: 'First',
+                            last: 'Last',
+                            next: 'Next',
+                            previous: 'Previous'
+                        }
+                    },
+                    dom: '<"top"lf>rt<"bottom"ip><"clear">',
+                    columnDefs: [
+                        {
+                            targets: 0, // ID column
+                            width: "5%",
+                            searchable: false
+                        },
+                        {
+                            targets: 1, // Name column
+                            width: "25%"
+                        },
+                        {
+                            targets: 2, // Description column
+                            width: "30%"
+                        },
+                        {
+                            targets: 3, // Status column
+                            width: "10%",
+                            orderable: false
+                        },
+                        {
+                            targets: 4, // Created Date column
+                            width: "15%",
+                            type: 'date'
+                        },
+                        {
+                            targets: 5, // Actions column
+                            width: "15%",
+                            orderable: false,
+                            searchable: false
+                        }
+                    ],
+                    order: [[0, 'desc']], // Sort by ID descending
+                    initComplete: function() {
+                        isDataTableInitialized = true;
+                    }
+                });
+            }
+
+            // Alert functions
+            function showSuccess(message) {
+                const alertId = 'alert-' + Date.now();
+                const successHtml = `
+                    <div id="${alertId}" class="alert alert-success">
+                        <i class="fas fa-check-circle alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">
+                                <span>Success!</span>
+                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="alert-message">${message}</div>
+                        </div>
+                    </div>`;
+                $('.alert-area').append(successHtml);
+                setTimeout(() => closeAlert(alertId), 5000);
+            }
+
+            function showError(message) {
+                const alertId = 'alert-' + Date.now();
+                const errorHtml = `
+                    <div id="${alertId}" class="alert alert-danger">
+                        <i class="fas fa-exclamation-triangle alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">
+                                <span>Error!</span>
+                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="alert-message">${message}</div>
+                        </div>
+                    </div>`;
+                $('.alert-area').append(errorHtml);
+                setTimeout(() => closeAlert(alertId), 8000);
+            }
+
+            function showWarning(message) {
+                const alertId = 'alert-' + Date.now();
+                const warningHtml = `
+                    <div id="${alertId}" class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">
+                                <span>Warning!</span>
+                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="alert-message">${message}</div>
+                        </div>
+                    </div>`;
+                $('.alert-area').append(warningHtml);
+                setTimeout(() => closeAlert(alertId), 6000);
+            }
+
+            window.closeAlert = function(alertId) {
+                const alert = $('#' + alertId);
+                if (alert.length) {
+                    alert.css('animation', 'fadeOut 0.5s ease forwards');
+                    setTimeout(() => alert.remove(), 500);
+                }
+            };
+
+            // Tab switching
+            $('.menu-itemlocal').click(function () {
+                $('.menu-itemlocal').removeClass('active');
+                $(this).addClass('active');
+                $('.content-section').removeClass('active');
+                $('#' + $(this).data('section')).addClass('active');
+
+                if ($(this).data('section') === 'access-points-list') {
+                    if (!isDataTableInitialized || !$.fn.DataTable.isDataTable('#accessPointsTable')) {
+                        initializeAccessPointsDataTable();
+                    }
+                    loadAccessPoints();
+                } else if ($(this).data('section') === 'manage-access-points') {
+                    $('#accessPointForm')[0].reset();
+                    $('#accessPointForm').removeData('access-point-id');
+                    $('#saveAccessPointBtn').html('<i class="fas fa-save"></i> Save Access Point');
+                }
+            });
+
+            // Form validation
             $('#accessPointForm').validate({
                 rules: {
-                    AccessPointName: { required: true, minlength: 3 },
-                    AccessPointDescription: { maxlength: 250 }
+                    Name: {
+                        required: true,
+                        minlength: 3,
+                        maxlength: 100
+                    },
+                    Description: {
+                        maxlength: 500
+                    }
                 },
                 messages: {
-                    AccessPointName: {
-                        required: "Please enter Access Point Name",
-                        minlength: "Access Point Name must be at least 3 characters"
+                    Name: {
+                        required: "Access Point Name is required",
+                        minlength: "Access Point Name must be at least 3 characters",
+                        maxlength: "Access Point Name cannot exceed 100 characters"
                     },
-                    AccessPointDescription: { maxlength: "Description cannot exceed 250 characters" }
+                    Description: {
+                        maxlength: "Description cannot exceed 500 characters"
+                    }
                 },
                 errorClass: "text-danger",
-                errorPlacement: function (error, element) { error.insertAfter(element); },
-                submitHandler: function (form) {
-                    const dto = {
-                        AccessPointId: editId,
-                        Name: $('#accessPointName').val().trim(),
-                        Description: $('#accessPointDescription').val().trim()
-                    };
+                errorPlacement: (error, element) => error.insertAfter(element),
+                highlight: (element) => $(element).addClass('is-invalid'),
+                unhighlight: (element) => $(element).removeClass('is-invalid'),
+                submitHandler: saveAccessPoint
+            });
 
-                    $.ajax({
-                        url: '/AccessPoint/Save',
-                        method: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify(dto),
-                        success: function (res) {
-                            showNotification(res.message);
+            // Save access point
+            function saveAccessPoint() {
+                const accessPointId = $('#accessPointForm').data('access-point-id') || 0;
+                const isEdit = accessPointId > 0;
+
+                const dto = {
+                    AccessPointId: accessPointId,
+                    Name: $('#accessPointName').val().trim(),
+                    Description: $('#accessPointDescription').val().trim()
+                };
+
+                // Show loading on button
+                const originalText = $('#saveAccessPointBtn').html();
+                $('#saveAccessPointBtn')
+                    .html('<i class="fas fa-spinner fa-spin"></i> Saving...')
+                    .prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("Save", "AccessPoint")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(dto),
+                    success: function (response) {
+                        if (response.success) {
+                            showSuccess(response.message || `Access Point ${isEdit ? 'updated' : 'created'} successfully!`);
                             $('#accessPointForm')[0].reset();
-                            editId = 0;
+                            $('#accessPointForm').removeData('access-point-id');
+                            $('#saveAccessPointBtn').html('<i class="fas fa-save"></i> Save Access Point');
+
+                            // Switch to list tab and refresh
+                            $('.menu-itemlocal[data-section="access-points-list"]').click();
                             loadAccessPoints();
-                        },
-                        error: function (xhr) {
-                            const err = xhr.responseJSON?.error || 'Failed to save access point';
-                            showNotification(err, 'error');
+                        } else {
+                            showError(response.message || `Failed to ${isEdit ? 'update' : 'create'} access point`);
                         }
-                    });
-                }
-            });
+                    },
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.message || 'Error saving access point';
+                        showError(errorMessage);
+                    },
+                    complete: function () {
+                        $('#saveAccessPointBtn').html(originalText).prop('disabled', false);
+                    }
+                });
+            }
 
-            $('.tab').click(function () {
-                $('.tab, .content-section').removeClass('active');
-                $(this).addClass('active');
-                $('#' + $(this).data('section')).addClass('active');
-            });
-
+            // Load access points into DataTable
             function loadAccessPoints() {
-                $.ajax({
-                    url: '/AccessPoint/LoadAccessPoints',
-                    method: 'GET',
-                    success: function (data) {
-                        renderAccessPoints(data);
-                        updateDashboard(data);
-                    },
-                    error: function () {
-                        showNotification('Failed to load access points', 'error');
-                    }
-                });
-            }
+                // Show loading state in DataTable
+                if (accessPointsDataTable) {
+                    // Clear existing data
+                    accessPointsDataTable.clear().draw();
 
-            function renderAccessPoints(accessPoints) {
-                const container = $('#existingAccessPoints');
-                container.empty();
+                    // Add a loading row
+                    const loadingRow = accessPointsDataTable.row.add([
+                        '',
+                        '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-lg"></i> Loading access points...</div>',
+                        '',
+                        '',
+                        '',
+                        ''
+                    ]).node();
 
-                if (accessPoints.length === 0) {
-                    container.html(`
-                        <div class="empty-state">
-                            <i class="fas fa-door-closed"></i>
-                            <p>No access points created yet</p>
-                            <p style="margin-top:10px;">Create your first access point using the form on the left</p>
-                        </div>
-                    `);
-                    return;
+                    // Make the loading row span all columns
+                    $(loadingRow).find('td:eq(1)').attr('colspan', '6');
+                    $(loadingRow).find('td').not(':eq(1)').hide();
+
+                    accessPointsDataTable.draw();
                 }
 
-                accessPoints.forEach(ap => {
-                    const card = $(`
-                        <div class="access-point-card">
-                            <div class="access-point-header">
-                                <div class="access-point-name">${ap.name}</div>
-                                <div class="access-point-status status-active">Active</div>
-                            </div>
-                            <div class="access-point-details">
-                                <div><i class="fas fa-info-circle"></i> ${ap.description || ''}</div>
-                            </div>
-                            <div class="access-point-actions">
-                                <button class="action-btn edit-btn" data-id="${ap.accessPointId}"><i class="fas fa-edit"></i> Edit</button>
-                                <button class="action-btn delete-btn" data-id="${ap.accessPointId}"><i class="fas fa-trash"></i> Delete</button>
-                            </div>
-                        </div>
-                    `);
-                    container.append(card);
-                });
-
-                $('.edit-btn').click(function () { editAccessPoint($(this).data('id')); });
-                $('.delete-btn').click(function () { deleteAccessPoint($(this).data('id')); });
-            }
-
-            function editAccessPoint(id) {
                 $.ajax({
-                    url: '/AccessPoint/Details?id=' + id,
-                    method: 'GET',
-                    success: function (ap) {
-                        $('#accessPointName').val(ap.name);
-                        $('#accessPointDescription').val(ap.description);
-                        editId = ap.accessPointId;
-                        showNotification('Access point loaded for editing. Update and click Create to save.', 'warning');
+                    url: '@Url.Action("LoadAccessPoints", "AccessPoint")',
+                    type: 'GET',
+                    success: function (accessPoints) {
+                        // Initialize DataTable if not already initialized
+                        if (!isDataTableInitialized || !$.fn.DataTable.isDataTable('#accessPointsTable')) {
+                            initializeAccessPointsDataTable();
+                        }
+
+                        // Clear existing data
+                        accessPointsDataTable.clear();
+
+                        if (!accessPoints || !Array.isArray(accessPoints) || accessPoints.length === 0) {
+                            // Add empty state row
+                            accessPointsDataTable.row.add([
+                                '',
+                                '<div class="text-center py-4 text-muted"><i class="fas fa-door-closed fa-2x mb-2"></i><br>No access points found</div>',
+                                '',
+                                '',
+                                '',
+                                ''
+                            ]).draw();
+                            return;
+                        }
+
+                        // Add data to DataTable
+                        accessPoints.forEach(ap => {
+                            // Format date if exists
+                            const createdDate = ap.createdDate
+                                ? new Date(ap.createdDate).toLocaleDateString('en-US', {
+                                    year: 'numeric',
+                                    month: 'short',
+                                    day: 'numeric'
+                                })
+                                : '';
+
+                            accessPointsDataTable.row.add([
+                                ap.accessPointId,
+                                escapeHtml(ap.name || ''),
+                                escapeHtml(ap.description || ''),
+                                `<span class="status-badge status-active">Active</span>`,
+                                createdDate,
+                                `
+                                    <button class="btn btn-warning btn-sm edit-btn" data-id="${ap.accessPointId}">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                    <button class="btn btn-danger btn-sm delete-btn" data-id="${ap.accessPointId}">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                `
+                            ]);
+                        });
+
+                        // Draw the table
+                        accessPointsDataTable.draw();
                     },
-                    error: function () {
-                        showNotification('Failed to load access point details', 'error');
+                    error: function (xhr) {
+                        showError('Error loading access points');
+                        if (accessPointsDataTable) {
+                            accessPointsDataTable.clear();
+                            // Add error state row
+                            accessPointsDataTable.row.add([
+                                '',
+                                '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error loading access points</div>',
+                                '',
+                                '',
+                                '',
+                                ''
+                            ]).draw();
+                        }
                     }
                 });
             }
 
-            function deleteAccessPoint(id) {
-                if (!confirm('Are you sure you want to delete this access point?')) return;
+            // Edit access point
+            $(document).on('click', '.edit-btn', function () {
+                const accessPointId = $(this).data('id');
+
+                // Show loading on button
+                const originalText = $(this).html();
+                $(this)
+                    .html('<i class="fas fa-spinner fa-spin"></i>')
+                    .prop('disabled', true);
 
                 $.ajax({
-                    url: '/AccessPoint/Delete?id=' + id,
-                    method: 'POST',
-                    success: function (res) {
-                        showNotification(res.message);
-                        loadAccessPoints();
+                    url: '@Url.Action("Details", "AccessPoint")',
+                    type: 'GET',
+                    data: { id: accessPointId },
+                    success: function (accessPoint) {
+                        // Switch to create tab
+                        $('.menu-itemlocal[data-section="manage-access-points"]').click();
+
+                        // Fill form with data
+                        $('#accessPointName').val(accessPoint.name);
+                        $('#accessPointDescription').val(accessPoint.description);
+                        $('#accessPointForm').data('access-point-id', accessPoint.accessPointId);
+                        $('#saveAccessPointBtn').html('<i class="fas fa-edit"></i> Update Access Point');
+
+                        // Scroll to form
+                        $('html, body').animate({
+                            scrollTop: $('#manage-access-points').offset().top - 20
+                        }, 500);
                     },
                     error: function () {
-                        showNotification('Failed to delete access point', 'error');
+                        showError('Error fetching access point details.');
+                    },
+                    complete: function() {
+                        // Reset button
+                        $(this).html(originalText).prop('disabled', false);
+                    }.bind(this) // Bind the context to maintain 'this'
+                });
+            });
+
+            // Delete access point
+            $(document).on('click', '.delete-btn', function () {
+                const accessPointId = $(this).data('id');
+                const $deleteBtn = $(this);
+                const accessPointName = $deleteBtn.closest('tr').find('td:eq(1)').text().trim();
+
+                if (!confirm(`Are you sure you want to delete "${accessPointName}"? This action cannot be undone.`)) return;
+
+                // Show loading on button
+                const originalText = $deleteBtn.html();
+                $deleteBtn
+                    .html('<i class="fas fa-spinner fa-spin"></i>')
+                    .prop('disabled', true);
+
+                $.ajax({
+                    url: '@Url.Action("Delete", "AccessPoint")',
+                    type: 'POST',
+                    data: { id: accessPointId },
+                    success: function (response) {
+                        if (response.success) {
+                            showSuccess(response.message || 'Access point deleted successfully!');
+                            loadAccessPoints(); // Refresh DataTable
+                        } else {
+                            showError(response.message || 'Error deleting access point');
+                            // Reset button
+                            $deleteBtn.html(originalText).prop('disabled', false);
+                        }
+                    },
+                    error: function () {
+                        showError('Error deleting access point');
+                        // Reset button
+                        $deleteBtn.html(originalText).prop('disabled', false);
                     }
                 });
+            });
+
+            // Refresh button
+            $('#refreshAccessPointsBtn').click(function () {
+                loadAccessPoints();
+                showSuccess('Access points list refreshed');
+            });
+
+            // Escape HTML function
+            function escapeHtml(text) {
+                if (!text) return '';
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
             }
 
-            function updateDashboard(accessPoints) {
-                $('#totalAccessPoints').text(accessPoints.length);
-                $('#activeAssignments').text('0');
-            }
-
-            function showNotification(message, type = 'success') {
-                const notification = $('#notification');
-                $('#notificationText').text(message);
-                notification.removeClass().addClass('notification').addClass(type).addClass('show');
-                setTimeout(() => notification.removeClass('show'), 3000);
-            }
+            // Initialize on page load
+            initializeAccessPointsDataTable();
+            loadAccessPoints();
         });
     </script>
 }
