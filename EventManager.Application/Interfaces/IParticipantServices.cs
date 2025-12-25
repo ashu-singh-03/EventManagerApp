@@ -3,7 +3,7 @@ using EventManager.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 
 namespace EventManager.Application.Interfaces
 {
@@ -13,6 +13,12 @@ namespace EventManager.Application.Interfaces
         Task<ParticipantDto> GetParticipantByIdAsync(int participantId);
         Task SaveParticipantAsync(ParticipantDto participantDto);
         Task DeleteParticipantAsync(int participantId);
-        Task<ImportResult> ImportParticipantsFromExcelAsync(IFormFile excelFile, int eventId, string createdBy);
+
+        // Add uploadsFolder parameter with default value
+        Task<ImportResult> ImportParticipantsFromExcelAsync(
+            IFormFile excelFile,
+            int eventId,
+            string createdBy,
+            string uploadsFolder = null);
     }
 }

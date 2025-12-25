@@ -9,11 +9,12 @@ namespace EventManager.Application.DTOs
         public int EventId { get; set; }
         public string EventName { get; set; }
         public string EventDescription { get; set; }
-        public string EventDate { get; set; }  // string from JS
-        public string EventTime { get; set; }  // string from JS
+        public string EventDate { get; set; }
+        public string EventTime { get; set; }
         public string Location { get; set; }
-        public string EndDate { get; set; }    // string from JS
-        public string EndTime { get; set; }    // string from JS
+        public string EndDate { get; set; }
+        public string EndTime { get; set; }
+        public int ParticipantCount { get; set; }
     }
 
 }

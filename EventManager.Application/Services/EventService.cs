@@ -21,7 +21,10 @@ namespace EventManager.Application.Services
 
         public async Task<IEnumerable<EventDto>> GetAllEventsAsync()
         {
+            // Repository returns IEnumerable<Event> entities
             var events = await _repository.GetAllEventsAsync();
+
+            // Map Event entities to EventDto DTOs
             return events.Select(e => new EventDto
             {
                 EventId = e.EventId,
@@ -31,7 +34,8 @@ namespace EventManager.Application.Services
                 EventTime = e.EventTime?.ToString(@"hh\:mm"),
                 Location = e.Location,
                 EndDate = e.EndDate?.ToString("yyyy-MM-dd"),
-                EndTime = e.EndTime?.ToString(@"hh\:mm")
+                EndTime = e.EndTime?.ToString(@"hh\:mm"),
+                ParticipantCount = e.ParticipantCount // Make sure Event entity has this property
             }).ToList();
         }
 
@@ -49,7 +53,8 @@ namespace EventManager.Application.Services
                 EventTime = e.EventTime?.ToString(@"hh\:mm"),
                 Location = e.Location,
                 EndDate = e.EndDate?.ToString("yyyy-MM-dd"),
-                EndTime = e.EndTime?.ToString(@"hh\:mm")
+                EndTime = e.EndTime?.ToString(@"hh\:mm"),
+                ParticipantCount = e.ParticipantCount // Add this
             };
         }
 
@@ -73,7 +78,8 @@ namespace EventManager.Application.Services
                     EventTime = e.EventTime?.ToString(@"hh\:mm"),
                     Location = e.Location,
                     EndDate = e.EndDate?.ToString("yyyy-MM-dd"),
-                    EndTime = e.EndTime?.ToString(@"hh\:mm")
+                    EndTime = e.EndTime?.ToString(@"hh\:mm"),
+                    ParticipantCount = e.ParticipantCount // Add this
                 },
                 TicketTypes = tickets.Select(t => new TicketTypeDto
                 {

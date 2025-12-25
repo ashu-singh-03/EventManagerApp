@@ -6,7 +6,6 @@
 }
 
 <style>
- 
     /* --- General Layout & Header --- */
     .dashboard-header {
         border-bottom: 1px solid #dee2e6;
@@ -20,7 +19,7 @@
         border-radius: 1.5rem;
         overflow: hidden;
         transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s ease-in-out;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); /* Deeper default shadow */
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
         background-color: #ffffff;
     }
 
@@ -44,7 +43,7 @@
         background-color: var(--primary-yellow);
         color: var(--text-dark);
         border-radius: 0.75rem;
-        width: 70px; /* Fixed width for uniformity */
+        width: 70px;
         height: 70px;
         display: flex;
         flex-direction: column;
@@ -97,7 +96,7 @@
         }
 
     .best-practices-section .premium-card {
-        box-shadow: none; /* Make them look lighter and informational */
+        box-shadow: none;
         background-color: var(--card-bg-light);
     }
 
@@ -105,6 +104,19 @@
             transform: none;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
         }
+
+    /* --- Participant Count Styles --- */
+    .participant-count-high {
+        color: #198754 !important;
+    }
+
+    .participant-count-medium {
+        color: #0dcaf0 !important;
+    }
+
+    .participant-count-low {
+        color: #6c757d !important;
+    }
 </style>
 
 <div class="container py-5">
@@ -118,6 +130,16 @@
 
     @if (!Model.Any())
     {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fa-solid fa-calendar-xmark fa-4x text-muted"></i>
+            </div>
+            <h3 class="fw-bold text-dark mb-3">No Events Found</h3>
+            <p class="text-secondary mb-4">You haven't created any events yet. Get started by creating your first event!</p>
+            <a class="btn btn-warning btn-lg fw-bold px-4 py-3" asp-controller="Event" asp-action="Create">
+                <i class="fa-solid fa-calendar-plus me-2"></i> Create Your First Event
+            </a>
+        </div>
     }
     else
     {
@@ -130,17 +152,40 @@
 
                             <div class="d-flex justify-content-between align-items-start mb-3">
                                 @{
-                                    // Parse EventDate string to DateTime
                                     DateTime eventDate = DateTime.Parse(evt.EventDate);
                                     bool isLive = eventDate >= DateTime.Now.Date;
                                     var badgeClass = isLive ? "bg-success text-white" : "bg-secondary text-white";
-                                    var badgeText = isLive ? "LIVE" : "DRAFT/PAST";
-                                }
-                            <span class="badge @badgeClass status-badge">@badgeText</span>
 
-                            <div class="text-end">
-                                <h6 class="mb-0 text-muted small">Participants</h6>
-                                <h4 class="fw-bolder text-info mb-0">125+</h4>
+                                    // Get actual participant count from database
+                                    int participantCount = evt.ParticipantCount;
+                                    string countClass = "participant-count-low";
+                                    if (participantCount >= 100)
+                                    {
+                                        countClass = "participant-count-high";
+                                    }
+                                    else if (participantCount > 0)
+                                    {
+                                        countClass = "participant-count-medium";
+                                    }
+                                }
+
+                                <div class="text-end">
+                                    <h6 class="mb-0 text-muted small">Participants</h6>
+                                    <h4 class="fw-bolder mb-0 @countClass">
+                                        @participantCount
+                                    </h4>
+                                    @if (participantCount == 0)
+                                    {
+                                        <small class="text-muted">No participants yet</small>
+                                    }
+                                    else if (participantCount >= 100)
+                                    {
+                                        <small class="text-success">Great attendance!</small>
+                                    }
+                                    else if (participantCount >= 50)
+                                    {
+                                        <small class="text-info">Good response</small>
+                                    }
                             </div>
                         </div>
 
@@ -188,7 +233,6 @@
                                     <button type="submit" class="btn btn-info">Manage Event</button>
                                 </form>
 
-
                                 <div class="btn-group" role="group">
                                     <form method="post" asp-controller="Event" asp-action="Edit">
                                         <input type="hidden" name="eventId" value="@evt.EventId" />
@@ -201,9 +245,7 @@
                                         <i class="fa-solid fa-trash me-1"></i> Delete Event
                                     </button>
                                 </div>
-
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -244,11 +286,9 @@
     </div>
 </div>
 
-
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Handle Delete button (AJAX functionality)
             $('#eventContainer').on('click', '.delete-event', function () {
                 var eventId = $(this).data('id');
 
@@ -260,11 +300,8 @@
                         data: JSON.stringify(eventId),
                         success: function (response) {
                             if (response.success) {
-                                // Use a toast or temporary message instead of alert for better UI
-                                // alert(response.message);
                                 $('#eventCard_' + eventId).fadeOut(600, function () {
                                     $(this).remove();
-                                    // Reload if the last card is gone to show the Welcome view
                                     if ($('#eventContainer').children().length === 0) {
                                         location.reload();
                                     }

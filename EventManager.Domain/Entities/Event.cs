@@ -20,6 +20,7 @@ namespace EventManager.Domain.Entities
         public string? UpdatedBy { get; set; }
         public string? Status { get; set; }
         public bool IsActive { get; set; }
+        public int ParticipantCount { get; set; }
 
     }
 
