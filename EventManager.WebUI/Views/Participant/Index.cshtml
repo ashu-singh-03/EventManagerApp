@@ -560,90 +560,95 @@
 </style>
 
 
-<div class="container">
-    <div class="menu-bar">
-        <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
-        <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
-    </div>
+<div class="container-fluid">
+    <div class="card">
+        <div class="card-body p-4 p-lg-5">
 
-    <!-- Global Alert Area -->
-    <div class="alert-area"></div>
+        <div class="menu-bar">
+            <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
+            <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
+        </div>
 
-    <!-- Manage Attendees Section -->
-    <div class="content-section active" id="manage-attendees">
-        <div class="action-bar">
-            <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
-            <div>
-                <button class="btn btn-primary" id="bulkUploadBtn">
-                    <i class="fas fa-file-upload"></i> Bulk Upload
-                </button>
+        <!-- Global Alert Area -->
+        <div class="alert-area"></div>
+
+        <!-- Manage Attendees Section -->
+        <div class="content-section active" id="manage-attendees">
+            <div class="action-bar">
+                <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
+                <div>
+                    <button class="btn btn-primary" id="bulkUploadBtn">
+                        <i class="fas fa-file-upload"></i> Bulk Upload
+                    </button>
+                </div>
+            </div>
+            <form id="attendeeForm">
+                <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="FirstName" required>
+                    </div>
+                    <div class="form-col">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="LastName" required>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="Email" required>
+                    </div>
+                    <div class="form-col">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="Phone">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-col">
+                        <label for="company">Company</label>
+                        <input type="text" id="company" name="Company">
+                    </div>
+                    <div class="form-col">
+                        <label for="department">Department</label>
+                        <input type="text" id="department" name="Department">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="notes">Additional Notes</label>
+                    <textarea id="notes" name="Notes" rows="2"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">Save Attendee</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Attendees List Section -->
+        <div class="content-section" id="attendees-list">
+            <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
+            <div class="table-container" id="attendeesTableContainer">
+                <table class="table" id="attendeesTable">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Company</th>
+                            <th>Department</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attendeesTableBody"></tbody>
+                </table>
             </div>
         </div>
-        <form id="attendeeForm">
-            <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
-
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="firstName">First Name *</label>
-                    <input type="text" id="firstName" name="FirstName" required>
-                </div>
-                <div class="form-col">
-                    <label for="lastName">Last Name *</label>
-                    <input type="text" id="lastName" name="LastName" required>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="email">Email Address *</label>
-                    <input type="email" id="email" name="Email" required>
-                </div>
-                <div class="form-col">
-                    <label for="phone">Phone Number</label>
-                    <input type="tel" id="phone" name="Phone">
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-col">
-                    <label for="company">Company</label>
-                    <input type="text" id="company" name="Company">
-                </div>
-                <div class="form-col">
-                    <label for="department">Department</label>
-                    <input type="text" id="department" name="Department">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label for="notes">Additional Notes</label>
-                <textarea id="notes" name="Notes" rows="2"></textarea>
-            </div>
-
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary">Save Attendee</button>
-            </div>
-        </form>
-    </div>
-
-    <!-- Attendees List Section -->
-    <div class="content-section" id="attendees-list">
-        <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
-        <div class="table-container" id="attendeesTableContainer">
-            <table class="table" id="attendeesTable">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Name</th>
-                        <th>Email</th>
-                        <th>Phone</th>
-                        <th>Company</th>
-                        <th>Department</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody id="attendeesTableBody"></tbody>
-            </table>
         </div>
     </div>
 </div>
@@ -720,7 +725,6 @@
         </div>
     </div>
 </div>
-
 @section Scripts {
     <script>
         $(document).ready(function () {

@@ -304,14 +304,11 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
 
-            <a class="navbar-brand fw-bold fs-4 mx-auto mx-lg-0" href="@Url.Action("Index", "Home")">EventManagerApp</a>
+            <a class="navbar-brand fw-bold fs-4 mx-auto mx-lg-0">EventManagerApp</a>
 
             <div class="d-flex align-items-center">
                 <a class="nav-link" asp-controller="Event" asp-action="Index">
                     <i class="fa-solid fa-house me-1"></i> <span class="d-none d-lg-inline">Home</span>
-                </a>
-                <a class="nav-link ms-3" href="#">
-                    <i class="fa-solid fa-bell me-1"></i> <span class="d-none d-lg-inline">Notifications</span>
                 </a>
                 <a class="nav-link ms-3" href="#">
                     <i class="fa-solid fa-user me-1"></i> <span class="d-none d-lg-inline">Admin Profile</span>
@@ -367,15 +364,6 @@
                        href="@Url.Action("AdminScanLog", "QrConfiguration")">
                         <i class="fa-solid fa-history menu-icon"></i> <!-- Changed icon -->
                         <span class="menu-text">Scan Log</span> <!-- Updated text -->
-                    </a>
-                </div>
-
-                <div class="menu-section">
-                    <div class="menu-title">Settings</div>
-                    <a class="menu-itemlocal @(controller == "settings" ? "active" : "")"
-                       href="@Url.Action("Index", "Settings")">
-                        <i class="fa-solid fa-gear menu-icon"></i>
-                        <span class="menu-text">App Settings</span>
                     </a>
                 </div>
             </aside>
