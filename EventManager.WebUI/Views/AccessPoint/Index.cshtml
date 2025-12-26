@@ -790,16 +790,6 @@
 
                     accessPointsDataTable.clear();
 
-                    if (!accessPoints || !Array.isArray(accessPoints) || accessPoints.length === 0) {
-                           accessPointsDataTable.row.add([
-                        '<div class="text-center py-4 text-muted"><br>No access points found</div>',
-                        '',
-                        '',
-                        ''
-                    ]).draw();
-                        return;
-                    }
-
                     accessPoints.forEach(ap => {
                         accessPointsDataTable.row.add([
                             escapeHtml(ap.name || ''),
