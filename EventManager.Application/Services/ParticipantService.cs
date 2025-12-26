@@ -4,6 +4,8 @@ using EventManager.Application.Utilities;
 using EventManager.Domain.Entities;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -270,39 +272,68 @@ namespace EventManager.Application.Services
         {
             try
             {
+                // Remove event_id column
+                if (errorData.Columns.Contains("event_id"))
+                {
+                    errorData.Columns.Remove("event_id");
+                }
+
                 string timestamp = DateTime.Now.ToString("dd-MMM-yyyy_hh-mm-tt");
-                string errorFileName = $"Participant_Import_Errors_{timestamp}.xlsx"; // ✅ Only once
+                string errorFileName = $"Import_Errors_{timestamp}.xlsx";
                 string errorFilePath = Path.Combine(uploadsFolder, errorFileName);
 
-                // Use ExcelHelper to generate the error file
-                if (_excelHelper != null)
+                using (var package = new ExcelPackage())
                 {
-                    // ⚠ Make sure GenerateErrorExcel does NOT add anything to filename
-                    return _excelHelper.GenerateErrorExcel(errorData, errorFilePath);
-                }
-                else
-                {
-                    using (var package = new OfficeOpenXml.ExcelPackage())
+                    var worksheet = package.Workbook.Worksheets.Add("Errors");
+
+                    // Title with date/time - Row 1
+                    worksheet.Cells["A1"].Value = $"Import Error Report - {DateTime.Now:yyyy-MM-dd HH:mm:ss}";
+                    worksheet.Cells[1, 1, 1, errorData.Columns.Count].Merge = true;
+                    worksheet.Cells["A1"].Style.Font.Bold = true;
+                    worksheet.Cells["A1"].Style.Font.Size = 14;
+                    worksheet.Cells["A1"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+
+                    // EMPTY ROW for full column space - Row 2
+                    // Leave row 2 completely empty (all cells merged)
+                    worksheet.Cells[2, 1, 2, errorData.Columns.Count].Merge = true;
+                    worksheet.Row(2).Height = 10; // Set height for spacing
+
+                    // Column headers - Row 3
+                    int headerRow = 3;
+                    for (int i = 0; i < errorData.Columns.Count; i++)
                     {
-                        var worksheet = package.Workbook.Worksheets.Add("Validation Errors");
-
-                        // Add headers
-                        for (int i = 0; i < errorData.Columns.Count; i++)
-                        {
-                            worksheet.Cells[1, i + 1].Value = errorData.Columns[i].ColumnName;
-                        }
-
-                        // Add data
-                        for (int i = 0; i < errorData.Rows.Count; i++)
-                        {
-                            for (int j = 0; j < errorData.Columns.Count; j++)
-                            {
-                                worksheet.Cells[i + 2, j + 1].Value = errorData.Rows[i][j];
-                            }
-                        }
-
-                        package.SaveAs(new FileInfo(errorFilePath));
+                        worksheet.Cells[headerRow, i + 1].Value = errorData.Columns[i].ColumnName;
+                        worksheet.Cells[headerRow, i + 1].Style.Font.Bold = true;
+                        worksheet.Cells[headerRow, i + 1].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
                     }
+
+                    // Data rows start at Row 4
+                    for (int row = 0; row < errorData.Rows.Count; row++)
+                    {
+                        for (int col = 0; col < errorData.Columns.Count; col++)
+                        {
+                            var cellValue = errorData.Rows[row][col];
+                            int excelRow = row + headerRow + 1; // Start after header row (Row 4)
+
+                            // Format dates
+                            if (errorData.Columns[col].ColumnName == "created_at" && cellValue != DBNull.Value)
+                            {
+                                if (DateTime.TryParse(cellValue.ToString(), out DateTime dateValue))
+                                {
+                                    worksheet.Cells[excelRow, col + 1].Value = dateValue;
+                                    worksheet.Cells[excelRow, col + 1].Style.Numberformat.Format = "yyyy-mm-dd hh:mm:ss";
+                                    continue;
+                                }
+                            }
+
+                            worksheet.Cells[excelRow, col + 1].Value = cellValue;
+                        }
+                    }
+
+                    // Auto-fit columns
+                    worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+
+                    package.SaveAs(new FileInfo(errorFilePath));
                 }
 
                 return errorFilePath;
@@ -313,8 +344,6 @@ namespace EventManager.Application.Services
                 throw;
             }
         }
-
-
         private DataTable ProcessExcelData(DataTable dtImport, int eventId, string createdBy)
         {
             _logger.LogInformation($"ProcessExcelData started with {dtImport.Rows.Count} rows");
@@ -355,10 +384,19 @@ namespace EventManager.Application.Services
                 }
             }
 
+            // ADD THIS: Add error_message column for stored procedure
+            if (!dtImport.Columns.Contains("error_message"))
+            {
+                dtImport.Columns.Add("error_message", typeof(string));
+                _logger.LogInformation("Added 'error_message' column");
+                // Set all error_message values to NULL initially
+                foreach (DataRow row in dtImport.Rows)
+                    row["error_message"] = DBNull.Value;
+            }
+
             _logger.LogInformation($"ProcessExcelData completed. Output rows: {dtImport.Rows.Count}");
             return dtImport;
         }
-
         private string CleanColumnName(string columnName)
         {
             if (string.IsNullOrEmpty(columnName))

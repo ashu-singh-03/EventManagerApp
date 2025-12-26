@@ -89,30 +89,28 @@ namespace EventManager.Infrastructure.Repositories
             using var connection = _context.CreateConnection() as MySqlConnection;
             if (connection != null)
             {
-                // For MySQL, we need to use LOAD DATA or individual inserts
-                // Using individual inserts for simplicity
                 foreach (DataRow row in data.Rows)
                 {
-                    await connection.ExecuteAsync(@"
-                        INSERT INTO participants_temp 
-                        (first_name, last_name, email, phone, company, department, notes, event_id, created_by)
-                        VALUES (@FirstName, @LastName, @Email, @Phone, @Company, @Department, @Notes, @EventId, @CreatedBy)",
+                    await connection.ExecuteAsync(
+                        "usp_InsertParticipantTemp",
                         new
                         {
-                            FirstName = row["first_name"],
-                            LastName = row["last_name"],
-                            Email = row["email"],
-                            Phone = row["phone"],
-                            Company = row["company"],
-                            Department = row["department"],
-                            Notes = row["notes"],
-                            EventId = row["event_id"],
-                            CreatedBy = row["created_by"]
-                        });
+                            p_first_name = row["first_name"],
+                            p_last_name = row["last_name"],
+                            p_email = row["email"],
+                            p_phone = row["phone"],
+                            p_company = row["company"],
+                            p_department = row["department"],
+                            p_notes = row["notes"],
+                            p_event_id = row["event_id"],
+                            p_created_by = row["created_by"],
+                            p_error_message = row["error_message"] ?? DBNull.Value // Use the column we added
+                        },
+                        commandType: CommandType.StoredProcedure
+                    );
                 }
             }
         }
-
         public async Task<DataTable> ValidateTempParticipantsAsync(int eventId, string createdBy)
         {
             using var connection = _context.CreateConnection() as MySqlConnection;

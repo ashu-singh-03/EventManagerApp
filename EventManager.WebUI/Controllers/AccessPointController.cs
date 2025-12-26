@@ -49,7 +49,6 @@ namespace EventManager.WebUI.Controllers
             return Json(accessPoints);
         }
 
-        // SAVE (INSERT/UPDATE) - JSON
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] AccessPointDto dto)
         {
@@ -68,7 +67,12 @@ namespace EventManager.WebUI.Controllers
                 return BadRequest(ModelState);
 
             await _service.SaveAccessPointAsync(dto);
-            return Ok(new { message = "Access point saved successfully" });
+
+            string message = dto.AccessPointId > 0
+                ? "Access point updated successfully"
+                : "Access point created successfully";
+
+            return Ok(new { message = message });
         }
 
         // DELETE (SOFT DELETE) - JSON

@@ -140,6 +140,26 @@ namespace EventManager.Application.Utilities
                     // Load data starting from row 3 (row 2 is empty for spacing)
                     workSheet.Cells["A3"].LoadFromDataTable(errorData, true);
 
+                    // ADD THESE LINES: Format datetime columns
+                    if (errorData.Columns.Contains("created_at"))
+                    {
+                        int createdAtIndex = errorData.Columns.IndexOf("created_at") + 1; // +1 for Excel's 1-based index
+
+                        for (int row = 4; row <= workSheet.Dimension.End.Row; row++) // Start from row 4 (data starts at row 3 + 1)
+                        {
+                            var cell = workSheet.Cells[row, createdAtIndex];
+                            if (cell.Value != null)
+                            {
+                                // Try to parse as DateTime
+                                if (DateTime.TryParse(cell.Value.ToString(), out DateTime dateValue))
+                                {
+                                    cell.Value = dateValue;
+                                    cell.Style.Numberformat.Format = "yyyy-mm-dd hh:mm:ss";
+                                }
+                            }
+                        }
+                    }
+
                     // Auto-fit columns for better readability
                     workSheet.Cells[workSheet.Dimension.Address].AutoFitColumns();
 

@@ -486,7 +486,6 @@
         color: #383d41;
     }
 
-    /* Form card styles */
     .form-card {
         background-color: white;
         border-radius: 8px;
@@ -522,11 +521,29 @@
         .empty-state p {
             font-size: 1rem;
         }
+    label.required::after {
+        content: ' *';
+        color: var(--danger);
+    }
+
+    label:has(input[required]), label:has(textarea[required]), label:has(select[required]) {
+        position: relative;
+    }
+
+        label:has(input[required])::after,
+        label:has(textarea[required])::after,
+        label:has(select[required])::after {
+            content: ' *';
+            color: var(--danger);
+            margin-left: 2px;
+        }
+
 </style>
 
 <div class="container-fluid">
     <div class="card">
         <div class="card-body p-4 p-lg-5">
+
             <!-- Global Alert Area -->
             <div class="alert-area"></div>
 
@@ -577,22 +594,15 @@
             <div class="content-section" id="access-points-list">
                 <div class="action-bar">
                     <h2 class="section-title"><i class="fas fa-list"></i> Access Points List</h2>
-                    <div>
-                        <button class="btn btn-primary" id="refreshAccessPointsBtn">
-                            <i class="fas fa-sync-alt"></i> Refresh List
-                        </button>
-                    </div>
                 </div>
 
                 <div class="table-container" id="accessPointsTableContainer">
                     <table class="table display nowrap" id="accessPointsTable" style="width:100%">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Status</th>
-                                <th>Created Date</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -602,440 +612,307 @@
                     </table>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <!-- Add DataTable JS -->
 
-    <script>
-        $(document).ready(function () {
-            // Initialize DataTable
-            let accessPointsDataTable = null;
-            let isDataTableInitialized = false;
+<script>
+    $(document).ready(function () {
+        // Initialize DataTable
+        let accessPointsDataTable = null;
+        let isDataTableInitialized = false;
 
-            // Initialize DataTable
-            function initializeAccessPointsDataTable() {
-                if ($.fn.DataTable.isDataTable('#accessPointsTable')) {
-                    accessPointsDataTable.destroy();
-                    $('#accessPointsTable tbody').empty();
+        // Initialize DataTable
+        function initializeAccessPointsDataTable() {
+            if ($.fn.DataTable.isDataTable('#accessPointsTable')) {
+                accessPointsDataTable.destroy();
+                $('#accessPointsTable tbody').empty();
+            }
+
+            accessPointsDataTable = $('#accessPointsTable').DataTable({
+                paging: true,
+                pageLength: 10,
+                searching: true,
+                ordering: true,
+                info: true,
+                responsive: true
+            });
+
+            isDataTableInitialized = true; // Fix: set flag true
+        }
+
+        // Toast function
+        function showToast(message, type = 'success') {
+            const alertId = 'alert-' + Date.now();
+            const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-triangle';
+            const title = type === 'success' ? 'Success!' : 'Error!';
+
+            const toastHtml = `
+                <div id="${alertId}" class="alert alert-${type}">
+                    <i class="fas ${icon} alert-icon"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">
+                            <span>${title}</span>
+                            <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="alert-message">${message}</div>
+                    </div>
+                </div>`;
+            $('.alert-area').append(toastHtml);
+
+            setTimeout(() => closeAlert(alertId), 5000);
+        }
+
+        // Close alert
+        window.closeAlert = function(alertId) {
+            $('#' + alertId).fadeOut(500, function() { $(this).remove(); });
+        };
+
+        // Tab switching
+        $('.menu-itemlocal').click(function () {
+            $('.menu-itemlocal').removeClass('active');
+            $(this).addClass('active');
+            $('.content-section').removeClass('active');
+            $('#' + $(this).data('section')).addClass('active');
+
+            if ($(this).data('section') === 'access-points-list') {
+                if (!isDataTableInitialized || !$.fn.DataTable.isDataTable('#accessPointsTable')) {
+                    initializeAccessPointsDataTable();
                 }
-
-                accessPointsDataTable = $('#accessPointsTable').DataTable({
-                    paging: true,
-                    pageLength: 10,
-                    lengthMenu: [10, 25, 50, 100],
-                    searching: true,
-                    ordering: true,
-                    info: true,
-                    autoWidth: false,
-                    responsive: true,
-                    processing: false, // This is just a config option, not a method
-                    language: {
-                        processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
-                        emptyTable: 'No access points found',
-                        info: 'Showing _START_ to _END_ of _TOTAL_ access points',
-                        infoEmpty: 'Showing 0 to 0 of 0 access points',
-                        infoFiltered: '(filtered from _MAX_ total access points)',
-                        lengthMenu: 'Show _MENU_ access points',
-                        search: 'Search:',
-                        paginate: {
-                            first: 'First',
-                            last: 'Last',
-                            next: 'Next',
-                            previous: 'Previous'
-                        }
-                    },
-                    dom: '<"top"lf>rt<"bottom"ip><"clear">',
-                    columnDefs: [
-                        {
-                            targets: 0, // ID column
-                            width: "5%",
-                            searchable: false
-                        },
-                        {
-                            targets: 1, // Name column
-                            width: "25%"
-                        },
-                        {
-                            targets: 2, // Description column
-                            width: "30%"
-                        },
-                        {
-                            targets: 3, // Status column
-                            width: "10%",
-                            orderable: false
-                        },
-                        {
-                            targets: 4, // Created Date column
-                            width: "15%",
-                            type: 'date'
-                        },
-                        {
-                            targets: 5, // Actions column
-                            width: "15%",
-                            orderable: false,
-                            searchable: false
-                        }
-                    ],
-                    order: [[0, 'desc']], // Sort by ID descending
-                    initComplete: function() {
-                        isDataTableInitialized = true;
-                    }
-                });
+                loadAccessPoints();
+            } else if ($(this).data('section') === 'manage-access-points') {
+                $('#accessPointForm')[0].reset();
+                $('#accessPointForm').removeData('access-point-id');
+                $('#saveAccessPointBtn').html('<i class="fas fa-save"></i> Save Access Point');
             }
+        });
 
-            // Alert functions
-            function showSuccess(message) {
-                const alertId = 'alert-' + Date.now();
-                const successHtml = `
-                    <div id="${alertId}" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">
-                                <span>Success!</span>
-                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="alert-message">${message}</div>
-                        </div>
-                    </div>`;
-                $('.alert-area').append(successHtml);
-                setTimeout(() => closeAlert(alertId), 5000);
-            }
-
-            function showError(message) {
-                const alertId = 'alert-' + Date.now();
-                const errorHtml = `
-                    <div id="${alertId}" class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">
-                                <span>Error!</span>
-                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="alert-message">${message}</div>
-                        </div>
-                    </div>`;
-                $('.alert-area').append(errorHtml);
-                setTimeout(() => closeAlert(alertId), 8000);
-            }
-
-            function showWarning(message) {
-                const alertId = 'alert-' + Date.now();
-                const warningHtml = `
-                    <div id="${alertId}" class="alert alert-warning">
-                        <i class="fas fa-exclamation-circle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">
-                                <span>Warning!</span>
-                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="alert-message">${message}</div>
-                        </div>
-                    </div>`;
-                $('.alert-area').append(warningHtml);
-                setTimeout(() => closeAlert(alertId), 6000);
-            }
-
-            window.closeAlert = function(alertId) {
-                const alert = $('#' + alertId);
-                if (alert.length) {
-                    alert.css('animation', 'fadeOut 0.5s ease forwards');
-                    setTimeout(() => alert.remove(), 500);
+        // Form validation
+        $('#accessPointForm').validate({
+            rules: {
+                Name: {
+                    required: true,
+                    minlength: 3,
+                    maxlength: 100
+                },
+                Description: {
+                    maxlength: 500
                 }
+            },
+            messages: {
+                Name: {
+                    required: "Access Point Name is required",
+                    minlength: "Access Point Name must be at least 3 characters",
+                    maxlength: "Access Point Name cannot exceed 100 characters"
+                },
+                Description: {
+                    maxlength: "Description cannot exceed 500 characters"
+                }
+            },
+            errorClass: "text-danger",
+            errorPlacement: (error, element) => error.insertAfter(element),
+            highlight: (element) => $(element).addClass('is-invalid'),
+            unhighlight: (element) => $(element).removeClass('is-invalid'),
+            submitHandler: saveAccessPoint
+        });
+
+        // Save access point
+        function saveAccessPoint() {
+            const accessPointId = $('#accessPointForm').data('access-point-id') || 0;
+            const isEdit = accessPointId > 0;
+
+            const dto = {
+                AccessPointId: accessPointId,
+                Name: $('#accessPointName').val().trim(),
+                Description: $('#accessPointDescription').val().trim()
             };
 
-            // Tab switching
-            $('.menu-itemlocal').click(function () {
-                $('.menu-itemlocal').removeClass('active');
-                $(this).addClass('active');
-                $('.content-section').removeClass('active');
-                $('#' + $(this).data('section')).addClass('active');
+            const $btn = $('#saveAccessPointBtn');
+            const originalHtml = $btn.html();
+            const buttonText = isEdit ? 'Updating...' : 'Saving...';
+            $btn.html(`<i class="fas fa-spinner fa-spin"></i> ${buttonText}`).prop('disabled', true);
 
-                if ($(this).data('section') === 'access-points-list') {
+            $.ajax({
+                url: '@Url.Action("Save", "AccessPoint")',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(dto),
+                success: function (response) {
+                    const msg = isEdit ? 'Access point updated successfully!' : 'Access point created successfully!';
+                    showToast(response.message || msg, 'success');
+                    $('#accessPointForm')[0].reset();
+                    $('#accessPointForm').removeData('access-point-id');
+                    const newButtonText = isEdit ? '<i class="fas fa-edit"></i> Update Access Point' : '<i class="fas fa-save"></i> Save Access Point';
+                    $btn.html(newButtonText);
+                    $('.menu-itemlocal[data-section="access-points-list"]').click();
+                    loadAccessPoints();
+                },
+                error: function (xhr) {
+                    let errorMsg = isEdit ? 'Error updating access point' : 'Error creating access point';
+                    if (xhr.responseJSON?.error) errorMsg = xhr.responseJSON.error;
+                    else if (xhr.responseJSON?.message) errorMsg = xhr.responseJSON.message;
+                    showToast(errorMsg, 'danger');
+                },
+                complete: function () {
+                    $btn.html('<i class="fas fa-save"></i> Save Access Point').prop('disabled', false);
+                }
+            });
+        }
+
+        // Load access points
+        function loadAccessPoints() {
+            if (accessPointsDataTable) {
+                accessPointsDataTable.clear().draw();
+
+                const loadingRow = accessPointsDataTable.row.add([
+                    '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-lg"></i> Loading access points...</div>',
+                    '',
+                    '',
+                    ''
+                ]).node();
+
+                $(loadingRow).find('td:eq(0)').attr('colspan', '4').css('text-align', 'center');
+                $(loadingRow).find('td').not(':eq(0)').hide();
+                accessPointsDataTable.draw();
+            }
+
+            $.ajax({
+                url: '@Url.Action("LoadAccessPoints", "AccessPoint")',
+                type: 'GET',
+                success: function (accessPoints) {
                     if (!isDataTableInitialized || !$.fn.DataTable.isDataTable('#accessPointsTable')) {
                         initializeAccessPointsDataTable();
                     }
-                    loadAccessPoints();
-                } else if ($(this).data('section') === 'manage-access-points') {
-                    $('#accessPointForm')[0].reset();
-                    $('#accessPointForm').removeData('access-point-id');
-                    $('#saveAccessPointBtn').html('<i class="fas fa-save"></i> Save Access Point');
-                }
-            });
 
-            // Form validation
-            $('#accessPointForm').validate({
-                rules: {
-                    Name: {
-                        required: true,
-                        minlength: 3,
-                        maxlength: 100
-                    },
-                    Description: {
-                        maxlength: 500
-                    }
-                },
-                messages: {
-                    Name: {
-                        required: "Access Point Name is required",
-                        minlength: "Access Point Name must be at least 3 characters",
-                        maxlength: "Access Point Name cannot exceed 100 characters"
-                    },
-                    Description: {
-                        maxlength: "Description cannot exceed 500 characters"
-                    }
-                },
-                errorClass: "text-danger",
-                errorPlacement: (error, element) => error.insertAfter(element),
-                highlight: (element) => $(element).addClass('is-invalid'),
-                unhighlight: (element) => $(element).removeClass('is-invalid'),
-                submitHandler: saveAccessPoint
-            });
+                    accessPointsDataTable.clear();
 
-            // Save access point
-            function saveAccessPoint() {
-                const accessPointId = $('#accessPointForm').data('access-point-id') || 0;
-                const isEdit = accessPointId > 0;
-
-                const dto = {
-                    AccessPointId: accessPointId,
-                    Name: $('#accessPointName').val().trim(),
-                    Description: $('#accessPointDescription').val().trim()
-                };
-
-                // Show loading on button
-                const originalText = $('#saveAccessPointBtn').html();
-                $('#saveAccessPointBtn')
-                    .html('<i class="fas fa-spinner fa-spin"></i> Saving...')
-                    .prop('disabled', true);
-
-                $.ajax({
-                    url: '@Url.Action("Save", "AccessPoint")',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(dto),
-                    success: function (response) {
-                        if (response.success) {
-                            showSuccess(response.message || `Access Point ${isEdit ? 'updated' : 'created'} successfully!`);
-                            $('#accessPointForm')[0].reset();
-                            $('#accessPointForm').removeData('access-point-id');
-                            $('#saveAccessPointBtn').html('<i class="fas fa-save"></i> Save Access Point');
-
-                            // Switch to list tab and refresh
-                            $('.menu-itemlocal[data-section="access-points-list"]').click();
-                            loadAccessPoints();
-                        } else {
-                            showError(response.message || `Failed to ${isEdit ? 'update' : 'create'} access point`);
-                        }
-                    },
-                    error: function (xhr) {
-                        const errorMessage = xhr.responseJSON?.message || 'Error saving access point';
-                        showError(errorMessage);
-                    },
-                    complete: function () {
-                        $('#saveAccessPointBtn').html(originalText).prop('disabled', false);
-                    }
-                });
-            }
-
-            // Load access points into DataTable
-            function loadAccessPoints() {
-                // Show loading state in DataTable
-                if (accessPointsDataTable) {
-                    // Clear existing data
-                    accessPointsDataTable.clear().draw();
-
-                    // Add a loading row
-                    const loadingRow = accessPointsDataTable.row.add([
-                        '',
-                        '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-lg"></i> Loading access points...</div>',
-                        '',
+                    if (!accessPoints || !Array.isArray(accessPoints) || accessPoints.length === 0) {
+                           accessPointsDataTable.row.add([
+                        '<div class="text-center py-4 text-muted"><br>No access points found</div>',
                         '',
                         '',
                         ''
-                    ]).node();
+                    ]).draw();
+                        return;
+                    }
 
-                    // Make the loading row span all columns
-                    $(loadingRow).find('td:eq(1)').attr('colspan', '6');
-                    $(loadingRow).find('td').not(':eq(1)').hide();
+                    accessPoints.forEach(ap => {
+                        accessPointsDataTable.row.add([
+                            escapeHtml(ap.name || ''),
+                            escapeHtml(ap.description || ''),
+                            `<span class="status-badge status-active">Active</span>`,
+                            `
+                            <button class="btn btn-warning btn-sm edit-btn" data-id="${ap.accessPointId}">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm delete-btn" data-id="${ap.accessPointId}">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                            `
+                        ]);
+                    });
 
                     accessPointsDataTable.draw();
-                }
-
-                $.ajax({
-                    url: '@Url.Action("LoadAccessPoints", "AccessPoint")',
-                    type: 'GET',
-                    success: function (accessPoints) {
-                        // Initialize DataTable if not already initialized
-                        if (!isDataTableInitialized || !$.fn.DataTable.isDataTable('#accessPointsTable')) {
-                            initializeAccessPointsDataTable();
-                        }
-
-                        // Clear existing data
+                },
+                error: function (xhr) {
+                    showToast('Error loading access points', 'danger');
+                    if (accessPointsDataTable) {
                         accessPointsDataTable.clear();
-
-                        if (!accessPoints || !Array.isArray(accessPoints) || accessPoints.length === 0) {
-                            // Add empty state row
-                            accessPointsDataTable.row.add([
-                                '',
-                                '<div class="text-center py-4 text-muted"><i class="fas fa-door-closed fa-2x mb-2"></i><br>No access points found</div>',
-                                '',
-                                '',
-                                '',
-                                ''
-                            ]).draw();
-                            return;
-                        }
-
-                        // Add data to DataTable
-                        accessPoints.forEach(ap => {
-                            // Format date if exists
-                            const createdDate = ap.createdDate
-                                ? new Date(ap.createdDate).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'short',
-                                    day: 'numeric'
-                                })
-                                : '';
-
-                            accessPointsDataTable.row.add([
-                                ap.accessPointId,
-                                escapeHtml(ap.name || ''),
-                                escapeHtml(ap.description || ''),
-                                `<span class="status-badge status-active">Active</span>`,
-                                createdDate,
-                                `
-                                    <button class="btn btn-warning btn-sm edit-btn" data-id="${ap.accessPointId}">
-                                        <i class="fas fa-edit"></i> Edit
-                                    </button>
-                                    <button class="btn btn-danger btn-sm delete-btn" data-id="${ap.accessPointId}">
-                                        <i class="fas fa-trash"></i> Delete
-                                    </button>
-                                `
-                            ]);
-                        });
-
-                        // Draw the table
-                        accessPointsDataTable.draw();
-                    },
-                    error: function (xhr) {
-                        showError('Error loading access points');
-                        if (accessPointsDataTable) {
-                            accessPointsDataTable.clear();
-                            // Add error state row
-                            accessPointsDataTable.row.add([
-                                '',
-                                '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error loading access points</div>',
-                                '',
-                                '',
-                                '',
-                                ''
-                            ]).draw();
-                        }
+                        accessPointsDataTable.row.add([
+                            '<div class="text-center py-4 text-danger"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>Error loading access points</div>',
+                            '',
+                            '',
+                            ''
+                        ]).draw();
                     }
-                });
-            }
-
-            // Edit access point
-            $(document).on('click', '.edit-btn', function () {
-                const accessPointId = $(this).data('id');
-
-                // Show loading on button
-                const originalText = $(this).html();
-                $(this)
-                    .html('<i class="fas fa-spinner fa-spin"></i>')
-                    .prop('disabled', true);
-
-                $.ajax({
-                    url: '@Url.Action("Details", "AccessPoint")',
-                    type: 'GET',
-                    data: { id: accessPointId },
-                    success: function (accessPoint) {
-                        // Switch to create tab
-                        $('.menu-itemlocal[data-section="manage-access-points"]').click();
-
-                        // Fill form with data
-                        $('#accessPointName').val(accessPoint.name);
-                        $('#accessPointDescription').val(accessPoint.description);
-                        $('#accessPointForm').data('access-point-id', accessPoint.accessPointId);
-                        $('#saveAccessPointBtn').html('<i class="fas fa-edit"></i> Update Access Point');
-
-                        // Scroll to form
-                        $('html, body').animate({
-                            scrollTop: $('#manage-access-points').offset().top - 20
-                        }, 500);
-                    },
-                    error: function () {
-                        showError('Error fetching access point details.');
-                    },
-                    complete: function() {
-                        // Reset button
-                        $(this).html(originalText).prop('disabled', false);
-                    }.bind(this) // Bind the context to maintain 'this'
-                });
+                }
             });
+        }
 
-            // Delete access point
-            $(document).on('click', '.delete-btn', function () {
-                const accessPointId = $(this).data('id');
-                const $deleteBtn = $(this);
-                const accessPointName = $deleteBtn.closest('tr').find('td:eq(1)').text().trim();
+        // Edit access point
+        $(document).on('click', '.edit-btn', function () {
+            const accessPointId = $(this).data('id');
+            const $btn = $(this);
+            const originalText = $btn.html();
 
-                if (!confirm(`Are you sure you want to delete "${accessPointName}"? This action cannot be undone.`)) return;
+            $btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-                // Show loading on button
-                const originalText = $deleteBtn.html();
-                $deleteBtn
-                    .html('<i class="fas fa-spinner fa-spin"></i>')
-                    .prop('disabled', true);
+            $.ajax({
+                url: '@Url.Action("Details", "AccessPoint")',
+                type: 'GET',
+                data: { id: accessPointId },
+                success: function (accessPoint) {
+                    $('.menu-itemlocal[data-section="manage-access-points"]').click();
+                    $('#accessPointName').val(accessPoint.name);
+                    $('#accessPointDescription').val(accessPoint.description);
+                    $('#accessPointForm').data('access-point-id', accessPoint.accessPointId);
+                    $('#saveAccessPointBtn').html('<i class="fas fa-edit"></i> Update Access Point');
 
-                $.ajax({
-                    url: '@Url.Action("Delete", "AccessPoint")',
-                    type: 'POST',
-                    data: { id: accessPointId },
-                    success: function (response) {
-                        if (response.success) {
-                            showSuccess(response.message || 'Access point deleted successfully!');
-                            loadAccessPoints(); // Refresh DataTable
-                        } else {
-                            showError(response.message || 'Error deleting access point');
-                            // Reset button
-                            $deleteBtn.html(originalText).prop('disabled', false);
-                        }
-                    },
-                    error: function () {
-                        showError('Error deleting access point');
-                        // Reset button
-                        $deleteBtn.html(originalText).prop('disabled', false);
-                    }
-                });
+                    $('html, body').animate({
+                        scrollTop: $('#manage-access-points').offset().top - 20
+                    }, 500);
+                },
+                error: function () {
+                    showToast('Error fetching access point details.', 'danger');
+                },
+                complete: function () {
+                    $btn.html(originalText).prop('disabled', false);
+                }
             });
-
-            // Refresh button
-            $('#refreshAccessPointsBtn').click(function () {
-                loadAccessPoints();
-                showSuccess('Access points list refreshed');
-            });
-
-            // Escape HTML function
-            function escapeHtml(text) {
-                if (!text) return '';
-                const div = document.createElement('div');
-                div.textContent = text;
-                return div.innerHTML;
-            }
-
-            // Initialize on page load
-            initializeAccessPointsDataTable();
-            loadAccessPoints();
         });
-    </script>
-}
+
+        // Delete access point
+        $(document).on('click', '.delete-btn', function () {
+            const accessPointId = $(this).data('id');
+            const $deleteBtn = $(this);
+            const accessPointName = $deleteBtn.closest('tr').find('td:eq(0)').text().trim(); // fixed index
+
+            if (!confirm(`Are you sure you want to delete "${accessPointName}"? This action cannot be undone.`)) return;
+            const originalText = $deleteBtn.html();
+            $deleteBtn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+            $.ajax({
+                url: '@Url.Action("Delete", "AccessPoint")',
+                type: 'POST',
+                data: { id: accessPointId },
+                success: function (response) {
+                    showToast(response.message || 'Access point deleted successfully!', 'success');
+                    loadAccessPoints();
+                },
+                error: function (xhr) {
+                    let errorMessage = 'Error deleting access point';
+                    if (xhr.responseJSON?.error) errorMessage = xhr.responseJSON.error;
+                    else if (xhr.responseJSON?.message) errorMessage = xhr.responseJSON.message;
+                    else if (xhr.responseText) errorMessage = xhr.responseText;
+
+                    showToast(errorMessage, 'danger');
+                },
+                complete: function () {
+                    $deleteBtn.html(originalText).prop('disabled', false);
+                }
+            });
+        });
+
+        // Refresh button
+        $('#refreshAccessPointsBtn').click(function () {
+            loadAccessPoints();
+            showToast('Access points list refreshed', 'success');
+        });
+
+        // Escape HTML
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Initial load
+        initializeAccessPointsDataTable();
+        loadAccessPoints();
+    });
+</script>
