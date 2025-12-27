@@ -34,16 +34,15 @@ namespace EventManager.WebUI.Controllers
             return View();
         }
 
-        // Edit existing event (secure, no EventId in URL)
-        [HttpPost]
-        public async Task<IActionResult> Edit(int eventId)
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id) 
         {
-            if (eventId <= 0) return BadRequest();
+            if (id <= 0) return BadRequest();
 
-            // Store eventId in claims
-            await _eventClaimService.SetEventIdClaimAsync(eventId);
+            // Store eventId in claims (your security logic)
+            await _eventClaimService.SetEventIdClaimAsync(id);
 
-            var eventWithTickets = await _eventService.GetEventWithTicketsByIdAsync(eventId);
+            var eventWithTickets = await _eventService.GetEventWithTicketsByIdAsync(id);
             if (eventWithTickets == null) return NotFound();
 
             // Reuse Create view for editing
@@ -92,7 +91,7 @@ namespace EventManager.WebUI.Controllers
 
         // Delete event
         [HttpPost]
-        public async Task<IActionResult> Delete([FromBody] int id)
+        public async Task<IActionResult> Delete(int id) // [FromBody] removed for compatibility
         {
             if (id <= 0) return Json(new { success = false, message = "Invalid event ID." });
 
@@ -103,6 +102,7 @@ namespace EventManager.WebUI.Controllers
             }
             catch (Exception ex)
             {
+                // Logs the error and returns it to the UI toast
                 return Json(new { success = false, message = ex.Message });
             }
         }
