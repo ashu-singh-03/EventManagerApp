@@ -66,7 +66,6 @@ namespace EventManager.Application.Services
                     scannedByUserId
                 );
 
-                // Check if the stored procedure returned a result
                 if (participant == null)
                 {
                     return new ScanResultDto

@@ -484,6 +484,8 @@
                     </div>
                 </div>
 
+                <button class="reprintButton" onclick="reprintLastIdCard()">Reprint Last ID Card</button>
+
                 <!-- Continue Button -->
                 <button class="btn btn-primary w-100 mt-3" id="modalContinueBtn" data-bs-dismiss="modal">
                     <i class="fas fa-check me-2"></i>Continue
@@ -558,7 +560,7 @@
             });
 
             // Function to show professional popup
-            function showScanResultPopup(response) {
+            function showScanResultPopup(response,isPrintCenter) {
                 const modal = $('#scanResultModal');
                 const modalContent = $('#scanResultModalContent');
                 const modalTitle = $('#scanResultModalTitle');
@@ -602,6 +604,12 @@
                         buttonClass = 'btn-danger';
                     }
                 } else {
+                    if(isPrintCenter && response.status === "DUPLICATE"){
+                        $('.reprintButton').show();
+                    }
+                    else{
+                        $('.reprintButton').hide();
+                    }
                     var responsemsg = response.message ? response.message.replace('@@idCardHtml@@', '') : '';
                     statusClass = 'scan-error';
                     iconClass = 'fas fa-times-circle';
@@ -1337,7 +1345,8 @@
                         if (response.idCardHtml) {
                             window.lastIdCardHtml = response.idCardHtml;
                         }
-                        showScanResultPopup(response);
+
+                        showScanResultPopup(response,isPrintCenter);
 
                         if (response.success) {
                             if (response.scanData) {
