@@ -129,6 +129,7 @@
                                     <span class="badge bg-secondary bg-opacity-10 text-secondary">
                                         <i class="fas fa-times me-1"></i>Not Assigned
                                     </span>
+
                                 `;
                             }
                         },
@@ -165,6 +166,18 @@
                                             <i class="fas fa-envelope"></i>
                                         </button>
                                     </div>
+                                    <button type="button" class="btn btn-outline-primary print-pass-btn"
+                                                data-id="${data.participantId}"
+                                                data-name="${data.fullName}">
+                                            <i class="fas fa-print"></i>
+                                    </button>
+
+                                    <button type="button" class="btn btn-outline-success download-pdf-btn"
+                                                data-id="${data.participantId}"
+                                                data-name="${data.fullName}"
+                                                title="Download PDF">
+                                            <i class="fas fa-file-download"></i>
+                                    </button>
                                 `;
                             }
                         }
@@ -223,7 +236,134 @@
                 });
             });
 
-            // Refresh table every 60 seconds
+
+         $(document).on('click', '.print-pass-btn', function(e) {
+            e.preventDefault();
+            const button = $(this);
+            const participantId = button.data('id');
+            const originalHtml = button.html();
+            button.html('<i class="fas fa-spinner fa-spin"></i>');
+            button.prop('disabled', true);
+
+            $.ajax({
+                url: '/ParticipantCommunication/GenerateIdCard',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    QrCode: participantId.toString(),
+                    AccessPoint: "Print Center",
+                    IsPrintCenter: true
+                }),
+                success: function(response) {
+                    if (response.success && response.idCardHtml) {
+                        printIdCard(response.idCardHtml);
+                    } else {
+                        alert('Error: ' + (response.message || 'Failed to generate ID card'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    alert('Failed to generate ID card. Please try again.');
+                },
+                complete: function() {
+                    setTimeout(function() {
+                        button.html(originalHtml);
+                        button.prop('disabled', false);
+                    }, 10);
+                }
+            });
+        });
+
+        $(document).on('click', '.download-pdf-btn', function() {
+            const btn = $(this);
+            const pName = btn.data('name');
+            const oldHtml = btn.html();
+
+            // Loading State
+            btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+            $.ajax({
+                url: '/ParticipantCommunication/GenerateIdCard',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ QrCode: btn.data('id').toString(), IsPrintCenter: true }),
+                success: function(res) {
+                    if (res.success) {
+                        // Create a div with exact same structure as print
+                        const element = document.createElement('div');
+                        element.innerHTML = res.idCardHtml;
+
+                        // Ensure the div has proper styling
+                        element.style.width = '320px';
+                        element.style.height = '500px';
+                        element.style.margin = '0 auto';
+                        element.style.display = 'block';
+
+                        html2pdf()
+                            .set({
+                                filename: pName + '_ID_Card.pdf',
+                                margin: [20, 20, 20, 20], // Add margins
+                                jsPDF: {
+                                    unit: 'px',
+                                    format: [360, 540], // Slightly larger than card to include margins
+                                    orientation: 'portrait'
+                                },
+                                html2canvas: {
+                                    scale: 2, // Higher resolution
+                                    useCORS: true,
+                                    backgroundColor: '#f5f5f5'
+                                }
+                            })
+                            .from(element)
+                            .save();
+                    }
+                },
+                complete: function() {
+                    btn.html(oldHtml).prop('disabled', false);
+                }
+            });
+        });
+        function printIdCard(htmlContent) {
+            if (!htmlContent || htmlContent.trim() === '') return;
+
+            console.log('Auto-printing ID card...');
+
+            // Modify HTML to add print color adjustments
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+
+            // Add print color adjustment to all styled elements
+            const allElements = tempDiv.querySelectorAll('*');
+            allElements.forEach(el => {
+                const currentStyle = el.getAttribute('style') || '';
+                if (currentStyle) {
+                    el.setAttribute('style', currentStyle + '; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important;');
+                }
+            });
+
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            iframeDoc.open();
+            iframeDoc.write(`
+              
+                    ${tempDiv.innerHTML}
+
+            `);
+            iframeDoc.close();
+
+            iframe.onload = function() {
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                    }, 1000);
+                }, 500);
+            };
+        }
             setInterval(() => {
                 participantsTable.ajax.reload(null, false);
             }, 60000);

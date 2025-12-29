@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Mail;
 using System.Net.Sockets;
 using System.Text;
+using static EventManager.Application.DTOs.ScanDtos;
 
 namespace EventManager.Application.Services
 {
@@ -15,14 +16,17 @@ namespace EventManager.Application.Services
         //private readonly IEmailService _emailService;
         private readonly IMailgunService _mailgunService;
         private readonly IConfiguration _configuration;
+        private readonly IScanRepository _scanRepository;
 
         public ParticipantCommunicationService(
             IParticipantCommunicationRepository repository,
+             IScanRepository scanRepository,
             //IEmailService emailService,
             IMailgunService mailgunService,
         IConfiguration configuration)
         {
             _repository = repository;
+            _scanRepository = scanRepository;  // Assign to field
             //_emailService = emailService;
             _mailgunService = mailgunService;
             _configuration = configuration;
@@ -111,7 +115,7 @@ namespace EventManager.Application.Services
                     emailRequest.BccEmails = bccEmailsList;
                 }
 
-                emailRequest.FromEmail = "postmaster@sandbox9436a5ace7524a81a718b2e3dd399978.mailgun.org";
+                emailRequest.FromEmail = "postmaster@sandboxdfa20f2294224a8cb8e81a8ecbb11738.mailgun.org";
                 emailRequest.ToEmails[0] = "bviraj44@gmail.com";
                 // 8. Send email using your existing EmailService
                 return await _mailgunService.SendEmailAsync(emailRequest);
@@ -150,7 +154,7 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var qrData = $"EVENT:{eventId}|CODE:{participantCode}|TIME:{DateTime.Now:yyyyMMddHHmmss}";
+                var qrData = $"CODE:{participantCode}";
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
                 var qrCode = new Base64QRCode(qrCodeData);
@@ -161,6 +165,90 @@ namespace EventManager.Application.Services
             {
                 return string.Empty;
             }
+        }
+
+        public async Task<ScanResultDto> GenerateIdCardAsync(int eventId, int participantId)
+        {
+            try
+            {
+                // 1. Get email configuration
+                var emailConfig = await _scanRepository.GetPassConfigurationAsync(eventId);
+
+                // 2. Get participant data
+                var participantData = await _repository.GetParticipantsDetailsAsync(eventId, participantId);
+
+                // Check if participant data is null
+                if (participantData == null)
+                {
+                    return new ScanResultDto
+                    {
+                        Success = false,
+                        ValidationMessage = "Participant not found"
+                    };
+                }
+
+                // 3. Generate QR Code
+                var qrCodeBase64 = GenerateQRCode(participantData.ParticipantCode, eventId);
+
+                // 4. Get ID card template from configuration - CORRECTED LINE
+                // Template is in BodyText field, not IdCardTemplate
+                string idCardTemplate = emailConfig?.BodyText?.ToString() ?? "";
+
+                // 5. Replace placeholders in the ID card template
+                string idCardHtml = ReplaceIdCardPlaceholders(idCardTemplate, participantData, qrCodeBase64);
+
+                // 6. Create response with the generated ID card
+                return new ScanResultDto
+                {
+                    Success = true,
+                    IdCardHtml = idCardHtml,
+                    Message = "ID card generated successfully",
+                    ParticipantId = participantId,
+                    FullName = participantData.FullName?.ToString() ?? "",
+                    ParticipantCode = participantData.ParticipantCode?.ToString() ?? "",
+                    ValidationStatus = "VALID",
+                    ValidationMessage = "ID card generated",
+                    Status = "Generated",
+                    ScanTime = DateTime.Now,
+                    IsPrintCenter = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ScanResultDto
+                {
+                    Success = false,
+                    ValidationMessage = $"Failed to generate ID card: {ex.Message}"
+                };
+            }
+        }
+
+        private string ReplaceIdCardPlaceholders(string template, dynamic participant, string qrCodeBase64 = null)
+        {
+            if (string.IsNullOrEmpty(template))
+                return "<div>No ID card template available</div>";
+
+            var html = template
+                .Replace("@EVENTNAME@", participant.EventName?.ToString() ?? "")
+                .Replace("@EventDate@", participant.EventDate?.ToString() ?? "")  // Note: This needs to match template
+                .Replace("@ParticipantName@", participant.FullName?.ToString() ?? "")
+                .Replace("@Company@", participant.Company?.ToString() ?? "")
+                .Replace("@Department@", participant.Department?.ToString() ?? "")
+                .Replace("@ParticipantCode@", participant.ParticipantCode?.ToString() ?? "")
+                .Replace("@Email@", participant.Email?.ToString() ?? "");
+
+            // IMPORTANT: Replace @QR_BASE64@ with JUST the base64 string, not the whole img tag
+            if (!string.IsNullOrEmpty(qrCodeBase64))
+            {
+                html = html.Replace("@QR_BASE64@", qrCodeBase64);
+            }
+            else
+            {
+                // If no QR code, use empty string
+                html = html.Replace("@QR_BASE64@", "");
+            }
+
+            return html;
         }
     }
 }

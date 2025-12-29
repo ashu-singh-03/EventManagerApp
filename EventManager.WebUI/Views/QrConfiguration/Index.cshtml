@@ -470,10 +470,6 @@
                         <span class="detail-label">Time:</span>
                         <span class="detail-value" id="detailScanTime"></span>
                     </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Validation:</span>
-                        <span class="detail-value" id="detailValidationMessage"></span>
-                    </div>
                 </div>
 
                 <!-- Error Details (for failures) -->
@@ -484,7 +480,10 @@
                     </div>
                 </div>
 
-                <button class="reprintButton" onclick="reprintLastIdCard()">Reprint Last ID Card</button>
+                <!-- Reprint Button - HIDDEN BY DEFAULT -->
+                <button class="btn btn-outline-primary w-100 mt-2 mb-2 reprintButton" onclick="reprintLastIdCard()" style="display: none;">
+                    <i class="fas fa-print me-2"></i>Reprint Last ID Card
+                </button>
 
                 <!-- Continue Button -->
                 <button class="btn btn-primary w-100 mt-3" id="modalContinueBtn" data-bs-dismiss="modal">
@@ -560,99 +559,115 @@
             });
 
             // Function to show professional popup
-            function showScanResultPopup(response,isPrintCenter) {
-                const modal = $('#scanResultModal');
-                const modalContent = $('#scanResultModalContent');
-                const modalTitle = $('#scanResultModalTitle');
-                const modalIcon = $('#scanResultIcon');
-                const modalMessage = $('#scanResultMessage');
-                const statusBadge = $('#statusBadge');
-                const participantDetails = $('#participantDetails');
-                const errorDetails = $('#errorDetails');
-                const modalContinueBtn = $('#modalContinueBtn');
+        function showScanResultPopup(response, isPrintCenter) {
+            const modal = $('#scanResultModal');
+            const modalContent = $('#scanResultModalContent');
+            const modalIcon = $('#scanResultIcon');
+            const modalMessage = $('#scanResultMessage');
+            const statusBadge = $('#statusBadge');
+            const participantDetails = $('#participantDetails');
+            const errorDetails = $('#errorDetails');
+            const modalContinueBtn = $('#modalContinueBtn');
 
-                if (autoCloseInterval) {
-                    clearInterval(autoCloseInterval);
-                }
+            // Get the reprint button - HIDE IT FIRST
+            const reprintButton = $('.reprintButton');
+            reprintButton.hide(); // Always hide it first
 
-                let statusClass = 'scan-info';
-                let iconClass = 'fas fa-info-circle';
-                let statusText = 'INFO';
-                let message = response.message || 'Scan processed';
-                let buttonClass = 'btn-primary';
+            if (autoCloseInterval) {
+                clearInterval(autoCloseInterval);
+            }
 
-                if (response.success) {
-                    const status = (response.status || response.validationStatus || '').toUpperCase();
+            let statusClass = 'scan-info';
+            let iconClass = 'fas fa-info-circle';
+            let statusText = 'INFO';
+            let message = response.message || 'Scan processed';
+            let buttonClass = 'btn-primary';
 
-                    if (status === 'VALID') {
-                        statusClass = 'scan-success';
-                        iconClass = 'fas fa-check-circle';
-                        statusText = 'VALID';
-                        message = response.message || 'Access granted successfully';
-                        buttonClass = 'btn-success';
-                    } else if (status === 'DUPLICATE') {
-                        statusClass = 'scan-warning';
-                        iconClass = 'fas fa-exclamation-triangle';
-                        statusText = 'DUPLICATE';
-                        message = response.message || 'Already scanned';
-                        buttonClass = 'btn-warning';
-                    } else {
-                        statusClass = 'scan-error';
-                        iconClass = 'fas fa-times-circle';
-                        statusText = 'INVALID';
-                        message = response.message || 'Access denied';
-                        buttonClass = 'btn-danger';
-                    }
+            // Check the actual status/validationStatus from response
+            const status = (response.status || response.validationStatus || '').toUpperCase();
+            console.log("Scan Status:", status, "isPrintCenter:", isPrintCenter);
+
+            // FIRST: Hide the reprint button for all cases
+            reprintButton.hide();
+
+            // SECOND: Only show reprint button if:
+            // 1. It's a Print Center scan
+            // 2. AND status is DUPLICATE
+            if (isPrintCenter === true && status === 'DUPLICATE') {
+                console.log("Showing reprint button for duplicate scan at print center");
+                reprintButton.show();
+            }
+
+            if (response.success) {
+                if (status === 'VALID') {
+                    statusClass = 'scan-success';
+                    iconClass = 'fas fa-check-circle';
+                    statusText = 'VALID';
+                    message = response.message || 'Access granted successfully';
+                    buttonClass = 'btn-success';
+
+                } else if (status === 'DUPLICATE') {
+                    statusClass = 'scan-warning';
+                    iconClass = 'fas fa-exclamation-triangle';
+                    statusText = 'DUPLICATE';
+                    message = response.message || 'Already scanned';
+                    buttonClass = 'btn-warning';
+
                 } else {
-                    if(isPrintCenter && response.status === "DUPLICATE"){
-                        $('.reprintButton').show();
-                    }
-                    else{
-                        $('.reprintButton').hide();
-                    }
-                    var responsemsg = response.message ? response.message.replace('@@idCardHtml@@', '') : '';
                     statusClass = 'scan-error';
                     iconClass = 'fas fa-times-circle';
-                    statusText = 'ERROR';
-                    message = responsemsg;
+                    statusText = 'INVALID';
+                    message = response.message || 'Access denied';
                     buttonClass = 'btn-danger';
                 }
+            } else {
+                // For errors (not success) - like "Participant not found"
+                var responsemsg = response.message ? response.message.replace('@@idCardHtml@@', '') : '';
+                statusClass = 'scan-error';
+                iconClass = 'fas fa-times-circle';
+                statusText = 'ERROR';
 
-                modalContent.removeClass('scan-success scan-error scan-warning scan-info')
-                           .addClass(statusClass);
-
-                modalIcon.find('i').removeClass().addClass(iconClass);
-
-                let badgeClass = 'status-valid';
-                if (statusText === 'ERROR' || statusText === 'INVALID') badgeClass = 'status-invalid';
-                else if (statusText === 'DUPLICATE') badgeClass = 'status-duplicate';
-
-                statusBadge.html(`<span class="status-badge ${badgeClass}">${statusText}</span>`);
-                modalMessage.html(message);
-
-                if (response.success && (response.ticketId || response.holderName)) {
-                    participantDetails.show();
-                    $('#detailParticipantName').text(response.holderName || response.fullName || 'N/A');
-                    $('#detailScanTime').text(new Date().toLocaleTimeString());
-                    $('#detailValidationMessage').text(response.message || '');
-                    errorDetails.hide();
-                } else {
-                    participantDetails.hide();
-                    errorDetails.show();
-                    $('#errorMessage').html(response.message || 'An error occurred');
+                // For "Participant not found" or similar errors
+                if (response.validationStatus === 'INVALID' || status === 'INVALID') {
+                    statusText = 'INVALID';
                 }
 
-                modalContinueBtn.removeClass('btn-primary btn-success btn-danger btn-warning')
-                               .addClass(buttonClass);
-
-                modal.modal('show');
-
-                autoCloseInterval = setTimeout(function() {
-                    modal.modal('hide');
-                }, 100000);
+                message = responsemsg;
+                buttonClass = 'btn-danger';
             }
-           
-            // Print ID card automatically
+
+            modalContent.removeClass('scan-success scan-error scan-warning scan-info')
+                       .addClass(statusClass);
+
+            modalIcon.find('i').removeClass().addClass(iconClass);
+
+            let badgeClass = 'status-valid';
+            if (statusText === 'ERROR' || statusText === 'INVALID') badgeClass = 'status-invalid';
+            else if (statusText === 'DUPLICATE') badgeClass = 'status-duplicate';
+
+            statusBadge.html(`<span class="status-badge ${badgeClass}">${statusText}</span>`);
+            modalMessage.html(message);
+
+            if (response.success && (response.ticketId || response.holderName || response.fullName)) {
+                participantDetails.show();
+                $('#detailParticipantName').text(response.holderName || response.fullName || 'N/A');
+                $('#detailScanTime').text(new Date().toLocaleTimeString());
+                errorDetails.hide();
+            } else {
+                participantDetails.hide();
+                errorDetails.show();
+                $('#errorMessage').html(response.message || 'An error occurred');
+            }
+
+            modalContinueBtn.removeClass('btn-primary btn-success btn-danger btn-warning')
+                           .addClass(buttonClass);
+
+            modal.modal('show');
+
+            autoCloseInterval = setTimeout(function() {
+                modal.modal('hide');
+            }, 100000);
+        }                    // Print ID card automatically
 
             // Function to load scan log and statistics
             function loadScanLogAndStats(accessPointId) {

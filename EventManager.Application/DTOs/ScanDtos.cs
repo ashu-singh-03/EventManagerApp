@@ -29,6 +29,8 @@ namespace EventManager.Application.DTOs
             public string ValidationMessage { get; set; }
             public string FullName { get; set; }
             public string ParticipantCode { get; set; }
+            public string? Error { get; set; } // Add this
+            public string? QrCodeBase64 { get; set; } // Add this
         }
 
         public class ScanStatisticsDto

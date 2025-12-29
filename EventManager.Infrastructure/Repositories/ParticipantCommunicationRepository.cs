@@ -45,5 +45,17 @@ namespace EventManager.Infrastructure.Repositories
                 },
                 commandType: CommandType.StoredProcedure);
         }
+        public async Task<dynamic> GetParticipantsDetailsAsync(int eventId, int participantId)
+        {
+            using var connection = _context.CreateConnection();
+            return await connection.QueryFirstOrDefaultAsync<dynamic>(
+                "USP_GetParticipantDetailsForIDCard_V1",
+                new
+                {
+                    p_event_id = eventId,
+                    p_participant_id = participantId
+                },
+                commandType: CommandType.StoredProcedure);
+        }
     }
 }

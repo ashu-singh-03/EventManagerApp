@@ -9,6 +9,7 @@ namespace EventManager.Application.Interfaces
     {
         Task<List<ParticipantCommunicationDto>> GetParticipantsWithAssignmentsAsync(int eventId);
         Task<dynamic> GetEmailConfigurationAsync(int eventId);
+        Task<dynamic> GetParticipantsDetailsAsync(int eventId,int participantId);
         Task<dynamic> GetParticipantEmailDataAsync(int eventId, int participantId);
     }
 }
