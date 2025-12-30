@@ -154,7 +154,7 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var qrData = $"CODE:{participantCode}";
+                var qrData = $"EVENT:{eventId}|CODE:{participantCode}";
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
                 var qrCode = new Base64QRCode(qrCodeData);
