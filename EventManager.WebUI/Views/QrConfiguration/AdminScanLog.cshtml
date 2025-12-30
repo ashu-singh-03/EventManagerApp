@@ -592,16 +592,6 @@
                 $('#invalidScans').text(stats.invalidScans || 0);
                 $('#duplicateScans').text(stats.duplicateScans || 0);
             }
-
-            // Export button
-            $('#btnExport').click(function() {
-                if (dataTable) {
-                    dataTable.button('.buttons-csv').trigger();
-                    showMessage('Export started', 'success');
-                } else {
-                    showMessage('No data to export', 'warning');
-                }
-            });
         });
     </script>
 }

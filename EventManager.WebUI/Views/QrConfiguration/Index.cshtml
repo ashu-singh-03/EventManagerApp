@@ -456,10 +456,7 @@
                 <div id="statusBadge" class="mb-2">
                     <span class="status-badge status-valid">VALID</span>
                 </div>
-
-                <!-- Main Message -->
-                <h5 class="mb-2" id="scanResultMessage">Scan Successful</h5>
-
+              
                 <!-- Participant Details -->
                 <div class="participant-card" id="participantDetails" style="display: none;">
                     <div class="detail-item">
@@ -1400,15 +1397,7 @@
                 }
             });
 
-            // Export button
-            $('#btnExport').click(function () {
-                if (dataTable) {
-                    dataTable.button('.buttons-csv').trigger();
-                } else {
-                    showAlert('No data to export. Please select an access point first.', 'warning');
-                }
-            });
-
+           
             // Show alert function
             function showAlert(message, type) {
                 $('.alert-dismissible').remove();
