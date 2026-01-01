@@ -1396,7 +1396,14 @@
                     showAlert('Please select an access point first', 'warning');
                 }
             });
-
+             // Export button
+            $('#btnExport').click(function () {
+                if (dataTable) {
+                    dataTable.button('.buttons-csv').trigger();
+                } else {
+                    showAlert('No data to export. Please select an access point first.', 'warning');
+                }
+            });
            
             // Show alert function
             function showAlert(message, type) {

@@ -557,7 +557,6 @@
         color: var(--gray);
         font-style: italic;
     }
-    /* DataTable specific styles */
     #previewTable_wrapper .dataTables_scrollBody {
         max-height: 400px !important;
         min-height: 200px !important;
@@ -596,7 +595,6 @@
         box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
     }
 
-    /* Ensure table header stays visible */
     #previewTable thead th {
         position: sticky;
         top: 0;
@@ -604,7 +602,6 @@
         z-index: 10;
     }
 
-    /* Style for DataTable buttons and controls */
     .dataTables_filter input {
         padding: 8px 12px;
         border: 1px solid var(--border);
@@ -636,7 +633,6 @@
             color: var(--dark) !important;
         }
         
-    /* Attendees List DataTable Styles */
     #attendeesTable_wrapper {
         margin-top: 15px;
     }
@@ -649,7 +645,6 @@
         margin-bottom: 15px;
     }
 
-    /* Make sure action buttons don't wrap */
     #attendeesTable td:last-child {
         white-space: nowrap;
     }
@@ -665,10 +660,8 @@
             <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
         </div>
 
-        <!-- Global Alert Area -->
         <div class="alert-area"></div>
 
-        <!-- Manage Attendees Section -->
         <div class="content-section active" id="manage-attendees">
             <div class="action-bar">
                 <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
@@ -725,7 +718,6 @@
             </form>
         </div>
 
-        <!-- Attendees List Section -->
         <div class="content-section" id="attendees-list">
             <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
             <div class="table-container" id="attendeesTableContainer">
@@ -742,7 +734,6 @@
                         </tr>
                     </thead>
                     <tbody id="attendeesTableBody">
-                        <!-- Data will be loaded dynamically -->
                     </tbody>
                 </table>
             </div>
@@ -751,7 +742,6 @@
     </div>
 </div>
 
-<!-- Bulk Upload Modal -->
 <div class="modal" id="bulkUploadModal">
     <div class="modal-content">
         <div class="modal-header">
@@ -827,19 +817,14 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
-            // Initialize DataTable variables
             let previewDataTable = null;
             let attendeesDataTable = null;
-
-            // Initialize Preview DataTable (empty initially)
             function initializeDataTable() {
-                // Destroy existing DataTable if it exists
                 if ($.fn.DataTable.isDataTable('#previewTable')) {
                     previewDataTable.destroy();
                     $('#previewTable').empty();
                 }
 
-                // Recreate table structure
                 $('#previewTable').html(`
                     <thead>
                         <tr>
@@ -855,7 +840,6 @@
                     <tbody></tbody>
                 `);
 
-                // Initialize new DataTable
                 previewDataTable = $('#previewTable').DataTable({
                     paging: true,
                     pageLength: 10,
@@ -887,7 +871,6 @@
                 });
             }
 
-            // Initialize Attendees DataTable
             function initializeAttendeesDataTable() {
                 if ($.fn.DataTable.isDataTable('#attendeesTable')) {
                     attendeesDataTable.destroy();
@@ -921,118 +904,126 @@
                     dom: '<"top"lf>rt<"bottom"ip><"clear">',
                     columnDefs: [
                         { 
-                            targets: 0, // ID column
+                            targets: 0, 
                             width: "5%",
                             searchable: false
                         },
                         { 
-                            targets: 1, // Name column
+                            targets: 1, 
                             width: "20%"
                         },
                         { 
-                            targets: 2, // Email column
+                            targets: 2, 
                             width: "20%"
                         },
                         { 
-                            targets: 3, // Phone column
+                            targets: 3, 
                             width: "15%"
                         },
                         { 
-                            targets: 4, // Company column
+                            targets: 4, 
                             width: "15%"
                         },
                         { 
-                            targets: 5, // Department column
+                            targets: 5,
                             width: "15%"
                         },
                         { 
-                            targets: 6, // Actions column
+                            targets: 6, 
                             width: "10%",
                             orderable: false,
                             searchable: false
                         }
                     ],
-                    order: [[0, 'desc']] // Sort by ID descending
+                    order: [[0, 'desc']] 
                 });
             }
 
-            // Initialize on page load
             initializeDataTable();
             initializeAttendeesDataTable();
 
-            // Alert functions for global alerts
-            function showSuccess(message, totalRecords, importedRecords) {
-                const alertId = 'alert-' + Date.now();
-                const successHtml = `
-                    <div id="${alertId}" class="alert alert-success">
-                        <i class="fas fa-check-circle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">
-                                <span>Import Successful!</span>
-                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="alert-message">${message}</div>
-                            <div class="alert-stats">
-                                <span class="stat-badge stat-success">
-                                    <i class="fas fa-users"></i> Total: ${totalRecords}
-                                </span>
-                                <span class="stat-badge stat-success">
-                                    <i class="fas fa-check-circle"></i> Imported: ${importedRecords}
-                                </span>
-                            </div>
+            function showAlert(type, message, totalRecords = null, processedRecords = null, errorFileUrl = null) {
+            const alertId = 'alert-' + Date.now();
+            const isSuccess = type === 'success';
+
+            // Check if we should show stats (when totalRecords is provided)
+            const showStats = totalRecords !== null;
+
+            // Convert to numbers if showing stats
+            const totalNum = showStats ? Number(totalRecords) || 0 : 0;
+            const processedNum = showStats ? Number(processedRecords) || 0 : 0;
+            const failedNum = showStats && isSuccess ? totalNum - processedNum : processedRecords || 0;
+
+            // Configuration for different alert types
+            const config = {
+                success: {
+                    title: 'Success!',
+                    icon: 'fa-check-circle',
+                    primaryStatIcon: 'fa-check-circle',
+                    primaryStatClass: 'stat-success',
+                    timeout: 8000
+                },
+                danger: {
+                    title: 'Error',
+                    icon: 'fa-exclamation-triangle',
+                    primaryStatIcon: 'fa-times-circle',
+                    primaryStatClass: 'stat-danger',
+                    timeout: 10000
+                }
+            };
+
+            const currentConfig = config[type] || config.danger;
+
+            let alertHtml = `
+                <div id="${alertId}" class="alert alert-${type}">
+                    <i class="fas ${currentConfig.icon} alert-icon"></i>
+                    <div class="alert-content">
+                        <div class="alert-title">
+                            <span>${currentConfig.title}</span>
+                            <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
-                    </div>`;
-                $('.alert-area').append(successHtml);
-                setTimeout(() => closeAlert(alertId), 8000);
+                        <div class="alert-message">${message}</div>`;
+
+            // Add stats section only if needed
+            if (showStats) {
+                alertHtml += `
+                        <div class="alert-stats">
+                            <span class="stat-badge stat-secondary">
+                                <i class="fas fa-users"></i> Total: ${totalNum}
+                            </span>`;
+
+                if (isSuccess) {
+                    alertHtml += `
+                            <span class="stat-badge stat-success">
+                                <i class="fas ${currentConfig.primaryStatIcon}"></i> Imported: ${processedNum}
+                            </span>`;
+                } else {
+                    alertHtml += `
+                            <span class="stat-badge stat-danger">
+                                <i class="fas ${currentConfig.primaryStatIcon}"></i> Failed: ${failedNum}
+                            </span>`;
+                }
+
+                alertHtml += `</div>`;
             }
 
-            function showError(message, totalRecords, failedRecords, errorFileUrl) {
-                const alertId = 'alert-' + Date.now();
-
-                // Convert to numbers
-                const totalNum = Number(totalRecords) || 0;
-                const failedNum = Number(failedRecords) || 0;
-
-                let errorHtml = `
-                    <div id="${alertId}" class="alert alert-danger">
-                        <i class="fas fa-exclamation-triangle alert-icon"></i>
-                        <div class="alert-content">
-                            <div class="alert-title">
-                                <span>Import Failed</span>
-                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="alert-message">${message || 'Unknown error'}</div>
-                            <div class="alert-stats">
-                                <span class="stat-badge stat-secondary">
-                                    <i class="fas fa-users"></i> Total: ${totalNum}
-                                </span>
-                                <span class="stat-badge stat-danger">
-                                    <i class="fas fa-times-circle"></i> Failed: ${failedNum}
-                                </span>
-                            </div>`;
-
-                if (errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '') {
-                    errorHtml += `
+            // Add error report section only for error alerts with valid URL
+            if (!isSuccess && errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '') {
+                alertHtml += `
                         <div class="alert-actions">
                             <a href="${errorFileUrl}" class="btn-download-error" target="_blank" download>
                                 <i class="fas fa-download"></i> Download Error Report
                             </a>
                         </div>`;
-                } else {
-                    errorHtml += `
-                        <div class="no-error-report">
-                            <i class="fas fa-info-circle"></i> No error report available
-                        </div>`;
-                }
-
-                errorHtml += `</div></div>`;
-                $('.alert-area').append(errorHtml);
-                setTimeout(() => closeAlert(alertId), 10000);
             }
+
+            alertHtml += `</div></div>`;
+
+            $('.alert-area').append(alertHtml);
+            setTimeout(() => closeAlert(alertId), currentConfig.timeout);
+        }
 
             window.closeAlert = function(alertId) {
                 const alert = $('#' + alertId);
@@ -1042,7 +1033,6 @@
                 }
             };
 
-            // Modal error functions
             function showModalError(message, totalRecords, failedRecords, errorFileUrl) {
                 const errorArea = $('#modalErrorArea');
                 const messageEl = $('#modalErrorMessage');
@@ -1124,7 +1114,6 @@
                 $('#modalErrorActions').empty();
             }
 
-            // Tab switching
             $('.menu-itemlocal').click(function () {
                 $('.menu-itemlocal').removeClass('active');
                 $(this).addClass('active');
@@ -1144,7 +1133,6 @@
                 }
             });
 
-            // Form validation
             $('#attendeeForm').validate({
                 rules: {
                     FirstName: { required: true, minlength: 2 },
@@ -1163,7 +1151,6 @@
                 submitHandler: saveParticipant
             });
 
-            // Save participant
             function saveParticipant() {
                 const dto = {
                     ParticipantId: $('#attendeeForm').data('participant-id') || 0,
@@ -1183,22 +1170,20 @@
                     contentType: 'application/json',
                     data: JSON.stringify(dto),
                     success: function () {
-                        showSuccess('Participant saved successfully!', 1, 1);
+                        showAlert('success', 'Participant saved successfully!');
                         $('#attendeeForm')[0].reset();
                         $('#attendeeForm').removeData('participant-id');
                         $('#attendeeForm button[type="submit"]').text('Save Attendee');
-                        // Reload attendees DataTable
                         loadParticipants();
                         $('.menu-itemlocal[data-section="attendees-list"]').click();
                     },
                     error: function (xhr) {
                         const errorMessage = xhr.responseJSON?.message || 'Error saving participant';
-                        showError(errorMessage, 1, 1);
+                        showAlert('danger', errorMessage);
                     }
                 });
             }
 
-            // Load participants
             function loadParticipants() {
                 // Show loading state
                 if (attendeesDataTable) {
@@ -1251,7 +1236,6 @@
                 });
             }
 
-            // Edit participant
             $(document).on('click', '.edit-btn', function () {
                 const participantId = $(this).data('id');
                 $.ajax({
@@ -1277,7 +1261,6 @@
                 });
             });
 
-            // Delete participant
             $(document).on('click', '.delete-btn', function () {
                 if (!confirm('Are you sure you want to delete this participant?')) return;
 
@@ -1287,26 +1270,23 @@
                     type: 'POST',
                     data: { id: participantId },
                     success: function () {
-                        showSuccess('Participant deleted successfully!', 1, 1);
-                        loadParticipants(); // This will refresh the DataTable
+                        showAlert('success', 'Participant deleted successfully!');
+                        loadParticipants(); 
                     },
                     error: function (xhr) {
-                        showError('Error deleting participant', 1, 1);
+                        showAlert('danger', 'Error deleting participant');
                     }
                 });
             });
 
-            // Bulk upload modal
             const modal = $('#bulkUploadModal');
             const fileInput = $('#fileInput');
             const dropZone = $('#dropZone');
             const modalUploadBtn = $('#modalUploadBtn');
 
-            // Open/close modal
             $('#bulkUploadBtn').click(() => {
                 hideModalError();
                 modal.addClass('show');
-                // Reset DataTable when opening modal
                 initializeDataTable();
             });
 
@@ -1322,12 +1302,10 @@
                 }
             });
 
-            // Close modal error button
             $(document).on('click', '#closeModalError', function() {
                 hideModalError();
             });
 
-            // Use event delegation for file handling
             $(document).on('click', '#browseBtn', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1336,7 +1314,6 @@
 
             fileInput.change(handleFileSelect);
 
-            // Drag and drop
             dropZone.on('dragover dragleave drop', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1362,7 +1339,6 @@
                     return;
                 }
 
-                // Hide any previous error
                 hideModalError();
 
                 dropZone.html(`
@@ -1375,7 +1351,6 @@
                         <i class="fas fa-exchange-alt"></i> Change File
                     </button>`);
 
-                // Clear and show loading in DataTable
                 if (previewDataTable) {
                     previewDataTable.clear().draw();
                 }
@@ -1459,8 +1434,6 @@
                 if (!previewDataTable) {
                     initializeDataTable();
                 }
-
-                // Clear existing data
                 previewDataTable.clear();
 
                 if (!data?.length) {
@@ -1468,7 +1441,6 @@
                     return;
                 }
 
-                // Add data to DataTable
                 data.forEach(row => {
                     previewDataTable.row.add([
                         escapeHtml(row.firstName || ''),
@@ -1481,24 +1453,17 @@
                     ]);
                 });
 
-                // Draw the table
                 previewDataTable.draw();
-
-                // Update the info text to show total count
                 updateDataTableInfo(data.length);
             }
 
-            // Function to update DataTable info with correct count
             function updateDataTableInfo(totalCount) {
-                // Wait for DataTable to update
                 setTimeout(() => {
-                    // Get the current info element
                     const infoElement = $('.dataTables_info');
                     if (infoElement.length) {
                         if (totalCount === 0) {
                             infoElement.text('Showing 0 to 0 of 0 entries');
                         } else {
-                            // Get current page info from DataTable
                             const pageInfo = previewDataTable.page.info();
                             const start = pageInfo.start + 1;
                             const end = pageInfo.end;
@@ -1516,13 +1481,11 @@
                 return div.innerHTML;
             }
 
-            // Download template
             $(document).on('click', '#downloadTemplateBtn', function(e) {
                 e.preventDefault();
                 window.location.href = '@Url.Action("DownloadTemplate", "Participant")';
             });
 
-            // Upload process
             modalUploadBtn.click(function () {
                 const file = fileInput[0].files[0];
 
@@ -1554,28 +1517,26 @@
                     data: formData,
                     contentType: false,
                     processData: false,
-
-                    // Handle both success and error responses
                     success: function (response) {
                         hideModalError();
                         modal.removeClass('show');
 
                         if (response.success) {
-                            showSuccess(
+                            showAlert(
+                                'success',
                                 response.message || 'File uploaded successfully!',
                                 response.totalRecords || 0,
                                 response.importedRecords || 0
                             );
                             loadParticipants();
                         } else {
-                            // Server returned success: false with error details
-                            showModalError(
+                            showAlert(
+                                'danger',
                                 response.message || 'Import failed.',
                                 response.totalRecords || 0,
                                 response.failedRecords || 0,
                                 response.errorFileUrl
                             );
-                            // Don't close modal on validation errors
                             modal.addClass('show');
                         }
                     },
@@ -1585,19 +1546,15 @@
                         console.log("AJAX Error:", error);
                         console.log("Response:", xhr.responseJSON);
 
-                        // Check if it's a 400 error with JSON response
                         if (xhr.status === 400 && xhr.responseJSON) {
-                            // This is actually a validation error from server
                             showModalError(
                                 xhr.responseJSON.message || 'Validation failed',
                                 xhr.responseJSON.totalRecords || 0,
                                 xhr.responseJSON.failedRecords || 0,
                                 xhr.responseJSON.errorFileUrl
                             );
-                            // Keep modal open to show errors
                             modal.addClass('show');
                         }
-                        // Check for 404 (endpoint not found)
                         else if (xhr.status === 404) {
                             showModalError(
                                 'Server endpoint not found. Please check the URL.',
@@ -1605,7 +1562,6 @@
                             );
                             modal.addClass('show');
                         }
-                        // Check for 500 (server error)
                         else if (xhr.status === 500) {
                             showModalError(
                                 'Server error occurred. Please try again later.',
@@ -1613,7 +1569,6 @@
                             );
                             modal.addClass('show');
                         }
-                        // Other errors
                         else {
                             showModalError(
                                 'Error during import: ' + (error || 'Unknown error'),
@@ -1629,7 +1584,6 @@
                 });
             });
 
-            // Event delegation for change file button
             $(document).on('click', '#changeFileBtn', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -1637,7 +1591,6 @@
                 hideModalError();
                 fileInput.val('');
                 
-                // Reset drop zone
                 dropZone.html(`
                     <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
                     <h3>Drag & Drop your Excel file here</h3>
@@ -1647,28 +1600,23 @@
                     </button>
                     <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">`);
 
-                // Clear DataTable
                 if (previewDataTable) {
                     previewDataTable.clear().draw();
-                    // Reset DataTable info text
                     setTimeout(() => {
                         $('.dataTables_info').text('Showing 0 to 0 of 0 entries');
                     }, 100);
                 }
 
-                // IMPORTANT: Re-attach ALL event handlers
                 setTimeout(() => {
-                    // Re-attach browse button click
+
                     $('#browseBtn').off('click').on('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
                         fileInput.click();
                     });
                     
-                    // Re-attach file input change event
                     fileInput.off('change').on('change', handleFileSelect);
                     
-                    // Re-attach drag and drop events to the NEW drop zone element
                     dropZone.off('dragover dragleave drop')
                         .on('dragover', function(e) {
                             e.preventDefault();
