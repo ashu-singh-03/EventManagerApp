@@ -154,19 +154,49 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var qrData = $"EVENT:{eventId}|CODE:{participantCode}";
+                // var qrData = $"EVENT:{eventId}|CODE:{participantCode}";
+                var qrData = participantCode + "||" + eventId;
+                
+                // 1. Use raw text WITHOUT any prefix
+               
+
+                // 2. Generate QR code
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
-                var qrCode = new Base64QRCode(qrCodeData);
-                var qrCodeImageBase64 = qrCode.GetGraphic(20);
-                return $"data:image/png;base64,{qrCodeImageBase64}";
+
+                // 3. Use PngByteQRCode (most reliable)
+                var pngQrCode = new PngByteQRCode(qrCodeData);
+
+                // 4. Generate with iPhone-friendly settings
+                var pngBytes = pngQrCode.GetGraphic(
+                    pixelsPerModule: 10,  // Optimal for iPhone
+                    drawQuietZones: true //, // CRITICAL for iPhone
+                                         //  quietZoneRendering: QRCoder.QRCodeGenerator.QuietZoneRendering.Flat
+                );
+
+                // 5. Convert to base64
+                var base64 = Convert.ToBase64String(pngBytes);
+
+                // 6. Test the QR code before returning
+             //   TestQRCode(pngBytes, qrData);
+
+                return $"data:image/png;base64,{base64}";
+
+
+                //return $"data:image/png;base64,{qrCodeImageBase64}";
             }
             catch
             {
                 return string.Empty;
             }
         }
-
+        private void TestQRCode(byte[] pngBytes, string expectedText)
+        {
+            // Save to file for testing
+            File.WriteAllBytes(@"C:\Users\Admin\source\repos\Images\test_qr1.png", pngBytes);
+            Console.WriteLine($"QR code saved. Expected text: '{expectedText}'");
+            Console.WriteLine("Scan this file with iPhone Camera app to test.");
+        }
         public async Task<ScanResultDto> GenerateIdCardAsync(int eventId, int participantId)
         {
             try

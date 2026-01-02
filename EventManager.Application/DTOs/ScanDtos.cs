@@ -10,6 +10,7 @@ namespace EventManager.Application.DTOs
             public string QrCode { get; set; }
             public string AccessPoint { get; set; }
             public bool IsPrintCenter { get; set; }
+            public string ParticipantName { get; set; }
         }
 
         public class ScanResultDto

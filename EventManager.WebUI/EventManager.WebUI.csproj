@@ -15,4 +15,12 @@
     <Folder Include="wwwroot\ExcelTemplates\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="DinkToPdf" Version="1.0.8" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="PuppeteerSharp" Version="20.2.5" />
+    <PackageReference Include="QuestPDF" Version="2025.12.1" />
+    <PackageReference Include="Wkhtmltopdf.NetCore" Version="3.0.2" />
+  </ItemGroup>
+
 </Project>

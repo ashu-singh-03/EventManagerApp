@@ -46,6 +46,10 @@ namespace EventManager.Application.Services
         {
             try
             {
+                var arreventId = request.QrCode.Split("||");
+                eventId = Convert.ToInt32(arreventId[1]);
+                var participantId = arreventId[0];
+                
                 if (!int.TryParse(request.AccessPoint, out int accessPointId))
                     return new ScanResultDto
                     {
@@ -61,7 +65,7 @@ namespace EventManager.Application.Services
                 // Get QR details from stored procedure
                 var participant = await _repository.GetQRDetailsAsync(
                     eventId,
-                    request.QrCode,
+                    participantId,
                     accessPointId,
                     scannedByUserId
                 );
@@ -94,7 +98,7 @@ namespace EventManager.Application.Services
                     if (passConfig != null && !string.IsNullOrEmpty(passConfig.BodyText))
                     {
                         // Generate QR code
-                        var qrCodeBase64 = GenerateQRCode(request.QrCode, eventId);
+                        var qrCodeBase64 = GenerateQRCode(participantId, eventId);
 
                         // Replace placeholders in the HTML template
                         idCardHtml = ReplaceIdCardPlaceholders(
@@ -164,12 +168,40 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var qrData = $"EVENT:{eventId}|CODE:{participantCode}";
+                //var qrData = $"EVENT:{eventId}|CODE:{participantCode}";
+                //using var qrGenerator = new QRCodeGenerator();
+                //var qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
+                //var qrCode = new Base64QRCode(qrCodeData);
+                //var qrCodeImageBase64 = qrCode.GetGraphic(20);
+                //return $"data:image/png;base64,{qrCodeImageBase64}";
+
+
+                var qrData = participantCode + "||" + eventId;
+
+                // 1. Use raw text WITHOUT any prefix
+
+
+                // 2. Generate QR code
                 using var qrGenerator = new QRCodeGenerator();
                 var qrCodeData = qrGenerator.CreateQrCode(qrData, QRCodeGenerator.ECCLevel.Q);
-                var qrCode = new Base64QRCode(qrCodeData);
-                var qrCodeImageBase64 = qrCode.GetGraphic(20);
-                return $"data:image/png;base64,{qrCodeImageBase64}";
+
+                // 3. Use PngByteQRCode (most reliable)
+                var pngQrCode = new PngByteQRCode(qrCodeData);
+
+                // 4. Generate with iPhone-friendly settings
+                var pngBytes = pngQrCode.GetGraphic(
+                    pixelsPerModule: 10,  // Optimal for iPhone
+                    drawQuietZones: true //, // CRITICAL for iPhone
+                                         //  quietZoneRendering: QRCoder.QRCodeGenerator.QuietZoneRendering.Flat
+                );
+
+                // 5. Convert to base64
+                var base64 = Convert.ToBase64String(pngBytes);
+
+                // 6. Test the QR code before returning
+                //   TestQRCode(pngBytes, qrData);
+
+                return $"data:image/png;base64,{base64}";
             }
             catch
             {

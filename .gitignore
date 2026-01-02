@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/EventManager.WebUI/.config/dotnet-tools.json
+/.gitignore
+/.gitignore
+/EventManager.WebUI/Views/ParticipantCommunication/Index - Copy.cshtml
