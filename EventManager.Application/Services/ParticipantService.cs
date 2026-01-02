@@ -42,6 +42,7 @@ namespace EventManager.Application.Services
                 LastName = p.LastName,
                 Email = p.Email,
                 Phone = p.Phone,
+                Country= p.Country,
                 Company = p.Company,
                 Department = p.Department,
                 Notes = p.Notes,
@@ -63,6 +64,7 @@ namespace EventManager.Application.Services
                 Email = participant.Email,
                 Phone = participant.Phone,
                 Company = participant.Company,
+                Country = participant.Country,
                 Department = participant.Department,
                 Notes = participant.Notes
             };
@@ -76,6 +78,7 @@ namespace EventManager.Application.Services
                 EventId = dto.EventId,
                 FirstName = dto.FirstName,
                 LastName = dto.LastName,
+                Country = dto.Country,
                 Email = dto.Email,
                 Phone = dto.Phone,
                 Company = dto.Company,
@@ -374,7 +377,7 @@ namespace EventManager.Application.Services
                     row["created_by"] = createdBy;
             }
 
-            string[] requiredColumns = { "first_name", "last_name", "email", "phone", "company", "department", "notes" };
+            string[] requiredColumns = { "first_name", "last_name", "email", "phone", "company", "department", "country", "notes" };
             foreach (var column in requiredColumns)
             {
                 if (!dtImport.Columns.Contains(column))

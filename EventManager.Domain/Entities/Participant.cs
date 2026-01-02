@@ -9,7 +9,8 @@
         public string? Email { get; set; }
         public string? Phone { get; set; }
         public string? Company { get; set; }      
-        public string? Department { get; set; }    
+        public string? Department { get; set; }
+        public string Country { get; set; }
         public string? Notes { get; set; }         
         public string QrCodeHash { get; set; }
         public DateTime QrCodeGeneratedAt { get; set; } = DateTime.Now;

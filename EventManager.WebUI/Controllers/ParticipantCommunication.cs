@@ -14,7 +14,6 @@ using System.Drawing.Imaging;
 using System.Drawing.Printing;
 using System.IO.Compression;
 using System.Threading.Tasks;
-using Wkhtmltopdf.NetCore;
 using static EventManager.Application.DTOs.ScanDtos;
 
 namespace EventManager.WebUI.Controllers
@@ -23,15 +22,12 @@ namespace EventManager.WebUI.Controllers
     {
         private readonly IParticipantCommunicationService _service;
         private readonly IEventClaimService _eventClaimService;
-        private readonly IGeneratePdf _generatePdf;
         public ParticipantCommunicationController(
             IParticipantCommunicationService service,
-            IEventClaimService eventClaimService,
-            IGeneratePdf generatePdf)
+            IEventClaimService eventClaimService)
         {
             _service = service;
             _eventClaimService = eventClaimService;
-            _generatePdf = generatePdf;
         }
 
         public IActionResult Index()

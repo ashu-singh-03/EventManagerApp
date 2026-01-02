@@ -30,7 +30,6 @@ namespace EventManager.WebUI.Controllers
             _logger = logger;
         }
 
-        // LOAD PAGE (HTML)
         public async Task<IActionResult> Index()
         {
             int eventId = _eventClaimService.GetEventIdFromClaim();
@@ -40,7 +39,6 @@ namespace EventManager.WebUI.Controllers
             return View(participants);
         }
 
-        // RETURN PARTICIPANTS AS JSON (for table AJAX)
         [HttpGet]
         public async Task<IActionResult> LoadParticipants()
         {
@@ -51,7 +49,6 @@ namespace EventManager.WebUI.Controllers
             return Json(participants);
         }
 
-        // GET ONE PARTICIPANT
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
@@ -62,7 +59,6 @@ namespace EventManager.WebUI.Controllers
             return Json(participant);
         }
 
-        // SAVE (INSERT/UPDATE)
         [HttpPost]
         public async Task<IActionResult> Save([FromBody] ParticipantDto dto)
         {
@@ -72,7 +68,6 @@ namespace EventManager.WebUI.Controllers
 
             if (!ModelState.IsValid)
             {
-                // Extract validation errors and return them in a consistent format
                 var errors = ModelState.Values
                     .SelectMany(v => v.Errors)
                     .Select(e => e.ErrorMessage)
@@ -90,7 +85,6 @@ namespace EventManager.WebUI.Controllers
             return Ok(new { message = "Participant saved successfully" });
         }
 
-        // DELETE
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
         {
@@ -104,21 +98,17 @@ namespace EventManager.WebUI.Controllers
         {
             try
             {
-                // Path to your Excel template file
                 var filePath = Path.Combine(_hostingEnvironment.WebRootPath,
                                            "ExcelTemplates",
                                            "Attendee_Template.xlsx");
 
-                // Check if file exists
                 if (!System.IO.File.Exists(filePath))
                 {
                     return NotFound("Template file not found. Please place Attendee_Template.xlsx in wwwroot/ExcelTemplates folder.");
                 }
 
-                // Read the file
                 var fileBytes = System.IO.File.ReadAllBytes(filePath);
 
-                // Return file for download
                 return File(fileBytes,
                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                            "Attendee_Template.xlsx");
@@ -210,7 +200,6 @@ namespace EventManager.WebUI.Controllers
                 if (string.IsNullOrEmpty(fileName))
                     return NotFound("Error file not specified.");
 
-                // Get the uploads folder path
                 var uploadsFolder = Path.Combine(_hostingEnvironment.WebRootPath, "Uploads");
                 var filePath = Path.Combine(uploadsFolder, fileName);
 
@@ -218,8 +207,6 @@ namespace EventManager.WebUI.Controllers
                     return NotFound($"Error file not found: {fileName}");
 
                 var fileBytes = System.IO.File.ReadAllBytes(filePath);
-
-                // Delete the error file after downloading
                 try
                 {
                     System.IO.File.Delete(filePath);

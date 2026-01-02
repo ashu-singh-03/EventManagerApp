@@ -5,6 +5,7 @@ using EventManager.Infrastructure.Data;
 using MySql.Data.MySqlClient;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics.Metrics;
 using System.Threading.Tasks;
 
 namespace EventManager.Infrastructure.Repositories
@@ -52,6 +53,7 @@ namespace EventManager.Infrastructure.Repositories
                 p_LastName = participant.LastName,
                 p_Email = participant.Email,
                 p_Phone = participant.Phone,
+                p_Country = participant.Country,
                 p_Company = participant.Company,         
                 p_Department = participant.Department,  
                 p_Notes = participant.Notes,
@@ -101,6 +103,7 @@ namespace EventManager.Infrastructure.Repositories
                             p_phone = row["phone"],
                             p_company = row["company"],
                             p_department = row["department"],
+                            p_country = row["country"],
                             p_notes = row["notes"],
                             p_event_id = row["event_id"],
                             p_created_by = row["created_by"],

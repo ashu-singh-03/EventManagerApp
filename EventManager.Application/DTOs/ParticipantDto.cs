@@ -9,6 +9,7 @@ namespace EventManager.Application.DTOs
         public int ParticipantId { get; set; }
         public int EventId { get; set; }
         public string FirstName { get; set; }
+        public string Country { get; set; }
         public string LastName { get; set; }
         public string? Email { get; set; }
         public string? Phone { get; set; }

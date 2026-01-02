@@ -671,52 +671,61 @@
                     </button>
                 </div>
             </div>
-            <form id="attendeeForm">
-                <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
+                <form id="attendeeForm">
+                    <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
 
-                <div class="form-row">
-                    <div class="form-col">
-                        <label for="firstName">First Name *</label>
-                        <input type="text" id="firstName" name="FirstName" required>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="firstName">First Name *</label>
+                            <input type="text" id="firstName" name="FirstName" required>
+                        </div>
+                        <div class="form-col">
+                            <label for="lastName">Last Name *</label>
+                            <input type="text" id="lastName" name="LastName" required>
+                        </div>
                     </div>
-                    <div class="form-col">
-                        <label for="lastName">Last Name *</label>
-                        <input type="text" id="lastName" name="LastName" required>
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-col">
-                        <label for="email">Email Address *</label>
-                        <input type="email" id="email" name="Email" required>
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="email">Email Address *</label>
+                            <input type="email" id="email" name="Email" required>
+                        </div>
+                        <div class="form-col">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="Phone">
+                        </div>
                     </div>
-                    <div class="form-col">
-                        <label for="phone">Phone Number</label>
-                        <input type="tel" id="phone" name="Phone">
-                    </div>
-                </div>
 
-                <div class="form-row">
-                    <div class="form-col">
-                        <label for="company">Company</label>
-                        <input type="text" id="company" name="Company">
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="company">Company</label>
+                            <input type="text" id="company" name="Company">
+                        </div>
+                        <div class="form-col">
+                            <label for="department">Department</label>
+                            <input type="text" id="department" name="Department">
+                        </div>
                     </div>
-                    <div class="form-col">
-                        <label for="department">Department</label>
-                        <input type="text" id="department" name="Department">
+
+                    <div class="form-row">
+                        <div class="form-col">
+                            <label for="country">Country</label>
+                            <input type="text" id="country" name="Country">
+                        </div>
+                        <div class="form-col">
+                        </div>
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label for="notes">Additional Notes</label>
-                    <textarea id="notes" name="Notes" rows="2"></textarea>
-                </div>
+                    <div class="form-group">
+                        <label for="notes">Additional Notes</label>
+                        <textarea id="notes" name="Notes" rows="2"></textarea>
+                    </div>
 
-                <div class="form-group">
-                    <button type="submit" class="btn btn-primary">Save Attendee</button>
-                </div>
-            </form>
-        </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Save Attendee</button>
+                    </div>
+                </form>
+            </div>
 
         <div class="content-section" id="attendees-list">
             <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
@@ -730,6 +739,7 @@
                             <th>Phone</th>
                             <th>Company</th>
                             <th>Department</th>
+                            <th>Country</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -793,6 +803,7 @@
                                 <th>Phone</th>
                                 <th>Company</th>
                                 <th>Department</th>
+                                <th>Country</th>
                                 <th>Notes</th>
                             </tr>
                         </thead>
@@ -834,6 +845,7 @@
                             <th>Phone</th>
                             <th>Company</th>
                             <th>Department</th>
+                            <th>Country</th>
                             <th>Notes</th>
                         </tr>
                     </thead>
@@ -928,8 +940,12 @@
                             targets: 5,
                             width: "15%"
                         },
-                        { 
+                         {
                             targets: 6, 
+                            width: "10%"
+                        }, 
+                        { 
+                            targets: 7, 
                             width: "10%",
                             orderable: false,
                             searchable: false
@@ -1161,6 +1177,7 @@
                     Phone: $('#phone').val(),
                     Company: $('#company').val(),
                     Department: $('#department').val(),
+                    Country: $('#country').val(),
                     Notes: $('#notes').val()
                 };
 
@@ -1217,6 +1234,7 @@
                                 p.phone || '',
                                 p.company || '',
                                 p.department || '',
+                                p.country || '',
                                 `
                                     <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
                                     <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
@@ -1237,6 +1255,7 @@
             }
 
             $(document).on('click', '.edit-btn', function () {
+                debugger;
                 const participantId = $(this).data('id');
                 $.ajax({
                     url: '@Url.Action("Details", "Participant")',
@@ -1251,6 +1270,7 @@
                         $('#phone').val(participant.phone);
                         $('#company').val(participant.company);
                         $('#department').val(participant.department);
+                        $('#country').val(participant.country);
                         $('#notes').val(participant.notes);
                         $('#attendeeForm').data('participant-id', participant.participantId);
                         $('#attendeeForm button[type="submit"]').text('Update Attendee');
@@ -1390,6 +1410,7 @@
                                 phone: '',
                                 company: '',
                                 department: '',
+                                country: '',
                                 notes: ''
                             };
 
@@ -1404,6 +1425,7 @@
                                 else if (header.includes('phone')) attendee.phone = value;
                                 else if (header.includes('company')) attendee.company = value;
                                 else if (header.includes('department') || header.includes('dept')) attendee.department = value;
+                                else if (header.includes('country')) attendee.country = value;
                                 else if (header.includes('note')) attendee.notes = value;
                             }
 
@@ -1449,6 +1471,7 @@
                         escapeHtml(row.phone || ''),
                         escapeHtml(row.company || ''),
                         escapeHtml(row.department || ''),
+                        escapeHtml(row.country || ''),
                         escapeHtml(row.notes || '')
                     ]);
                 });

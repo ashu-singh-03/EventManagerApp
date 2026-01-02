@@ -115,9 +115,8 @@ namespace EventManager.Application.Services
                     emailRequest.BccEmails = bccEmailsList;
                 }
 
-                emailRequest.FromEmail = "postmaster@sandboxdfa20f2294224a8cb8e81a8ecbb11738.mailgun.org";
-                emailRequest.ToEmails[0] = "bviraj44@gmail.com";
-                // 8. Send email using your existing EmailService
+                //emailRequest.FromEmail = "postmaster@sandboxdfa20f2294224a8cb8e81a8ecbb11738.mailgun.org";
+                //emailRequest.ToEmails[0] = "bviraj44@gmail.com";
                 return await _mailgunService.SendEmailAsync(emailRequest);
             }
             catch (Exception ex)
