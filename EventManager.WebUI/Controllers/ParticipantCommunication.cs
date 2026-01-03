@@ -4,7 +4,7 @@ using EventManager.Application.Interfaces;
 using EventManager.Application.Services;
 using EventManager.Domain.Entities;
 using EventManager.WebUI.ViewComponents;
-using EventManager.WebUI.ViewComponents.EventManager.WebUI.ViewComponents;
+using HtmlAgilityPack;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using MySqlX.XDevAPI.Common;
@@ -107,62 +107,106 @@ namespace EventManager.WebUI.Controllers
         [HttpPost]
         public async Task<IActionResult> GenerateBulkIdCards([FromBody] List<ScanRequestDto> requests)
         {
-          
             int eventId = _eventClaimService.GetEventIdFromClaim();
             if (requests == null || !requests.Any())
             {
                 return Json(new { success = false, message = "No participants selected" });
             }
+
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
             try
             {
                 using (var memoryStream = new MemoryStream())
                 {
                     using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                     {
+                        int generatedCount = 0;
+
                         foreach (var request in requests)
                         {
-                            if (!int.TryParse(request.QrCode, out int participantId))
+                            try
                             {
-                                 
-                            }
-                            // Generate each ID card
-                            // var idCardResult = await GenerateSingleIdCard(request.QrCode, request.IsPrintCenter);
-                            var idCardResult = await _service.GenerateIdCardAsync(eventId, participantId);
-                            if (idCardResult.Success)
-                            {
-                                // Convert HTML to PDF (you'll need a library like iTextSharp, DinkToPdf, etc.)
-                                 HtmlToQuestPdfConverter htmlToQuestPdfConverter = new HtmlToQuestPdfConverter();
-                                //BusinessCardPdfGenerator businessCardPdfGenerator = new BusinessCardPdfGenerator(request.ParticipantName,"as","");
-                                // var pdfDocVal =  businessCardPdfGenerator.GeneratePdfAsync();
-
-                                  var pdfDocVal = htmlToQuestPdfConverter.ConvertHtmlToDocument(idCardResult.IdCardHtml,true);
-
-                                 
-                                var pdfBytes = pdfDocVal.GeneratePdf();
-                                // Create ZIP entry
-                                var fileName = $"{request.QrCode.Replace(" ", "_")}_ID_Card.pdf";
-                                var entry = zipArchive.CreateEntry(fileName);
-
-                                using (var entryStream = entry.Open())
+                                if (!int.TryParse(request.QrCode, out int participantId))
                                 {
-                                    entryStream.Write(pdfBytes, 0, pdfBytes.Length);
+                                    continue;
+                                }
+
+                                // Get HTML from service
+                                var idCardResult = await _service.GenerateIdCardAsync(eventId, participantId);
+
+                                if (!idCardResult.Success || string.IsNullOrEmpty(idCardResult.IdCardHtml))
+                                {
+                                    continue;
+                                }
+
+                                // Parse HTML to extract data
+                                var htmlDoc = new HtmlDocument();
+                                htmlDoc.LoadHtml(idCardResult.IdCardHtml);
+
+                                var nameNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='name']");
+                                var companyNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='company']");
+                                var countryNode = htmlDoc.DocumentNode.SelectSingleNode("//div[@class='country']");
+                                var qrImgNode = htmlDoc.DocumentNode.SelectSingleNode("//img[@class='qr-placeholder']");
+
+                                string name = nameNode?.InnerText?.Trim() ?? request.ParticipantName ?? "Unknown";
+                                string company = companyNode?.InnerText?.Trim() ?? "";
+                                string country = countryNode?.InnerText?.Trim() ?? "United Kingdom";
+
+                                byte[] qrImage = null;
+                                if (qrImgNode != null)
+                                {
+                                    var src = qrImgNode.GetAttributeValue("src", "");
+                                    if (src.StartsWith("data:image/png;base64,"))
+                                    {
+                                        try
+                                        {
+                                            var base64String = src.Substring("data:image/png;base64,".Length);
+                                            qrImage = Convert.FromBase64String(base64String);
+                                        }
+                                        catch { }
+                                    }
+                                }
+
+                                // Use SIMPLE version that always works
+                                var converter = new HtmlToQuestPdfConverter();
+                                var pdfBytes = converter.CreateSimpleBusinessCardPdf(name, company, country, qrImage);
+
+                                if (pdfBytes != null && pdfBytes.Length > 0)
+                                {
+                                    var safeName = request.ParticipantName?.Replace(" ", "_") ?? participantId.ToString();
+                                    var fileName = $"{safeName}_ID_Card.pdf";
+                                    var entry = zipArchive.CreateEntry(fileName);
+
+                                    using (var entryStream = entry.Open())
+                                    {
+                                        entryStream.Write(pdfBytes, 0, pdfBytes.Length);
+                                    }
+
+                                    generatedCount++;
                                 }
                             }
+                            catch (Exception ex)
+                            {
+                                // Continue with other participants
+                                Console.WriteLine($"Error for {request.QrCode}: {ex.Message}");
+                            }
+                        }
+
+                        if (generatedCount == 0)
+                        {
+                            return Json(new { success = false, message = "No PDFs were generated." });
                         }
                     }
 
                     memoryStream.Position = 0;
                     var zipfileName = $"ID_Cards_{DateTime.Now:yyyyMMdd_HHmmss}.zip";
-                    //return File(memoryStream.ToArray(), "application/zip", $"id_cards_{DateTime.Now:yyyyMMdd_HHmmss}.zip");
-                    return File(memoryStream.ToArray(),"application/zip", zipfileName);
-
+                    return File(memoryStream.ToArray(), "application/zip", zipfileName);
                 }
             }
             catch (Exception ex)
             {
-              //  _logger.LogError(ex, "Error generating bulk ID cards");
-                return Json(new { success = false, message = "Error generating PDFs" });
+                return Json(new { success = false, message = $"Error generating PDFs: {ex.Message}" });
             }
         }
 

@@ -1,392 +1,272 @@
-﻿using QuestPDF.Fluent;
+﻿using HtmlAgilityPack;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+
 namespace EventManager.WebUI.ViewComponents
 {
-
-    using HtmlAgilityPack;
-    using QuestPDF.Fluent;
-    using QuestPDF.Helpers;
-    using QuestPDF.Infrastructure;
-
-    namespace EventManager.WebUI.ViewComponents
+    public class HtmlToQuestPdfConverter
     {
-        public class HtmlToQuestPdfConverter
+        public byte[] ConvertHtmlToPdfBytes(string html, bool isA6 = true)
         {
-            public Document ConvertHtmlToDocument(string html, bool isA6 = false)
+            try
             {
-                var doc = new HtmlDocument();
-                doc.LoadHtml(html);
+                // Parse HTML
+                var htmlDoc = new HtmlDocument();
+                htmlDoc.LoadHtml(html);
 
-                return Document.Create(container =>
-                {
-                    container.Page(page =>
-                    {
-                        // Set page size based on parameter
-                        if (isA6)
-                        {
-                            page.Size(PageSizes.A6);
-                            page.Margin(0.5f, Unit.Centimetre); // Smaller margins for A6
-                        }
-                        else
-                        {
-                            page.Size(PageSizes.A4);
-                            page.Margin(2, Unit.Centimetre);
-                        }
+                // Extract data
+                var name = ExtractText(htmlDoc, "//div[@class='name']");
+                var company = ExtractText(htmlDoc, "//div[@class='company']");
+                var country = ExtractText(htmlDoc, "//div[@class='country']") ?? "United Kingdom";
 
-                        page.DefaultTextStyle(style =>
-                            isA6
-                            ? style.FontSize(8) // Smaller font for A6
-                            : style.FontSize(11)
-                        );
+                // Extract QR code
+                var qrImage = ExtractQrCode(htmlDoc);
 
-                        page.Content().Column(column =>
-                        {
-                            ProcessHtmlNode(column, doc.DocumentNode, isA6);
-                        });
-                    });
-                });
+                // Create PDF - SIMPLIFIED VERSION THAT WORKS
+                return CreateWorkingBusinessCardPdf(name, company, country, qrImage);
             }
-
-            private void ProcessHtmlNode(ColumnDescriptor column, HtmlNode node, bool isA6, int indentLevel = 0)
+            catch (Exception ex)
             {
-                // Skip script and style tags
-                if (node.Name.ToLower() is "script" or "style")
-                    return;
+                // Fallback to simple card
+                return CreateSimpleBusinessCardPdf("Error", ex.Message, "Failed to generate");
+            }
+        }
 
-                // Handle text nodes
-                if (node.NodeType == HtmlNodeType.Text)
+        private string ExtractText(HtmlDocument doc, string xpath)
+        {
+            try
+            {
+                var node = doc.DocumentNode.SelectSingleNode(xpath);
+                return node?.InnerText?.Trim() ?? "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
+        private byte[] ExtractQrCode(HtmlDocument doc)
+        {
+            try
+            {
+                var imgNode = doc.DocumentNode.SelectSingleNode("//img[@class='qr-placeholder']");
+                if (imgNode != null)
                 {
-                    var text = node.InnerText.Trim();
-                    if (!string.IsNullOrEmpty(text))
+                    var src = imgNode.GetAttributeValue("src", "");
+                    if (src.StartsWith("data:image/png;base64,"))
                     {
-                        column.Item().Text(text);
+                        var base64String = src.Substring("data:image/png;base64,".Length);
+                        return Convert.FromBase64String(base64String);
                     }
-                    return;
                 }
+            }
+            catch
+            {
+                // Ignore extraction errors
+            }
+            return null;
+        }
 
-                // Calculate spacing based on page size
-                var spacing = isA6 ? 2 : 5;
-                var indent = isA6 ? 8 * indentLevel : 15 * indentLevel;
-
-                switch (node.Name.ToLower())
+        // WORKING VERSION - Simple and reliable
+        private byte[] CreateWorkingBusinessCardPdf(string name, string company, string country, byte[] qrImage)
+        {
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
                 {
-                    case "h1":
-                        column.Item()
-                            .PaddingBottom(spacing)
-                            .Text(node.InnerText.Trim())
-                            .FontSize(isA6 ? 12 : 24)
-                            .Bold();
-                        break;
+                    // A6 size
+                    page.Size(PageSizes.A6);
+                    page.Margin(15); // Page margin
 
-                    case "h2":
-                        column.Item()
-                            .PaddingBottom(spacing)
-                            .Text(node.InnerText.Trim())
-                            .FontSize(isA6 ? 10 : 20)
-                            .Bold();
-                        break;
-
-                    case "h3":
-                        column.Item()
-                            .PaddingBottom(spacing)
-                            .Text(node.InnerText.Trim())
-                            .FontSize(isA6 ? 9 : 18)
-                            .Bold();
-                        break;
-
-                    case "h4":
-                    case "h5":
-                    case "h6":
-                        column.Item()
-                            .PaddingBottom(spacing)
-                            .Text(node.InnerText.Trim())
-                            .FontSize(isA6 ? 8 : 16)
-                            .Bold();
-                        break;
-
-                    case "p":
-                        column.Item()
-                            .PaddingBottom(spacing)
-                            .PaddingLeft(indent)
-                            .Text(node.InnerText.Trim());
-                        break;
-
-                    case "br":
-                        column.Item().PaddingBottom(spacing / 2f);
-                        break;
-
-                    case "hr":
-                        column.Item()
-                            .PaddingVertical(spacing)
-                            .LineHorizontal(0.5f);
-                        break;
-
-                    case "ul":
-                    case "ol":
-                        column.Item()
-                            .PaddingVertical(spacing / 2f)
-                            .PaddingLeft(indent)
-                            .Column(listColumn =>
-                            {
-                                var items = node.SelectNodes("li") ?? new HtmlNodeCollection(node);
-                                for (int i = 0; i < items.Count; i++)
+                    page.Content().Element(content =>
+                    {
+                        content.AlignCenter().AlignMiddle().Element(card =>
+                        {
+                            // Simple card with proper dimensions
+                            card.Background(Colors.White)
+                                .Border(1).BorderColor(Colors.Grey.Lighten2)
+                                .Padding(10) // Reduced padding
+                                .Column(col =>
                                 {
-                                    var item = items[i];
-                                    var prefix = node.Name.ToLower() == "ol"
-                                        ? $"{i + 1}."
-                                        : isA6 ? "•" : "•"; // Using bullet for both, adjust as needed
+                                    // Name at top
+                                    col.Item().Text(name)
+                                        .FontSize(12).Bold().AlignCenter().FontColor(Colors.Black);
 
-                                    listColumn.Item()
-                                        .PaddingBottom(1)
-                                        .Text($"{prefix} {item.InnerText.Trim()}");
-                                }
-                            });
-                        break;
+                                    // Divider
+                                    col.Item().PaddingVertical(5).LineHorizontal(0.5f).LineColor(Colors.Grey.Lighten2);
 
-                    case "div":
-                    case "section":
-                    case "article":
-                    case "main":
-                        // Create nested column for block elements
-                        column.Item().Column(nestedColumn =>
-                        {
-                            foreach (var child in node.ChildNodes)
-                            {
-                                ProcessHtmlNode(nestedColumn, child, isA6, indentLevel);
-                            }
+                                    // Content in a row
+                                    col.Item().Row(row =>
+                                    {
+                                        // Text column - takes 60%
+                                        row.RelativeItem(6).Column(textCol =>
+                                        {
+                                            if (!string.IsNullOrEmpty(company))
+                                            {
+                                                textCol.Item().Text(company)
+                                                    .FontSize(9).FontColor(Colors.Black);
+                                                textCol.Item().PaddingTop(2);
+                                            }
+
+                                            textCol.Item().Text(country)
+                                                .FontSize(8).FontColor(Colors.Black);
+                                        });
+
+                                        // QR column - takes 40% (MORE SPACE!)
+                                        row.RelativeItem(4).AlignCenter().AlignMiddle()
+                                            .Element(qrCol =>
+                                            {
+                                                // Smaller QR that fits (40 points)
+                                                var qrSize = 40f;
+
+                                                if (qrImage != null)
+                                                {
+                                                    qrCol.Width(qrSize).Height(qrSize).Image(qrImage);
+                                                }
+                                                else
+                                                {
+                                                    qrCol.Width(qrSize).Height(qrSize)
+                                                        .Background(Colors.Grey.Lighten2)
+                                                        .AlignCenter().AlignMiddle()
+                                                        .Text("QR")
+                                                        .FontSize(10).Bold().FontColor(Colors.Grey.Medium);
+                                                }
+                                            });
+                                    });
+                                });
                         });
-                        break;
-
-                    case "span":
-                    case "strong":
-                    case "b":
-                        // Inline elements - combine with previous text if possible
-                        foreach (var child in node.ChildNodes)
-                        {
-                            ProcessHtmlNode(column, child, isA6, indentLevel);
-                        }
-                        break;
-
-                    case "em":
-                    case "i":
-                        column.Item().Text(node.InnerText.Trim()).Italic();
-                        break;
-
-                    case "a":
-                        column.Item().Text($"[{node.InnerText.Trim()}]").Underline();
-                        break;
-
-                    case "code":
-                        column.Item()
-                            .Background(Colors.Grey.Lighten3)
-                            .Padding(2)
-                            .Text(node.InnerText.Trim())
-                            .FontFamily("Courier");
-                        break;
-
-                    case "pre":
-                        column.Item()
-                            .Background(Colors.Grey.Lighten3)
-                            .Border(1)
-                            .BorderColor(Colors.Grey.Medium)
-                            .Padding(5)
-                            .Text(node.InnerText.Trim())
-                            .FontFamily("Courier")
-                            .FontSize(isA6 ? 6 : 10);
-                        break;
-
-                    case "blockquote":
-                        column.Item()
-                            .PaddingLeft(15)
-                            .BorderLeft(2)
-                            .BorderColor(Colors.Grey.Medium)
-                            .PaddingVertical(3)
-                            .Text(node.InnerText.Trim())
-                            .Italic();
-                        break;
-
-                    case "table":
-                        ProcessTable(column, node, isA6);
-                        break;
-
-                    default:
-                        // Process child nodes for unknown elements
-                        foreach (var child in node.ChildNodes)
-                        {
-                            ProcessHtmlNode(column, child, isA6, indentLevel);
-                        }
-                        break;
-                }
-            }
-
-            private void ProcessTable(ColumnDescriptor column, HtmlNode tableNode, bool isA6)
-            {
-                column.Item().Table(table =>
-                {
-                    // Find all rows
-                    var rows = tableNode.SelectNodes(".//tr") ?? new HtmlNodeCollection(tableNode);
-
-                    if (rows.Count == 0)
-                        return;
-
-                    // Determine number of columns from first row
-                    var firstRowCells = rows[0].SelectNodes(".//th|.//td") ?? new HtmlNodeCollection(rows[0]);
-                    int columnCount = firstRowCells.Count;
-
-                    // Define columns with relative widths
-                    table.ColumnsDefinition(columns =>
-                    {
-                        for (int i = 0; i < columnCount; i++)
-                        {
-                            columns.RelativeColumn();
-                        }
                     });
+                });
+            });
 
-                    // Add header if first row has th elements
-                    bool hasHeader = rows[0].SelectNodes(".//th")?.Count > 0;
+            return document.GeneratePdf();
+        }
 
-                    if (hasHeader)
+        // Even simpler version - guaranteed to work
+        public byte[] CreateSimpleBusinessCardPdf(string name, string company, string country, byte[] qrImage = null)
+        {
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A6);
+                    page.Margin(10);
+
+                    page.Content().Column(col =>
                     {
-                        table.Header(header =>
+                        // Name
+                        col.Item().Text(name)
+                            .FontSize(14).Bold().AlignCenter();
+
+                        // QR code (centered)
+                        col.Item().PaddingTop(10).AlignCenter().Element(qr =>
                         {
-                            var headerCells = rows[0].SelectNodes(".//th");
-                            foreach (var cell in headerCells)
+                            var qrSize = 60f;
+                            if (qrImage != null)
                             {
-                                header.Cell()
-                                    .Background(Colors.Grey.Lighten3)
-                                    .Border(0.5f)
-                                    .Padding(isA6 ? 2 : 5)
-                                    .Text(cell.InnerText.Trim())
-                                    .FontSize(isA6 ? 7 : 10)
-                                    .Bold();
+                                qr.Width(qrSize).Height(qrSize).Image(qrImage);
+                            }
+                            else
+                            {
+                                qr.Width(qrSize).Height(qrSize)
+                                    .Background(Colors.Grey.Lighten2)
+                                    .AlignCenter().AlignMiddle()
+                                    .Text("QR")
+                                    .FontSize(12).Bold();
                             }
                         });
-                    }
 
-                    // Add data rows
-                    int startRow = hasHeader ? 1 : 0;
-                    for (int rowIndex = startRow; rowIndex < rows.Count; rowIndex++)
-                    {
-                        var cells = rows[rowIndex].SelectNodes(".//td") ?? new HtmlNodeCollection(rows[rowIndex]);
-
-                        foreach (var cell in cells)
+                        // Company (if exists)
+                        if (!string.IsNullOrEmpty(company))
                         {
-                            table.Cell()
-                                .Border(0.5f)
-                                .Padding(isA6 ? 2 : 5)
-                                .Text(cell.InnerText.Trim())
-                                .FontSize(isA6 ? 7 : 10);
+                            col.Item().PaddingTop(10).Text(company)
+                                .FontSize(10).AlignCenter();
                         }
-                    }
+
+                        // Country
+                        col.Item().PaddingTop(5).Text(country)
+                            .FontSize(9).AlignCenter();
+                    });
                 });
-            }
+            });
 
-            // Helper method to generate PDF bytes directly
-            public byte[] ConvertHtmlToPdfBytes(string html, bool isA6 = false)
+            return document.GeneratePdf();
+        }
+
+        // Alternative: Vertical layout that always works
+        public byte[] CreateVerticalBusinessCardPdf(string name, string company, string country, byte[] qrImage)
+        {
+            var document = Document.Create(container =>
             {
-                var document = ConvertHtmlToDocument(html, isA6);
-                return document.GeneratePdf();
-            }
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A6);
+                    page.Margin(10);
 
-            // Helper method to generate PDF and save to file
-            public void ConvertHtmlToPdfFile(string html, string outputPath, bool isA6 = false)
+                    page.Content().Element(content =>
+                    {
+                        content.AlignCenter().AlignMiddle().Element(card =>
+                        {
+                            card.Background(Colors.White)
+                                .Border(1).BorderColor(Colors.Grey.Lighten2)
+                                .Padding(8)
+                                .Column(col =>
+                                {
+                                    // QR code at top
+                                    col.Item().AlignCenter().Element(qr =>
+                                    {
+                                        var qrSize = 50f;
+                                        if (qrImage != null)
+                                        {
+                                            qr.Width(qrSize).Height(qrSize).Image(qrImage);
+                                        }
+                                    });
+
+                                    // Name below QR
+                                    col.Item().PaddingTop(5).Text(name)
+                                        .FontSize(11).Bold().AlignCenter();
+
+                                    // Company
+                                    if (!string.IsNullOrEmpty(company))
+                                    {
+                                        col.Item().PaddingTop(2).Text(company)
+                                            .FontSize(9).AlignCenter();
+                                    }
+
+                                    // Country
+                                    col.Item().PaddingTop(2).Text(country)
+                                        .FontSize(8).AlignCenter();
+                                });
+                        });
+                    });
+                });
+            });
+
+            return document.GeneratePdf();
+        }
+
+        private byte[] CreateErrorPdf(string message, bool isA6)
+        {
+            var document = Document.Create(container =>
             {
-                var document = ConvertHtmlToDocument(html, isA6);
-                document.GeneratePdf(outputPath);
-            }
+                container.Page(page =>
+                {
+                    page.Size(isA6 ? PageSizes.A6 : PageSizes.A4);
+                    page.Margin(20);
 
-            // Method optimized for ticket/receipt printing (A6)
-            public byte[] GenerateTicket(string htmlContent)
-            {
-                return ConvertHtmlToPdfBytes(htmlContent, true);
-            }
+                    page.Content().Column(col =>
+                    {
+                        col.Item().Text("Error")
+                            .FontSize(12).Bold().FontColor(Colors.Red.Medium);
 
-            // Method for multi-page A6 documents
-            //public Document ConvertHtmlToMultiPageDocument(string html, bool isA6 = false)
-            //{
-            //    var doc = new HtmlDocument();
-            //    doc.LoadHtml(html);
+                        col.Item().PaddingTop(10).Text(message)
+                            .FontSize(9);
+                    });
+                });
+            });
 
-            //    return Document.Create(container =>
-            //    {
-            //        var currentColumn = container.Page(page =>
-            //        {
-            //            if (isA6)
-            //            {
-            //                page.Size(PageSizes.A6);
-            //                page.Margin(0.5f, Unit.Centimetre);
-            //                page.DefaultTextStyle(style => style.FontSize(8));
-            //            }
-            //            else
-            //            {
-            //                page.Size(PageSizes.A4);
-            //                page.Margin(2, Unit.Centimetre);
-            //                page.DefaultTextStyle(style => style.FontSize(11));
-            //            }
-
-            //            // Add page numbers for multi-page
-            //            page.Footer()
-            //                .AlignCenter()
-            //                .Text(text =>
-            //                {
-            //                    text.Span("Page ");
-            //                    text.CurrentPageNumber();
-            //                    text.Span(" of ");
-            //                    text.TotalPages();
-            //                })
-            //                .FontSize(isA6 ? 6 : 9);
-
-            //            return page.Content().Column();
-            //        });
-
-            //        ProcessHtmlNode(currentColumn, doc.DocumentNode, isA6);
-            //    });
-            //}
+            return document.GeneratePdf();
         }
     }
-
-
-    //public class HtmlToQuestPdfConverter
-    //{
-        //public QuestPDF.Fluent.Document ConvertHtmlToDocument(string html)
-        //{
-        //    QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
-        //    var doc = new HtmlDocument();
-        //    doc.LoadHtml(html);
-
-        //    return QuestPDF.Fluent.Document.Create(container =>
-        //    {
-        //        container.Page(page =>
-        //        {
-        //            page.Content().Column(column =>
-        //            {
-        //                foreach (var node in doc.DocumentNode.ChildNodes)
-        //                {
-        //                    ProcessHtmlNode(column, node);
-        //                }
-        //            });
-        //        });
-        //    });
-        //}
-
-        //private void ProcessHtmlNode(ColumnDescriptor column, HtmlNode node)
-        //{
-        //    switch (node.Name.ToLower())
-        //    {
-        //        case "h1":
-        //            column.Item().Text(node.InnerText).FontSize(24).Bold();
-        //            break;
-        //        case "p":
-        //            column.Item().PaddingBottom(10).Text(node.InnerText);
-        //            break;
-        //        case "ul":
-        //            column.Item().PaddingVertical(5).Column(listColumn =>
-        //            {
-        //                foreach (var li in node.SelectNodes("li"))
-        //                {
-        //                    listColumn.Item().Text($"• {li.InnerText}");
-        //                }
-        //            });
-        //            break;
-        //    }
-        //}
-    }
+}

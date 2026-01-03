@@ -2,626 +2,158 @@
     ViewData["Title"] = "Participants Communication";
     Layout = "/Views/Shared/_Layout.cshtml";
 }
-<div class="container-fluid py-4">
-    <!-- Header Section -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
-                <a href="/Event/Index" class="btn btn-outline-warning btn-sm d-flex align-items-center mb-2 mb-md-0 me-md-3 px-3">
-                    <i class="fas fa-arrow-left me-2"></i> Back
-                </a>
-                <div class="vr d-none d-md-block me-3"></div>
-                <div class="d-flex align-items-center">
-                    <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-3">
-                        <i class="fas fa-users text-warning"></i>
-                    </div>
-                    <div>
-                        <h1 class="h5 mb-1 text-dark fw-semibold">Participants Communication</h1>
-                        <p class="mb-0 text-muted small">Manage participants and access credentials</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content Card -->
-    <div class="card border-0 shadow-lg overflow-hidden">
-        <!-- Card Header -->
-        <div class="card-header bg-white border-bottom py-3">
-            <div class="row align-items-center g-2">
-                <div class="col-md-6">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-warning bg-opacity-10 p-2 rounded-circle me-2">
-                            <i class="fas fa-list-check text-warning"></i>
-                        </div>
-                        <div>
-                            <h2 class="h6 mb-0 text-dark fw-semibold">Participants List</h2>
-                            <p class="text-muted small mb-0 d-none d-md-block">View and manage all participant details</p>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-md-end gap-2">
-                        <div class="bulk-actions-container" style="display: none;">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-outline-secondary btn-sm dropdown-toggle d-flex align-items-center"
-                                        data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span class="badge bg-warning rounded-pill me-1 selected-count">0</span>
-                                    <span class="d-none d-md-inline">Selected</span>
-                                </button>
-                                <ul class="dropdown-menu dropdown-menu-end shadow">
-                                    <li>
-                                        <a class="dropdown-item py-2" href="#" id="bulkGeneratePdf">
-                                            <i class="fas fa-file-pdf text-danger me-2"></i>
-                                            <span>Generate PDFs</span>
-                                        </a>
-                                    </li>
-                                    <li>
-                                        <a class="dropdown-item py-2" href="#" id="bulkSendEmails">
-                                            <i class="fas fa-envelope text-warning me-2"></i>
-                                            <span>Send Emails</span>
-                                        </a>
-                                    </li>
-                                    <li><hr class="dropdown-divider my-1"></li>
-                                    <li>
-                                        <a class="dropdown-item py-2 text-danger" href="#" id="clearSelection">
-                                            <i class="fas fa-times me-2"></i>
-                                            Clear Selection
-                                        </a>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        <button type="button" class="btn btn-primary btn-sm d-flex align-items-center" id="generateAllPdfs">
-                            <i class="fas fa-file-pdf me-1"></i>
-                            <span class="d-none d-md-inline">All PDFs</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Stats Overview -->
-        <div class="border-bottom">
-            <div class="row g-0">
-                <div class="col-4 col-sm-3 col-lg-2">
-                    <div class="p-3 border-end text-center">
-                        <div class="text-muted small mb-1">Total</div>
-                        <div class="h6 mb-0 fw-bold text-dark" id="totalParticipants">0</div>
-                    </div>
-                </div>
-                <div class="col-4 col-sm-3 col-lg-2">
-                    <div class="p-3 border-end text-center">
-                        <div class="text-muted small mb-1">With Tickets</div>
-                        <div class="h6 mb-0 fw-bold text-success" id="ticketCount">0</div>
-                    </div>
-                </div>
-                <div class="col-4 col-sm-3 col-lg-2">
-                    <div class="p-3 border-end text-center">
-                        <div class="text-muted small mb-1">Access</div>
-                        <div class="h6 mb-0 fw-bold text-info" id="accessCount">0</div>
-                    </div>
-                </div>
-                <div class="col-sm-3 col-lg-2 d-none d-sm-block">
-                    <div class="p-3 text-center">
-                        <div class="text-muted small mb-1">Pending</div>
-                        <div class="h6 mb-0 fw-bold text-warning" id="pendingCount">0</div>
-                    </div>
-                </div>
-                <div class="col-lg-4 d-none d-lg-block">
-                    <div class="p-3 border-start">
-                        <div class="input-group input-group-sm">
-                            <span class="input-group-text bg-transparent border-0">
-                                <i class="fas fa-search text-muted"></i>
-                            </span>
-                            <input type="text" class="form-control border-0"
-                                   placeholder="Search participants..."
-                                   id="tableSearch">
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Table Container -->
-        <div class="table-responsive">
-            <table class="table table-hover table-sm mb-0" id="participantsTable">
-                <thead class="table-light">
-                    <tr>
-                        <th class="text-center" style="width: 40px; min-width: 40px;">
-                            <div class="form-check mb-0">
-                                <input class="form-check-input m-0" type="checkbox" id="selectAllCheckbox">
-                            </div>
-                        </th>
-                        <th style="width: 100px; min-width: 100px;">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-id-badge text-primary me-1"></i>
-                                <span>Code</span>
-                            </div>
-                        </th>
-                        <th style="width: 180px; min-width: 180px;">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-user text-warning me-1"></i>
-                                <span>Participant</span>
-                            </div>
-                        </th>
-                        <th style="width: 120px; min-width: 120px;">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-phone text-info me-1"></i>
-                                <span>Contact</span>
-                            </div>
-                        </th>
-                        <th style="width: 140px; min-width: 140px;">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-building text-secondary me-1"></i>
-                                <span>Company</span>
-                            </div>
-                        </th>
-                        <th style="width: 140px; min-width: 140px;">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-ticket-alt text-success me-1"></i>
-                                <span>Ticket Type</span>
-                            </div>
-                        </th>
-                        <th style="width: 160px; min-width: 160px;">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-door-open text-info me-1"></i>
-                                <span>Access Points</span>
-                            </div>
-                        </th>
-                        <th class="text-center" style="width: 120px; min-width: 120px;">
-                            <div class="d-flex align-items-center justify-content-center">
-                                <i class="fas fa-bolt text-warning me-1"></i>
-                                <span>Actions</span>
-                            </div>
-                        </th>
-                    </tr>
-                </thead>
-            </table>
-        </div>
-
-        <!-- Card Footer -->
-        <div class="card-footer bg-white border-top py-2">
-            <div class="row align-items-center">
-                <div class="col-md-6 mb-1 mb-md-0">
-                    <div class="text-muted small">
-                        <i class="fas fa-info-circle text-warning me-1"></i>
-                        <span class="d-none d-md-inline">Select participants for bulk actions</span>
-                        <span class="d-md-none">Select for bulk actions</span>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="d-flex justify-content-md-end align-items-center gap-2">
-                        <div class="d-none d-md-flex align-items-center">
-                            <span class="text-muted small me-2">View:</span>
-                            <div class="btn-group btn-group-sm">
-                                <button class="btn btn-outline-secondary active" data-view="table">
-                                    <i class="fas fa-table"></i>
-                                </button>
-                                <button class="btn btn-outline-secondary" data-view="cards">
-                                    <i class="fas fa-th-large"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-outline-warning">
-                            <i class="fas fa-download me-1"></i>
-                            <span class="d-none d-md-inline">Export</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 <style>
-    /* Compact Table Styles */
-    .card {
+    /* Counter Badge Styles */
+    .btn-with-badge {
+        position: relative;
+        display: inline-block;
+    }
+
+    .counter-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        font-size: 0.6rem;
+        min-width: 16px;
+        height: 16px;
         border-radius: 8px;
-    }
-
-    .card-header {
-        padding-top: 0.75rem !important;
-        padding-bottom: 0.75rem !important;
-    }
-
-    .table {
-        margin-bottom: 0;
-        font-size: 0.85rem;
-    }
-
-    .table-sm th,
-    .table-sm td {
-        padding: 0.5rem 0.5rem !important;
-    }
-
-    .table thead th {
-        font-weight: 600;
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        white-space: nowrap;
-        border-bottom: 2px solid #f8f9fa;
-        position: sticky;
-        top: 0;
-        background-color: #f8f9fa;
-        z-index: 10;
-    }
-
-    .table tbody td {
-        vertical-align: middle;
-        border-top: 1px solid rgba(0, 0, 0, 0.03);
-    }
-
-    .table tbody tr:hover {
-        background-color: rgba(255, 193, 7, 0.05);
-    }
-
-    .table tbody tr.selected {
-        background-color: rgba(13, 110, 253, 0.08);
-    }
-
-    /* Compact Form Controls */
-    .form-check-input {
-        width: 1.1em;
-        height: 1.1em;
-        margin-top: 0;
-    }
-
-    /* Compact Badges */
-    .badge {
-        font-size: 0.7em;
-        font-weight: 500;
-        padding: 0.25em 0.5em;
-        line-height: 1.2;
-    }
-
-    /* Compact Buttons */
-    .btn-sm {
-        padding: 0.25rem 0.5rem;
-        font-size: 0.8125rem;
-    }
-
-    .btn-group-sm > .btn {
-        padding: 0.25rem 0.5rem;
-    }
-
-    /* Compact Dropdown */
-    .dropdown-menu {
-        font-size: 0.85rem;
-        min-width: 180px;
-    }
-
-    .dropdown-item {
-        padding: 0.375rem 0.75rem;
-    }
-
-    /* Stats Compact */
-    .stats-container .p-3 {
-        padding: 0.5rem !important;
-    }
-
-    /* Action Buttons Compact */
-    .btn-group .btn {
-        padding: 0.25rem 0.375rem;
-    }
-
-    /* Loading Overlay */
-    .loading-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(255, 255, 255, 0.9);
         display: flex;
         align-items: center;
         justify-content: center;
-        z-index: 9999;
+        padding: 0 3px;
+        border: 2px solid white;
     }
 
-    .spinner-border-sm {
-        width: 1.5rem;
-        height: 1.5rem;
+    .print-counter {
+        background-color: #dc3545;
+        color: white;
     }
 
-    /* Responsive Adjustments */
-    @@media (max-width: 1200px) {
-        .table {
-            font-size: 0.825rem;
-        }
-
-        .table-sm th,
-        .table-sm td {
-            padding: 0.375rem 0.5rem !important;
-        }
-
-        th:nth-child(2), td:nth-child(2) {
-            width: 90px;
-            min-width: 90px;
-        }
-        /* Code */
-        th:nth-child(3), td:nth-child(3) {
-            width: 160px;
-            min-width: 160px;
-        }
-        /* Participant */
-        th:nth-child(4), td:nth-child(4) {
-            width: 110px;
-            min-width: 110px;
-        }
-        /* Contact */
-        th:nth-child(5), td:nth-child(5) {
-            width: 130px;
-            min-width: 130px;
-        }
-        /* Company */
-        th:nth-child(6), td:nth-child(6) {
-            width: 130px;
-            min-width: 130px;
-        }
-        /* Ticket Type */
-        th:nth-child(7), td:nth-child(7) {
-            width: 150px;
-            min-width: 150px;
-        }
-        /* Access Points */
+    .download-counter {
+        background-color: #17a2b8;
+        color: white;
     }
 
-    @@media (max-width: 992px) {
-        .d-lg-none-force {
-            display: none !important;
-        }
-
-        .table-container {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .table {
-            min-width: 900px;
-        }
-    }
-
-    @@media (max-width: 768px) {
-        .card-header {
-            padding: 0.5rem !important;
-        }
-
-        .btn-sm {
-            padding: 0.2rem 0.4rem;
-            font-size: 0.75rem;
-        }
-
-        .badge {
-            font-size: 0.65em;
-            padding: 0.2em 0.4em;
-        }
-
-        .stats-container .p-3 {
-            padding: 0.375rem !important;
-        }
-
-        .stats-container .h6 {
-            font-size: 0.9rem;
-        }
-    }
-
-    @@media (max-width: 576px) {
-        .container-fluid {
-            padding-left: 0.5rem;
-            padding-right: 0.5rem;
-        }
-
-        .card-body {
-            padding: 0.75rem !important;
-        }
-
-        .table-sm th,
-        .table-sm td {
-            padding: 0.25rem 0.375rem !important;
-        }
-
-        .bulk-actions-container {
-            width: 100%;
-        }
-
-            .bulk-actions-container .btn-group {
-                width: 100%;
-            }
-    }
-
-    /* Scrollbar Styling */
-    .table-responsive::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .table-responsive::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
-    }
-
-    .table-responsive::-webkit-scrollbar-thumb {
-        background: #c1c1c1;
-        border-radius: 3px;
-    }
-
-        .table-responsive::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-
-    /* Print-specific styles */
-    @@media print {
-        .card-header, .card-footer, .bulk-actions-container,
-        #generateAllPdfs, .stats-container, .btn-group {
-            display: none !important;
-        }
-
-        .table {
-            font-size: 10pt !important;
-        }
-
-            .table th, .table td {
-                padding: 0.25rem !important;
-            }
+    .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        justify-content: center;
     }
 </style>
 
-
-@* 
 <div class="container-fluid py-4">
-    <!-- Header Card -->
-    <div class="card border-0 shadow-sm mb-4">
-        <div class="card-body p-3">
-            <div class="d-flex align-items-center">
-                <a href="/Event/Index" class="btn btn-outline-warning d-flex align-items-center me-3">
-                    <i class="fas fa-arrow-left me-2"></i> Back
-                </a>
-                <div class="vr me-3"></div>
-                <div>
-                    <h5 class="mb-0 text-dark">
-                        <i class="fas fa-users text-warning me-2"></i>
-                        Participants Communication
-                    </h5>
-                    <small class="text-muted">View all participants with their ticket types and access points</small>
+    <div class="card mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-3">
+                    <a href="/Event/Index" class="btn btn-outline-warning btn-sm">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                    <div>
+                        <h1 class="h5 mb-1 fw-bold">Participants Communication</h1>
+                        <p class="text-muted small mb-0">Manage participants and access credentials</p>
+                    </div>
                 </div>
+                <button class="btn btn-primary btn-sm" id="generateAllPdfs">
+                    <i class="fas fa-file-pdf"></i> Generate All PDFs
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- Main Table Card -->
-    <div class="card border-0 shadow-lg">
-        <div class="card-header bg-white border-bottom py-3">
-            <div class="row align-items-center">
-                <div class="col-lg-12">
-                    <h5 class="mb-0 text-dark">
-                        <i class="fas fa-list-check text-warning me-2"></i>
-                        Participants List with Assignments
-                    </h5>
+    <div class="card">
+        <div class="card-header bg-white border-bottom p-3">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h5 class="mb-0 fw-bold text-dark">Participants List</h5>
                 </div>
-            </div>
-        </div>
-
-        <div class="card-body p-0">
-
-            <div class="d-flex justify-content-between mb-3">
                 <div class="bulk-actions-container" style="display: none;">
                     <div class="btn-group">
-                        <button type="button" class="btn btn-outline-secondary dropdown-toggle"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                            <span class="selected-count">0</span> Selected
+                        <button type="button" class="btn btn-outline-dark btn-sm dropdown-toggle"
+                                data-bs-toggle="dropdown">
+                            <span class="badge bg-warning text-dark rounded-pill selected-count">0</span> Selected
                         </button>
-                        <ul class="dropdown-menu">
+                        <ul class="dropdown-menu dropdown-menu-end">
                             <li>
                                 <a class="dropdown-item" href="#" id="bulkGeneratePdf">
-                                    <i class="fas fa-file-pdf me-2"></i>Generate PDFs
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#" id="bulkSendEmails">
-                                    <i class="fas fa-envelope me-2"></i>Send Emails
+                                    <i class="fas fa-file-pdf text-danger me-2"></i>Generate PDFs
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <a class="dropdown-item" href="#" id="clearSelection">
+                                <a class="dropdown-item text-danger" href="#" id="clearSelection">
                                     <i class="fas fa-times me-2"></i>Clear Selection
                                 </a>
                             </li>
                         </ul>
                     </div>
                 </div>
-
-                <!-- Individual Action Button (optional) -->
-                <button type="button" class="btn btn-primary" id="generateAllPdfs">
-                    <i class="fas fa-file-pdf me-2"></i>Generate All PDFs
-                </button>
-            </div>
-            <div class="table-responsive">
-                <!-- Bulk Actions Dropdown -->
-                <table class="table table-hover table-striped mb-0" id="participantsTable">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="text-center">
-                                <input type="checkbox" id="selectAllCheckbox">
-                            </th>
-                            <th>Participant Code</th>
-                            <th>Participant</th>
-                            <th>Contact</th>
-                            <th>Company</th>
-                            <th>Ticket Type</th>
-                            <th>Access Points</th>
-                            <th class="text-center">Actions</th>
-                        </tr>
-                    </thead>
-                </table>
             </div>
         </div>
 
-  
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="participantsTable">
+                <thead>
+                    <tr>
+                        <th class="text-center" style="width: 50px;">
+                            <input class="form-check-input" type="checkbox" id="selectAllCheckbox">
+                        </th>
+                        <th>Code</th>
+                        <th>Participant</th>
+                        <th>Contact</th>
+                        <th>Company</th>
+                        <th>Ticket Type</th>
+                        <th>Access Points</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Table rows will be populated here -->
+                </tbody>
+            </table>
+        </div>
     </div>
-</div> *@
+</div>
 
 @section Scripts {
     <script>
         $(document).ready(function() {
+            // Counter storage
+            const COUNTER_KEY = 'participant_counters';
 
-         $('[data-bs-toggle="tooltip"]').tooltip({
-            trigger: 'hover',
-            placement: 'top'
-        });
-
-        // Search functionality
-        $('#tableSearch').on('keyup', function () {
-            if (typeof participantsTable !== 'undefined') {
-                participantsTable.search(this.value).draw();
+            function getCounters() {
+                const stored = localStorage.getItem(COUNTER_KEY);
+                return stored ? JSON.parse(stored) : {};
             }
-        });
 
-        // View toggle
-        $('[data-view]').on('click', function () {
-            var view = $(this).data('view');
-            $('[data-view]').removeClass('active');
-            $(this).addClass('active');
-
-            // You can implement view switching logic here
-            console.log('Switching to ' + view + ' view');
-        });
-
-        // Update stats from table data
-        function updateStats(data) {
-            if (data && data.length > 0) {
-                $('#totalParticipants').text(data.length);
-                const withTickets = data.filter(p => p.ticketTypes && p.ticketTypes !== 'Not Assigned').length;
-                const withAccess = data.filter(p => p.accessPoints && p.accessPoints !== 'No Access').length;
-                $('#ticketCount').text(withTickets);
-                $('#accessCount').text(withAccess);
-                $('#pendingCount').text(data.filter(p => !p.ticketTypes || p.ticketTypes === 'Not Assigned').length);
+            function saveCounters(counters) {
+                localStorage.setItem(COUNTER_KEY, JSON.stringify(counters));
             }
-        }
 
-        // Window resize adjustments
-        $(window).on('resize', function () {
-            if ($(window).width() < 576) {
-                $('.btn .d-md-inline').addClass('d-none');
-            } else {
-                $('.btn .d-md-inline').removeClass('d-none');
+            function getCounter(participantId, type) {
+                const counters = getCounters();
+                return counters[`${participantId}_${type}`] || 0;
             }
-        });
 
-        // Show/hide loading overlay
-        function showLoading() {
-            $('.loading-overlay').fadeIn();
-        }
+            function incrementCounter(participantId, type) {
+                const counters = getCounters();
+                const key = `${participantId}_${type}`;
+                counters[key] = (counters[key] || 0) + 1;
+                saveCounters(counters);
 
-        function hideLoading() {
-            $('.loading-overlay').fadeOut();
-        }
+                // Update badge display
+                const badge = $(`.counter-badge[data-id="${participantId}"][data-type="${type}"]`);
+                if (badge.length) {
+                    badge.text(counters[key]).show();
+                }
 
-
+                return counters[key];
+            }
 
             let participantsTable;
             let selectedParticipants = new Set();
+
             // Initialize DataTable
             function initializeDataTable() {
                 participantsTable = $('#participantsTable').DataTable({
@@ -633,95 +165,55 @@
                         }
                     },
                     columns: [
-                         {
+                        {
                             data: null,
                             className: 'text-center',
                             orderable: false,
                             render: function(data) {
-                                return `
-                                    <input type="checkbox" class="participant-checkbox" 
-                                           data-id="${data.participantId}">
-                                `;
+                                return `<input type="checkbox" class="participant-checkbox" data-id="${data.participantId}">`;
                             }
                         },
                         {
                             data: 'participantCode',
                             className: 'text-center',
                             render: function(data) {
-                                return data ?
-                                    `<span class="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2">
-                                        <i class="fas fa-id-badge me-2"></i>${data}
-                                    </span>` :
-                                    '<span class="text-muted">N/A</span>';
+                                return data ? `<span class="badge bg-primary">${data}</span>` : 'N/A';
                             }
                         },
                         {
                             data: null,
                             render: function(data) {
-                                return `
-                                    <div class="d-flex align-items-center">
-                                        <div class="avatar-sm bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
-                                            <i class="fas fa-user"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-medium">${data.fullName}</div>
-                                            <small class="text-muted">${data.email}</small>
-                                        </div>
-                                    </div>
-                                `;
+                                return `<div>${data.fullName}<br><small class="text-muted">${data.email}</small></div>`;
                             }
                         },
                         {
                             data: 'phone',
                             render: function(data) {
-                                return data || '<span class="text-muted">N/A</span>';
+                                return data || 'N/A';
                             }
                         },
                         {
                             data: 'company',
                             render: function(data) {
-                                return data ?
-                                    `<span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary">
-                                        <i class="fas fa-building me-1"></i>${data}
-                                    </span>` :
-                                    '<span class="text-muted">N/A</span>';
+                                return data || 'N/A';
                             }
                         },
                         {
                             data: 'ticketTypes',
                             render: function(data) {
-                                return data && data !== 'Not Assigned' ? `
-                                    <div class="d-flex align-items-center">
-                                        <i class="fas fa-ticket-alt fa-fw text-warning me-2"></i>
-                                        <div>
-                                            <div class="fw-medium small">${data}</div>
-                                        </div>
-                                    </div>
-                                ` : `
-                                    <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                        <i class="fas fa-times me-1"></i>Not Assigned
-                                    </span>
-
-                                `;
+                                return data && data !== 'Not Assigned' ?
+                                    `<span class="badge bg-warning">${data}</span>` :
+                                    '<span class="badge bg-secondary">Not Assigned</span>';
                             }
                         },
                         {
                             data: 'accessPoints',
                             render: function(data) {
                                 if (!data || data === 'No Access') {
-                                    return `
-                                        <span class="badge bg-secondary bg-opacity-10 text-secondary">
-                                            <i class="fas fa-times me-1"></i>No Access
-                                        </span>
-                                    `;
+                                    return '<span class="badge bg-secondary">No Access</span>';
                                 }
-
                                 const points = data.split(', ');
-                                return points.map(point => `
-                                    <span class="badge bg-info bg-opacity-10 text-info border border-info me-1 mb-1">
-                                        <i class="fas fa-door-open me-1"></i>${point}
-                                    </span>
-                                `).join('');
+                                return points.map(point => `<span class="badge bg-info me-1">${point}</span>`).join('');
                             }
                         },
                         {
@@ -729,27 +221,41 @@
                             className: 'text-center',
                             orderable: false,
                             render: function(data) {
+                                const printCount = getCounter(data.participantId, 'print');
+                                const downloadCount = getCounter(data.participantId, 'download');
+
                                 return `
-                                    <div class="btn-group btn-group-sm">
-                                        <button type="button" class="btn btn-outline-warning send-email-btn"
-                                                data-id="${data.participantId}"
-                                                data-email="${data.email}"
-                                                data-name="${data.fullName}">
+                                    <div class="action-buttons">
+                                        <button class="btn btn-outline-warning btn-sm email-btn"
+                                                data-id="${data.participantId}" data-email="${data.email}"
+                                                data-name="${data.fullName}" title="Send Email">
                                             <i class="fas fa-envelope"></i>
                                         </button>
-                                    </div>
-                                    <button type="button" class="btn btn-outline-primary print-pass-btn"
-                                                data-id="${data.participantId}"
-                                                data-name="${data.fullName}">
-                                            <i class="fas fa-print"></i>
-                                    </button>
 
-                                    <button type="button" class="btn btn-outline-success download-pdf-btn"
-                                                data-id="${data.participantId}"
-                                                data-name="${data.fullName}"
-                                                title="Download PDF">
-                                            <i class="fas fa-file-download"></i>
-                                    </button>
+                                        <div class="btn-with-badge">
+                                            <button class="btn btn-outline-primary btn-sm print-btn"
+                                                    data-id="${data.participantId}" data-name="${data.fullName}"
+                                                    title="Print ID Card">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <span class="counter-badge print-counter" data-id="${data.participantId}"
+                                                  data-type="print" ${printCount > 0 ? '' : 'style="display: none;"'}>
+                                                ${printCount}
+                                            </span>
+                                        </div>
+
+                                        <div class="btn-with-badge">
+                                            <button class="btn btn-outline-success btn-sm download-btn"
+                                                    data-id="${data.participantId}" data-name="${data.fullName}"
+                                                    title="Download PDF">
+                                                <i class="fas fa-file-download"></i>
+                                            </button>
+                                            <span class="counter-badge download-counter" data-id="${data.participantId}"
+                                                  data-type="download" ${downloadCount > 0 ? '' : 'style="display: none;"'}>
+                                                ${downloadCount}
+                                            </span>
+                                        </div>
+                                    </div>
                                 `;
                             }
                         }
@@ -761,686 +267,305 @@
                     responsive: true,
                     pageLength: 10,
                     lengthMenu: [5, 10, 25, 50],
-                    order: [[0, 'asc']], // Changed to column 1 since column 0 is checkbox
-                    drawCallback: function() {
-                        // Re-attach event listeners after table redraw
-                        attachCheckboxListeners();
-                    }
+                    order: [[1, 'asc']]
                 });
             }
-                    // Attach checkbox listeners to individual checkboxes
-        function attachCheckboxListeners() {
-            $('.participant-checkbox').off('change').on('change', function() {
-                const participantId = $(this).data('id');
 
+            // Checkbox functionality
+            $(document).on('change', '.participant-checkbox', function() {
+                const id = $(this).data('id');
                 if ($(this).prop('checked')) {
-                    selectedParticipants.add(participantId);
+                    selectedParticipants.add(id);
                 } else {
-                    selectedParticipants.delete(participantId);
+                    selectedParticipants.delete(id);
                     $('#selectAllCheckbox').prop('checked', false);
                 }
-
-                updateBulkActionsUI();
+                updateBulkUI();
             });
-        }
 
-                // Initialize bulk action functionality
-        function initializeBulkActions() {
-            // Select All checkbox
-            $('#selectAllCheckbox').on('click', function() {
-                const isChecked = $(this).prop('checked');
-                $('.participant-checkbox').prop('checked', isChecked);
+            $('#selectAllCheckbox').on('change', function() {
+                const checked = $(this).prop('checked');
+                $('.participant-checkbox').prop('checked', checked);
 
-                if (isChecked) {
-                    // Add all visible rows to selection
+                if (checked) {
                     participantsTable.rows({ search: 'applied' }).every(function() {
-                        const data = this.data();
-                        selectedParticipants.add(data.participantId);
+                        selectedParticipants.add(this.data().participantId);
                     });
                 } else {
-                    // Clear all selections
                     selectedParticipants.clear();
                 }
-
-                updateBulkActionsUI();
+                updateBulkUI();
             });
+
+            function updateBulkUI() {
+                const count = selectedParticipants.size;
+                $('.selected-count').text(count);
+                $('.bulk-actions-container').toggle(count > 0);
+                $('#generateAllPdfs').toggle(count === 0);
             }
-        // Update bulk actions UI based on selection
-        function updateBulkActionsUI() {
-            const selectedCount = selectedParticipants.size;
-            $('.selected-count').text(selectedCount);
 
-            if (selectedCount > 0) {
-                $('.bulk-actions-container').show();
-                $('#generateAllPdfs').hide();
-            } else {
-                $('.bulk-actions-container').hide();
-                $('#generateAllPdfs').show();
-            }
-        }
-
-
-           
-
-                 $('#generateAllPdfs').on('click', function() {
-                    if (confirm('Generate PDFs for all participants? This may take a while.')) {
-                        generateAllPdfs();
-                    }
-                });
-
-$('#bulkGeneratePdf').on('click', function(e) {
-    e.preventDefault();
-    
-    if (selectedParticipants.size === 0) {
-      //  toastr.warning('Please select at least one participant');
-        return;
-    }
-    
-    // Get selected participant data
-    const selectedData = [];
-    participantsTable.rows().every(function() {
-        const data = this.data();
-        if (selectedParticipants.has(data.participantId)) {
-            selectedData.push({
-                QrCode: data.participantId.toString(),
-                ParticipantName: data.fullName,
-                IsPrintCenter: true // or get from checkbox/option
-            });
-        }
-    });
-    
-    if (selectedData.length === 0) {
-        //toastr.warning('No valid participants selected');
-        return;
-    }
-    
-    // Show loading
-    const $btn = $('#bulkGeneratePdf');
-    const originalHtml = $btn.html();
-    $btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...').prop('disabled', true);
-    
-    // Create form for POST
-
-             $.ajax({
-                url: '/ParticipantCommunication/GenerateBulkIdCards',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(selectedData),
-                // beforeSend: function(xhr) {
-                //     // Add CSRF token header
-                //     const token = $('input[name="__RequestVerificationToken"]').val();
-                //     if (token) {
-                //         xhr.setRequestHeader('RequestVerificationToken', token);
-                //     }
-                // },
-                xhrFields: {
-                    responseType: 'blob' // Important for file download
-                },
-                success: function(data, status, xhr) {
-                    // Check if it's a file (ZIP)
-                    const contentType = xhr.getResponseHeader('Content-Type');
-
-                    if (contentType && contentType.indexOf('application/zip') !== -1) {
-                        // Create download link
-                        const blob = new Blob([data], { type: 'application/zip' });
-                        const downloadUrl = URL.createObjectURL(blob);
-
-                        // Get filename from headers or use default
-                        const contentDisposition = xhr.getResponseHeader('Content-Disposition');
-                        let filename = 'ID_Cards.zip';
-
-                        if (contentDisposition) {
-                            const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
-                            if (filenameMatch && filenameMatch[1]) {
-                                filename = filenameMatch[1];
-                            }
-                        }
-
-                        // Trigger download
-                        const a = document.createElement('a');
-                        a.href = downloadUrl;
-                        a.download = filename;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-
-                        // Clean up
-                        URL.revokeObjectURL(downloadUrl);
-
-                        // Show success message
-                        //toastr.success(`Successfully generated ${selectedData.length} ID cards`);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    console.error('Error:', error);
-
-                    // Try to parse error response
-                    if (xhr.responseText) {
-                        try {
-                            const errorResponse = JSON.parse(xhr.responseText);
-                            //toastr.error(errorResponse.message || 'Error generating PDFs');
-                        } catch (e) {
-                            toastr.error('Error generating PDFs');
-                        }
-                    } else {
-                       // toastr.error('Error generating PDFs');
-                    }
-                },
-                complete: function() {
-                    // Restore button
-                    $btn.html(originalHtml).prop('disabled', false);
-                    clearSelection();
-                }
-            });
-
-    // const form = document.createElement('form');
-    // form.method = 'POST';
-    // form.action = '/ParticipantCommunication/GenerateBulkIdCards';
-    // form.style.display = 'none';
-    
-    // // // Add CSRF token if using ASP.NET
-    // // const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
-    // // const csrfInput = document.createElement('input');
-    // // csrfInput.type = 'hidden';
-    // // csrfInput.name = '__RequestVerificationToken';
-    // // csrfInput.value = csrfToken;
-    // // form.appendChild(csrfInput);
-    
-    // // Add data as JSON
-    // const dataInput = document.createElement('input');
-    // dataInput.type = 'hidden';
-    // dataInput.name = 'requests';
-    // dataInput.value = JSON.stringify(selectedData);
-    // form.appendChild(dataInput);
-    
-    // document.body.appendChild(form);
-    // form.submit();
-    
-    // // Restore button after delay
-    // setTimeout(() => {
-    //     $btn.html(originalHtml).prop('disabled', false);
-    //     clearSelection();
-    // }, 2000);
-});
-
-                // Clear all selections
-        function clearSelection() {
-            selectedParticipants.clear();
-            $('.participant-checkbox').prop('checked', false);
-            $('#selectAllCheckbox').prop('checked', false);
-            updateBulkActionsUI();
-        }
-
-            // Clear Selection
-        $('#clearSelection').on('click', function(e) {
-            e.preventDefault();
-            clearSelection();
-        });
-            initializeDataTable();
-
-            // Handle email button clicks
-            $(document).on('click', '.send-email-btn', function(e) {
+            // Clear selection
+            $('#clearSelection').on('click', function(e) {
                 e.preventDefault();
+                selectedParticipants.clear();
+                $('.participant-checkbox').prop('checked', false);
+                $('#selectAllCheckbox').prop('checked', false);
+                updateBulkUI();
+            });
 
-                const button = $(this);
-                const participantId = button.data('id');
-                const participantEmail = button.data('email');
-                const participantName = button.data('name');
+            // Email button
+            $(document).on('click', '.email-btn', function(e) {
+                e.preventDefault();
+                const btn = $(this);
+                const original = btn.html();
+                btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-                // Show loading
-                const originalHtml = button.html();
-                button.html('<i class="fas fa-spinner fa-spin"></i>');
-                button.prop('disabled', true);
-
-                // Send request
                 $.ajax({
                     url: '/ParticipantCommunication/SendEmailToParticipant',
                     type: 'POST',
                     contentType: 'application/json',
-                    data: JSON.stringify({
-                        participantId: participantId
-                    }),
-                    success: function(response) {
-                        if (response.success) {
-                            // Show success message
-                            alert('Email sent successfully to ' + participantName);
-                        } else {
-                            alert('Error: ' + response.message);
-                        }
+                    data: JSON.stringify({ participantId: btn.data('id') }),
+                    success: function(res) {
+                        alert(res.success ? 'Email sent!' : 'Error: ' + res.message);
                     },
                     error: function() {
                         alert('Failed to send email');
                     },
                     complete: function() {
-                        // Restore button
-                        button.html(originalHtml);
-                        button.prop('disabled', false);
+                        btn.html(original).prop('disabled', false);
                     }
                 });
             });
 
+            // Print button
+            $(document).on('click', '.print-btn', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-         $(document).on('click', '.print-pass-btn', function(e) {
-            e.preventDefault();
-            const button = $(this);
-            const participantId = button.data('id');
-            const originalHtml = button.html();
-            button.html('<i class="fas fa-spinner fa-spin"></i>');
-            button.prop('disabled', true);
-
-            $.ajax({
-                url: '/ParticipantCommunication/GenerateIdCard',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    QrCode: participantId.toString(),
-                    AccessPoint: "Print Center",
-                    IsPrintCenter: true
-                }),
-                success: function(response) {
-                    if (response.success && response.idCardHtml) {
-                        printIdCard(response.idCardHtml);
-                    } else {
-                        alert('Error: ' + (response.message || 'Failed to generate ID card'));
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('Failed to generate ID card. Please try again.');
-                },
-                complete: function() {
-                    setTimeout(function() {
-                        button.html(originalHtml);
-                        button.prop('disabled', false);
-                    }, 10);
-                }
-            });
-        });
-
-        // $(document).on('click', '.download-pdf-btn', function() {
-        //     const btn = $(this);
-        //     const pName = btn.data('name');
-        //     const oldHtml = btn.html();
-
-        //     // Loading State
-        //     btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-        //     $.ajax({
-        //         url: '/ParticipantCommunication/GenerateIdCard',
-        //         type: 'POST',
-        //         contentType: 'application/json',
-        //         data: JSON.stringify({ QrCode: btn.data('id').toString(), IsPrintCenter: true }),
-        //         success: function(res) {
-        //             if (res.success) {
-        //                 // Create a div with exact same structure as print
-        //                 const element = document.createElement('div');
-        //                 element.innerHTML = res.idCardHtml;
-
-        //                 // Ensure the div has proper styling
-        //                 element.style.width = '320px';
-        //                 element.style.height = '500px';
-        //                 element.style.margin = '0 auto';
-        //                 element.style.display = 'block';
-
-        //                 html2pdf()
-        //                     .set({
-        //                         filename: pName + '_ID_Card.pdf',
-        //                         margin: [20, 20, 20, 20], // Add margins
-        //                         jsPDF: {
-        //                             unit: 'px',
-        //                             format: [360, 540], // Slightly larger than card to include margins
-        //                             orientation: 'portrait'
-        //                         },
-        //                         html2canvas: {
-        //                             scale: 2, // Higher resolution
-        //                             useCORS: true,
-        //                             backgroundColor: '#f5f5f5'
-        //                         }
-        //                     })
-        //                     .from(element)
-        //                     .save();
-        //             }
-        //         },
-        //         complete: function() {
-        //             btn.html(oldHtml).prop('disabled', false);
-        //         }
-        //     });
-        // });
-
-        //              $(document).on('click', '.download-pdf-btn', function() {
-        //     const btn = $(this);
-        //     const pName = btn.data('name');
-        //     const oldHtml = btn.html();
-
-        //     // Loading State
-        //     btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-        //     $.ajax({
-        //         url: '/ParticipantCommunication/GenerateIdCard',
-        //         type: 'POST',
-        //         contentType: 'application/json',
-        //         data: JSON.stringify({ QrCode: btn.data('id').toString(), IsPrintCenter: true }),
-        //         success: function(res) {
-        //             if (res.success) {
-        //                 // Create a div with exact same structure as print
-        //                 const element = document.createElement('div');
-        //                 element.innerHTML = res.idCardHtml;
-
-        //                 // A6 dimensions in millimeters: 105mm x 148mm
-        //                 // Convert to pixels at 96 DPI: 105mm = 397px, 148mm = 559px
-        //                 // But for html2pdf, we'll use mm units
-
-        //                 // Ensure the div has proper A6 styling
-        //                 element.style.width = '105mm';
-        //                 element.style.height = '148mm';
-        //                 element.style.margin = '0';
-        //                 element.style.padding = '0';
-        //                 element.style.display = 'block';
-        //                 element.style.boxSizing = 'border-box';
-
-        //                 // For better rendering, add a wrapper
-        //                 const wrapper = document.createElement('div');
-        //                 wrapper.style.width = '105mm';
-        //                 wrapper.style.height = '148mm';
-        //                 wrapper.style.margin = '0';
-        //                 wrapper.style.padding = '0';
-        //                 wrapper.style.overflow = 'hidden';
-        //                 wrapper.appendChild(element);
-
-        //                 html2pdf()
-        //                     .set({
-        //                         filename: pName + '_ID_Card.pdf',
-        //                         margin: [0, 0, 0, 0], // No margins for A6
-        //                         jsPDF: {
-        //                             unit: 'mm',
-        //                             format: 'a6', // A6 format (105mm x 148mm)
-        //                             orientation: 'portrait'
-        //                         },
-        //                         html2canvas: {
-        //                             scale: 3, // Higher resolution for better quality
-        //                             useCORS: true,
-        //                             backgroundColor: '#ffffff', // White background
-        //                             logging: false,
-        //                             letterRendering: true,
-        //                             allowTaint: true
-        //                         },
-        //                         // A6 specific settings
-        //                         pagebreak: { mode: 'avoid-all' },
-        //                         // Ensure it fits exactly to A6
-        //                         enableLinks: false,
-        //                         image: { type: 'jpeg', quality: 0.98 }
-        //                     })
-        //                     .from(wrapper)
-        //                     .save();
-        //             }
-        //         },
-        //         complete: function() {
-        //             btn.html(oldHtml).prop('disabled', false);
-        //         },
-        //         error: function(xhr, status, error) {
-        //             console.error('Error generating PDF:', error);
-        //             btn.html(oldHtml).prop('disabled', false);
-        //             alert('Error generating ID card. Please try again.');
-        //         }
-        //     });
-        // });
-
-        //         $(document).on('click', '.download-pdf-btn', function() {
-        //     const btn = $(this);
-        //     const pName = btn.data('name');
-        //     const oldHtml = btn.html();
-
-        //     // Loading State
-        //     btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-        //     $.ajax({
-        //         url: '/ParticipantCommunication/GenerateIdCard',
-        //         type: 'POST',
-        //         contentType: 'application/json',
-        //         data: JSON.stringify({ QrCode: btn.data('id').toString(), IsPrintCenter: true }),
-        //         success: function(res) {
-        //             if (res.success) {
-        //                 // Create a div with exact same structure as print
-        //                 const element = document.createElement('div');
-
-        //                 // Add CSS to prevent page breaks
-        //                 const style = document.createElement('style');
-        //                 style.innerHTML = `
-        //                     @@media print {
-        //                         * {
-        //                             page-break-inside: avoid !important;
-        //                             page-break-after: avoid !important;
-        //                             page-break-before: avoid !important;
-        //                         }
-        //                         html, body {
-        //                             height: 148mm !important;
-        //                             width: 105mm !important;
-        //                             margin: 0 !important;
-        //                             padding: 0 !important;
-        //                             overflow: hidden !important;
-        //                         }
-        //                     }
-        //                 `;
-
-        //                 element.innerHTML = style.outerHTML + res.idCardHtml;
-
-        //                 // Set container dimensions EXACTLY to A6
-        //                 element.style.width = '105mm';
-        //                 element.style.height = '148mm';
-        //                 element.style.margin = '0';
-        //                 element.style.padding = '0';
-        //                 element.style.display = 'block';
-        //                 element.style.overflow = 'hidden'; // Crucial to prevent overflow
-        //                 element.style.boxSizing = 'border-box';
-        //                 element.style.position = 'relative';
-
-        //                 html2pdf()
-        //                     .set({
-        //                         filename: pName + '_ID_Card.pdf',
-        //                         margin: [0, 0, 0, 0],
-        //                         jsPDF: {
-        //                             unit: 'mm',
-        //                             format: [105, 148], // Exact A6 dimensions
-        //                             orientation: 'portrait',
-        //                             hotfixes: ['px_scaling']
-        //                         },
-        //                         html2canvas: {
-        //                             scale: 2,
-        //                             useCORS: true,
-        //                             backgroundColor: '#ffffff',
-        //                             width: 397, // 105mm in pixels at 96 DPI
-        //                             height: 559, // 148mm in pixels at 96 DPI
-        //                             windowWidth: 397,
-        //                             windowHeight: 559,
-        //                             logging: false
-        //                         },
-        //                         pagebreak: {
-        //                             mode: ['avoid-all', 'css', 'legacy']
-        //                         }
-        //                     })
-        //                     .from(element)
-        //                     .save()
-        //                     .then(() => {
-        //                         console.log('PDF generated successfully');
-        //                     });
-        //             }
-        //         },
-        //         complete: function() {
-        //             btn.html(oldHtml).prop('disabled', false);
-        //         },
-        //         error: function() {
-        //             btn.html(oldHtml).prop('disabled', false);
-        //             alert('Error generating PDF');
-        //         }
-        //     });
-        //});
-
-                $(document).on('click', '.download-pdf-btn', function() {
                 const btn = $(this);
-                const pName = btn.data('name');
-                const originalHtml = btn.html();
+                const id = btn.data('id');
+                const name = btn.data('name');
 
+                // Update counter
+                incrementCounter(id, 'print');
+
+                // Show loading
+                const original = btn.html();
+                btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                // Print logic
                 $.ajax({
                     url: '/ParticipantCommunication/GenerateIdCard',
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
-                        QrCode: btn.data('id').toString(),
+                        QrCode: id.toString(),
+                        AccessPoint: "Print Center",
                         IsPrintCenter: true
                     }),
                     success: function(res) {
-                        if (res.success) {
-
-                // Show loading state
-                btn.html('<i class="fas fa-spinner fa-spin"></i> Generating PDF...').prop('disabled', true);
-
-                // Get the content to convert to PDF
-                const element = document.createElement('div');
-                element.innerHTML = res.idCardHtml;
-                // Clone the element to avoid affecting the display
-                const elementToPrint = element.cloneNode(true);
-                elementToPrint.style.background = 'white';
-                elementToPrint.style.margin = '0';
-                elementToPrint.style.boxShadow = 'none';
-                elementToPrint.style.border = 'none';
-
-
-
-        // //                 element.innerHTML = res.idCardHtml;
-
-                // Append to body temporarily
-                document.body.appendChild(elementToPrint);
-
-                // Options for html2pdf
-                const options = {
-                    margin: 0,
-                    filename: pName.replace(/\s+/g, '_') + '_Business_Card.pdf',
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: {
-                        scale: 3, // Higher scale for better quality
-                        useCORS: true,
-                        backgroundColor: '#ffffff',
-                        logging: false,
-                        width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
-                        height: 148 * 3.78  // Convert mm to pixels
+                        if (res.success && res.idCardHtml) {
+                            // Print function
+                            const iframe = document.createElement('iframe');
+                            iframe.style.display = 'none';
+                            document.body.appendChild(iframe);
+                            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                            iframeDoc.open();
+                            iframeDoc.write(res.idCardHtml);
+                            iframeDoc.close();
+                            iframe.onload = function() {
+                                setTimeout(() => {
+                                    iframe.contentWindow.focus();
+                                    iframe.contentWindow.print();
+                                    setTimeout(() => document.body.removeChild(iframe), 1000);
+                                }, 500);
+                            };
+                        } else {
+                            alert('Error generating ID card');
+                        }
                     },
-                    jsPDF: {
-                        unit: 'mm',
-                        format: 'a6',
-                        orientation: 'portrait'
-                    }
-                };
-
-                // Generate PDF
-                html2pdf()
-                    .set(options)
-                    .from(elementToPrint)
-                    .save()
-                    .then(() => {
-                        // Remove temporary element
-                        document.body.removeChild(elementToPrint);
-
-                        // Restore button
-                        btn.html(originalHtml).prop('disabled', false);
-                    })
-                    .catch(error => {
-                        console.error('PDF generation error:', error);
-
-                        // Try alternative method
-                        tryAlternativeMethod(pName, elementToPrint, btn, originalHtml);
-                    });
-
-                    }
+                    error: function() {
+                        alert('Failed to generate ID card');
                     },
                     complete: function() {
-                        btn.html(oldHtml).prop('disabled', false);
+                        setTimeout(() => {
+                            btn.html(original).prop('disabled', false);
+                        }, 1000);
+                    }
+                });
+
+                return false;
+            });
+
+            // Download button
+        $(document).on('click', '.download-btn', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const btn = $(this);
+            const id = btn.data('id');
+            const name = btn.data('name');
+
+            // Update counter
+            incrementCounter(id, 'download');
+
+            // Show loading
+            const original = btn.html();
+            btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+            try {
+                const response = await fetch('/ParticipantCommunication/GenerateIdCard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        QrCode: id.toString(),
+                        IsPrintCenter: true
+                    })
+                });
+
+                const result = await response.json();
+                console.log('Server response:', result);
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to generate ID card');
+                }
+
+                // Generate PDF from HTML on client side
+                await generateAndDownloadPdf(result.idCardHtml, name);
+
+                btn.html(original).prop('disabled', false);
+
+            } catch (error) {
+                console.error('Download error:', error);
+                alert(`Failed to generate PDF: ${error.message}`);
+                btn.html(original).prop('disabled', false);
+            }
+        });
+
+        async function generateAndDownloadPdf(htmlContent, name) {
+            return new Promise((resolve, reject) => {
+                try {
+                    const element = document.createElement('div');
+
+                    if (htmlContent.includes('<body>')) {
+                        const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                        if (bodyMatch && bodyMatch[1]) {
+                            element.innerHTML = bodyMatch[1];
+                        } else {
+                            element.innerHTML = htmlContent;
+                        }
+                    } else {
+                        element.innerHTML = htmlContent;
+                    }
+
+                    document.body.appendChild(element);
+
+                    const opt = {
+                        margin: 10,
+                        filename: `${name.replace(/\s+/g, '_')}_ID_Card.pdf`,
+                        image: {
+                            type: 'jpeg',
+                            quality: 0.98
+                        },
+                        html2canvas: {
+                            scale: 2,
+                            useCORS: true,
+                            logging: false,
+                        },
+                        jsPDF: {
+                            unit: 'mm',
+                            format: 'a4',
+                            orientation: 'portrait'
+                        }
+                    };
+
+                    // Wait a moment for any images to load
+                    setTimeout(() => {
+                        html2pdf()
+                            .set(opt)
+                            .from(element)
+                            .save()
+                            .then(() => {
+                                document.body.removeChild(element);
+                                resolve();
+                            })
+                            .catch(error => {
+                                console.error('PDF generation failed:', error);
+                                // Clean up
+                                document.body.removeChild(element);
+                                reject(error);
+                            });
+                    }, 500);
+
+                } catch (error) {
+                    console.error('Error in generateAndDownloadPdf:', error);
+                    reject(error);
+                }
+            });
+        }
+
+        // Bulk generate
+            $('#bulkGeneratePdf').on('click', function(e) {
+                e.preventDefault();
+                if (selectedParticipants.size === 0) {
+                    alert('Select participants first');
+                    return;
+                }
+
+                const data = [];
+                participantsTable.rows().every(function() {
+                    const row = this.data();
+                    if (selectedParticipants.has(row.participantId)) {
+                        data.push({
+                            QrCode: row.participantId.toString(),
+                            ParticipantName: row.fullName,
+                            IsPrintCenter: true
+                        });
+                    }
+                });
+
+                const btn = $(this);
+                const original = btn.html();
+                btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...').prop('disabled', true);
+
+                $.ajax({
+                    url: '/ParticipantCommunication/GenerateBulkIdCards',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    xhrFields: { responseType: 'blob' },
+                    success: function(response) {
+                        const blob = new Blob([response], { type: 'application/zip' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'ID_Cards.zip';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                        data.forEach(item => {
+                            const id = parseInt(item.QrCode);
+                            if (id) {
+                                incrementCounter(id, 'download');
+                            }
+                        });
+                    },
+                    error: function() {
+                        alert('Error generating PDFs');
+                    },
+                    complete: function() {
+                        btn.html(original).prop('disabled', false);
+                        selectedParticipants.clear();
+                        updateBulkUI();
                     }
                 });
             });
 
-            function tryAlternativeMethod(pName, element, btn, originalHtml) {
-                // Alternative method with different settings
-                const options = {
-                    margin: [5, 5, 5, 5],
-                    filename: pName.replace(/\s+/g, '_') + '_Business_Card.pdf',
-                    html2canvas: {
-                        scale: 2,
-                        useCORS: true,
-                        backgroundColor: '#ffffff',
-                        width: 794, // A6 in pixels at 72 DPI
-                        height: 1123
-                    },
-                    jsPDF: {
-                        unit: 'px',
-                        format: [794, 1123], // A6 in pixels
-                        orientation: 'portrait'
-                    }
-                };
-
-                html2pdf()
-                    .set(options)
-                    .from(element)
-                    .save()
-                    .then(() => {
-                        document.body.removeChild(element);
-                        btn.html(originalHtml).prop('disabled', false);
-                    })
-                    .catch(error => {
-                        console.error('Alternative method also failed:', error);
-                        document.body.removeChild(element);
-                        btn.html(originalHtml).prop('disabled', false);
-                        alert('Error generating PDF. Please try printing the page directly (Ctrl+P).');
-                    });
-            }
-
-        function printIdCard(htmlContent) {
-            if (!htmlContent || htmlContent.trim() === '') return;
-
-            console.log('Auto-printing ID card...');
-
-            // Modify HTML to add print color adjustments
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent;
-
-            // Add print color adjustment to all styled elements
-            const allElements = tempDiv.querySelectorAll('*');
-            allElements.forEach(el => {
-                const currentStyle = el.getAttribute('style') || '';
-                if (currentStyle) {
-                    el.setAttribute('style', currentStyle + '; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important;');
-                }
-            });
-
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            document.body.appendChild(iframe);
-
-            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-            iframeDoc.open();
-            iframeDoc.write(`
-              
-                    ${tempDiv.innerHTML}
-
-            `);
-            iframeDoc.close();
-
-            iframe.onload = function() {
-                setTimeout(() => {
-                    iframe.contentWindow.focus();
-                    iframe.contentWindow.print();
-
-                    setTimeout(() => {
-                        document.body.removeChild(iframe);
-                    }, 1000);
-                }, 500);
-            };
-        }
-            setInterval(() => {
-                participantsTable.ajax.reload(null, false);
-            }, 60000);
+            // Initialize
+            initializeDataTable();
         });
-
-
     </script>
 }
-
- 
