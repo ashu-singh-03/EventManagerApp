@@ -46,7 +46,7 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var arreventId = request.QrCode.Split("||");
+                var arreventId = request.QrCode.Replace("/","||").Split("||");
                 eventId = Convert.ToInt32(arreventId[1]);
                 var participantId = arreventId[0];
                 

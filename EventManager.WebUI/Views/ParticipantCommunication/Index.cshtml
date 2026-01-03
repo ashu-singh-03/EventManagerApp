@@ -2,6 +2,12 @@
     ViewData["Title"] = "Participants Communication";
     Layout = "/Views/Shared/_Layout.cshtml";
 }
+<!-- Add these in your <head> or before your script -->
+<!-- FileSaver.js for saving files -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<!-- JSZip for creating zip files -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
     /* Counter Badge Styles */
     .btn-with-badge {
@@ -444,10 +450,24 @@
             }
         });
 
-        async function generateAndDownloadPdf(htmlContent, name) {
+              async function generateAndDownloadPdf(htmlContent, name) {
             return new Promise((resolve, reject) => {
                 try {
-                    const element = document.createElement('div');
+                    const element = document.createElement('div'); // const element = document.createElement('div');
+                element.innerHTML = htmlContent;
+                // Clone the element to avoid affecting the display
+                const elementToPrint = element.cloneNode(true);
+                elementToPrint.style.background = 'white';
+                elementToPrint.style.margin = '0';
+                elementToPrint.style.boxShadow = 'none';
+                elementToPrint.style.border = 'none';
+
+
+
+        // //                 element.innerHTML = res.idCardHtml;
+
+                // Append to body temporarily
+                document.body.appendChild(elementToPrint);
 
                     if (htmlContent.includes('<body>')) {
                         const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -463,31 +483,32 @@
                     document.body.appendChild(element);
 
                     const opt = {
-                        margin: 10,
-                        filename: `${name.replace(/\s+/g, '_')}_ID_Card.pdf`,
-                        image: {
-                            type: 'jpeg',
-                            quality: 0.98
-                        },
-                        html2canvas: {
-                            scale: 2,
-                            useCORS: true,
-                            logging: false,
-                        },
-                        jsPDF: {
-                            unit: 'mm',
-                            format: 'a4',
-                            orientation: 'portrait'
-                        }
-                    };
+                    margin: 0,
+                    filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: {
+                        scale: 3, // Higher scale for better quality
+                        useCORS: true,
+                        backgroundColor: '#ffffff',
+                        logging: false,
+                        width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                        height: 148 * 3.78  // Convert mm to pixels
+                    },
+                    jsPDF: {
+                        unit: 'mm',
+                        format: 'a6',
+                        orientation: 'portrait'
+                    }
+                };
 
                     // Wait a moment for any images to load
                     setTimeout(() => {
                         html2pdf()
                             .set(opt)
-                            .from(element)
+                            .from(elementToPrint)
                             .save()
                             .then(() => {
+                                document.body.removeChild(elementToPrint);
                                 document.body.removeChild(element);
                                 resolve();
                             })
@@ -507,65 +528,504 @@
         }
 
         // Bulk generate
-            $('#bulkGeneratePdf').on('click', function(e) {
-                e.preventDefault();
-                if (selectedParticipants.size === 0) {
-                    alert('Select participants first');
-                    return;
+               $('#bulkGeneratePdf').on('click', function(e) {
+            e.preventDefault();
+                    const btn = $(this);
+
+            if (selectedParticipants.size === 0) {
+              //  toastr.warning('Please select at least one participant');
+                return;
+            }
+
+            // Get selected participant data
+            const selectedData = [];
+            participantsTable.rows().every(function() {
+                const data = this.data();
+                if (selectedParticipants.has(data.participantId)) {
+                    selectedData.push({
+                        QrCode: data.participantId.toString(),
+                        ParticipantName: data.fullName,
+                        IsPrintCenter: true // or get from checkbox/option
+                    });
                 }
-
-                const data = [];
-                participantsTable.rows().every(function() {
-                    const row = this.data();
-                    if (selectedParticipants.has(row.participantId)) {
-                        data.push({
-                            QrCode: row.participantId.toString(),
-                            ParticipantName: row.fullName,
-                            IsPrintCenter: true
-                        });
-                    }
-                });
-
-                const btn = $(this);
-                const original = btn.html();
-                btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...').prop('disabled', true);
-
-                $.ajax({
-                    url: '/ParticipantCommunication/GenerateBulkIdCards',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(data),
-                    xhrFields: { responseType: 'blob' },
-                    success: function(response) {
-                        const blob = new Blob([response], { type: 'application/zip' });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'ID_Cards.zip';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        data.forEach(item => {
-                            const id = parseInt(item.QrCode);
-                            if (id) {
-                                incrementCounter(id, 'download');
-                            }
-                        });
-                    },
-                    error: function() {
-                        alert('Error generating PDFs');
-                    },
-                    complete: function() {
-                        btn.html(original).prop('disabled', false);
-                        selectedParticipants.clear();
-                        updateBulkUI();
-                    }
-                });
             });
+
+            if (selectedData.length === 0) {
+                //toastr.warning('No valid participants selected');
+                return;
+            }
+
+
+            // Show loading
+            const $btn = $('#bulkGeneratePdf');
+            const originalHtml = $btn.html();
+            $btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...').prop('disabled', true);
+                    // Initialize zip and counters
+
+
+
+                    const zip = new JSZip();
+                    let processedCount = 0;
+                    let failedCount = 0;
+                    const totalCount = selectedData.length;
+
+                            // Create an array to hold all promises
+                    const promises = [];
+
+                    // Process each participant with delay
+                    selectedData.forEach((participant, index) => {
+                        // Create a promise for each participant
+                        const promise = new Promise((resolve) => {
+                            setTimeout(async () => {
+                                try {
+                                    await generateParticipantPDF(participant, zip);
+                                    processedCount++;
+
+                                    // Update progress
+                                    const percent = Math.round((processedCount / totalCount) * 100);
+                                    btn.html(`<i class="fas fa-spinner fa-spin"></i> ${percent}% (${processedCount}/${totalCount})`);
+
+                                    resolve(true);
+                                } catch (error) {
+                                    console.error(`Failed for ${participant.ParticipantName}:`, error);
+                                    processedCount++;
+
+                                    // Update progress even on failure
+                                    const percent = Math.round((processedCount / totalCount) * 100);
+                                    btn.html(`<i class="fas fa-spinner fa-spin"></i> ${percent}% (${processedCount}/${totalCount})`);
+
+                                    resolve(false); // Resolve even on failure to continue
+                                }
+                            }, index * 1000); // 1 second delay between requests
+                        });
+
+                        promises.push(promise);
+                    });
+
+                    // Wait for all promises to complete
+                    Promise.all(promises).then(results => {
+                        const successCount = results.filter(r => r === true).length;
+                        const failedCount = results.filter(r => r === false).length;
+
+                        console.log(`Completed: ${successCount} succeeded, ${failedCount} failed`);
+
+                        // Generate and download ZIP
+                        generateAndDownloadZip(zip, selectedData, btn, originalHtml, successCount, failedCount);
+                    });
+
+
+
+
+                    //VVVVV--------------------
+
+            // Create form for POST
+
+
+        });
 
             // Initialize
             initializeDataTable();
         });
+
+          function generateAndDownloadZip(zip, selectedData, button, originalButtonHtml, successCount, failedCount) {
+            button.html('<i class="fas fa-spinner fa-spin"></i> Creating ZIP file...');
+
+            console.log('Generating ZIP file...');
+
+            // Check if zip has any files
+            const fileCount = Object.keys(zip.files).length;
+
+            if (fileCount === 0) {
+                console.error('No files to add to ZIP');
+                button.html(originalButtonHtml).prop('disabled', false);
+               // toastr.error('No PDFs were generated. Please try again.');
+                return;
+            }
+
+            // Generate ZIP file
+            zip.generateAsync({
+                type: "blob",
+                compression: "DEFLATE",
+                compressionOptions: {
+                    level: 6
+                }
+            })
+            .then(function(content) {
+                console.log('ZIP generated successfully, size:', content.size);
+
+                // Create filename
+                const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
+                const filename = `ID_Cards_${timestamp}.zip`;
+
+                // Download using FileSaver.js
+                saveAs(content, filename);
+
+                // Restore button
+                button.html(originalButtonHtml).prop('disabled', false);
+
+                // Show success message
+                if (failedCount > 0) {
+                    //toastr.warning(`Downloaded ${successCount} of ${selectedData.length} ID cards. ${failedCount} failed.`);
+                } else {
+                    //toastr.success(`Successfully downloaded ${successCount} ID cards`);
+                }
+            })
+            .catch(function(error) {
+                console.error('Error creating ZIP:', error);
+                button.html(originalButtonHtml).prop('disabled', false);
+                //toastr.error('Error creating ZIP file. Please try again.');
+            });
+        }
+
+                function generateParticipantPDF(participantData, zip) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/ParticipantCommunication/GenerateIdCard',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        QrCode: participantData.QrCode,
+                        IsPrintCenter: true
+                    }),
+                    success: async function(res) {
+                        try {
+                            if (!res.success) {
+                                reject(new Error('API returned success: false'));
+                                return;
+                            }
+
+                            const htmlContent = res.idCardHtml; // You need to get the HTML from response
+                            const element = document.createElement('div');
+
+                            // Parse HTML content
+                            if (htmlContent.includes('<body>')) {
+                                const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                                if (bodyMatch && bodyMatch[1]) {
+                                    element.innerHTML = bodyMatch[1];
+                                } else {
+                                    element.innerHTML = htmlContent;
+                                }
+                            } else {
+                                element.innerHTML = htmlContent;
+                            }
+
+                            // Clone the element for printing
+                       const elementToPrint = element.cloneNode(true);
+        elementToPrint.style.background = 'white';
+        elementToPrint.style.margin = '0';
+        elementToPrint.style.boxShadow = 'none';
+        elementToPrint.style.border = 'none';
+
+
+                            // Append to body temporarily
+                            document.body.appendChild(elementToPrint);
+                            document.body.appendChild(element);
+
+                            const opt = {
+                                margin: 0,
+                                filename: participantData.ParticipantName.replace(/\s+/g, '_') + '_Business_Card.pdf',
+                                image: { type: 'jpeg', quality: 0.98 },
+                                html2canvas: {
+                                    scale: 3,
+                                    useCORS: true,
+                                    backgroundColor: '#ffffff',
+                                    logging: false,
+                                    width: 105 * 3.78,
+                                    height: 148 * 3.78
+                                },
+                                jsPDF: {
+                                    unit: 'mm',
+                                    format: 'a6',
+                                    orientation: 'portrait'
+                                }
+                            };
+
+                            // Wait a moment for any images to load
+                            setTimeout(() => {
+                                html2pdf()
+                                    .set(opt)
+                                    .from(elementToPrint)
+                                    .outputPdf('blob')
+                                    .then((pdfBlob) => {
+                                        // Clean up DOM elements
+                                        document.body.removeChild(elementToPrint);
+                                        document.body.removeChild(element);
+
+                                        // Create safe filename
+                                        const safeName = participantData.ParticipantName
+                                            .replace(/[^a-zA-Z0-9\s-]/g, '')
+                                            .replace(/\s+/g, '_');
+                                        const filename = `${safeName}_${participantData.QrCode}.pdf`;
+
+                                        // Add to ZIP
+                                        zip.file(filename, pdfBlob);
+                                        console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
+                                        resolve(pdfBlob);
+                                    })
+                                    .catch(error => {
+                                        console.error('PDF generation failed:', error);
+                                        // Clean up on error
+                                        document.body.removeChild(elementToPrint);
+                                        document.body.removeChild(element);
+                                        reject(error);
+                                    });
+                            }, 500);
+
+                        } catch (error) {
+                            // Ensure cleanup on error
+                            const elements = document.querySelectorAll('div[style*="-9999px"]');
+                            elements.forEach(el => {
+                                if (el.parentNode === document.body) {
+                                    document.body.removeChild(el);
+                                }
+                            });
+
+                            // Also remove any other temporary elements
+                            const tempElements = document.querySelectorAll('div[style*="position: absolute"]');
+                            tempElements.forEach(el => {
+                                if (el.parentNode === document.body && el.style.left === '-9999px') {
+                                    document.body.removeChild(el);
+                                }
+                            });
+
+                            reject(error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        reject(new Error(`AJAX request failed: ${status} - ${error}`));
+                    }
+                });
+            });
+        }
+        function generateParticipantPDFool(participantData, zip) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/ParticipantCommunication/GenerateIdCard',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        QrCode: participantData.QrCode,
+                        IsPrintCenter: true
+                    }),
+                    success: async function(res) {
+                        if (!res.success) {
+                            reject(new Error('API returned success: false'));
+                            return;
+                        }
+
+                        htmlContent =res.idCardHtml;
+                         const element = document.createElement('div');
+
+                            // Extract body content if present
+                            if (htmlContent.includes('<body>')) {
+                                const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                                element.innerHTML = bodyMatch && bodyMatch[1] ? bodyMatch[1] : htmlContent;
+                            } else {
+                                element.innerHTML = htmlContent;
+                            }
+
+                                 //const element = document.createElement('div'); // const element = document.createElement('div');
+                element.innerHTML = htmlContent;
+                // Clone the element to avoid affecting the display
+                const elementToPrint = element.cloneNode(true);
+                elementToPrint.style.background = 'white';
+                elementToPrint.style.margin = '0';
+                elementToPrint.style.boxShadow = 'none';
+                elementToPrint.style.border = 'none';
+
+
+
+
+
+
+
+                        // Create a hidden iframe to render the HTML
+                        const iframe = document.createElement('iframe');
+                        //iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:105mm;height:148mm;border:none;';
+
+                        document.body.appendChild(iframe);
+
+                        iframe.onload = async function() {
+                            try {
+                                // Write HTML to iframe
+                                iframe.contentDocument.open();
+                                iframe.contentDocument.write(res.idCardHtml);
+                                iframe.contentDocument.close();
+
+                                // Wait for iframe to render
+                                await new Promise(resolve => setTimeout(resolve, 300));
+
+                                const element = iframe.contentDocument.body;
+                                 const elementToPrint = element.cloneNode(true);
+
+                                // 3. Apply print styles
+                                elementToPrint.style.background = 'white';
+                                elementToPrint.style.margin = '0';
+                                elementToPrint.style.boxShadow = 'none';
+                                elementToPrint.style.border = 'none';
+                                elementToPrint.style.color = '#000'; // Add for better print contrast
+
+                                // 4. Append to IFRAME's body, not main document body
+                                iframe.contentDocument.body.innerHTML = ''; // Clear iframe first
+                                iframe.contentDocument.body.appendChild(elementToPrint);
+                                 const options = {
+                                 margin: 0,
+                                 image: { type: 'jpeg', quality: 0.98 },
+                                 html2canvas: {
+                                     scale: 3, // Higher scale for better quality
+                                     useCORS: true,
+                                     backgroundColor: '#ffffff',
+                                     logging: false,
+                                     width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                                     height: 148 * 3.78  // Convert mm to pixels
+                                 },
+                                 jsPDF: {
+                                     unit: 'mm',
+                                     format: 'a6',
+                                     orientation: 'portrait'
+                                 }
+                             }
+
+
+
+
+                                const pdfBlob = await html2pdf()
+                                    .set(options)
+                                    .from(elementToPrint)
+                                    .toPdf()
+                                    .output('blob');
+
+                                // Add to zip
+                                const safeName = participantData.ParticipantName
+                                    .replace(/[^a-zA-Z0-9\s-]/g, '')
+                                    .replace(/\s+/g, '_');
+                                const filename = `${safeName}_${participantData.QrCode}.pdf`;
+
+                                zip.file(filename, pdfBlob);
+                                console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
+
+                                // Cleanup
+                                document.body.removeChild(iframe);
+                                resolve();
+
+                            } catch (error) {
+                                document.body.removeChild(iframe);
+                                reject(error);
+                            }
+                        };
+
+                        // Trigger iframe load
+                        iframe.src = 'about:blank';
+                    },
+                    error: function(xhr, status, error) {
+                        reject(new Error(`AJAX error: ${error}`));
+                    }
+                });
+            });
+        }
+
+
+         function generateParticipantPDFold(participantData, zip) {
+            return new Promise((resolve, reject) => {
+                $.ajax({
+                    url: '/ParticipantCommunication/GenerateIdCard',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        QrCode: participantData.QrCode,
+                        IsPrintCenter: true
+                    }),
+                    success: async function(res) {
+                        if (!res.success) {
+                            reject(new Error('API returned success: false'));
+                            return;
+                        }
+
+                        // Create a hidden iframe to render the HTML
+                        const iframe = document.createElement('iframe');
+                        //iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:105mm;height:148mm;border:none;';
+
+                        document.body.appendChild(iframe);
+
+                        iframe.onload = async function() {
+                            try {
+                                // Write HTML to iframe
+                                iframe.contentDocument.open();
+                                iframe.contentDocument.write(res.idCardHtml);
+                                iframe.contentDocument.close();
+
+                                // Wait for iframe to render
+                                await new Promise(resolve => setTimeout(resolve, 300));
+
+                                const element = iframe.contentDocument.body;
+                                 const elementToPrint = element.cloneNode(true);
+
+                                // 3. Apply print styles
+                                elementToPrint.style.background = 'white';
+                                elementToPrint.style.margin = '0';
+                                elementToPrint.style.boxShadow = 'none';
+                                elementToPrint.style.border = 'none';
+                                elementToPrint.style.color = '#000'; // Add for better print contrast
+
+                                // 4. Append to IFRAME's body, not main document body
+                                iframe.contentDocument.body.innerHTML = ''; // Clear iframe first
+                                iframe.contentDocument.body.appendChild(elementToPrint);
+                                 const options = {
+                                 margin: 0,
+                                 image: { type: 'jpeg', quality: 0.98 },
+                                 html2canvas: {
+                                     scale: 3, // Higher scale for better quality
+                                     useCORS: true,
+                                     backgroundColor: '#ffffff',
+                                     logging: false,
+                                     width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                                     height: 148 * 3.78  // Convert mm to pixels
+                                 },
+                                 jsPDF: {
+                                     unit: 'mm',
+                                     format: 'a6',
+                                     orientation: 'portrait'
+                                 }
+                             }
+
+
+
+
+                                const pdfBlob = await html2pdf()
+                                    .set(options)
+                                    .from(elementToPrint)
+                                    .toPdf()
+                                    .output('blob');
+
+                                // Add to zip
+                                const safeName = participantData.ParticipantName
+                                    .replace(/[^a-zA-Z0-9\s-]/g, '')
+                                    .replace(/\s+/g, '_');
+                                const filename = `${safeName}_${participantData.QrCode}.pdf`;
+
+                                zip.file(filename, pdfBlob);
+                                console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
+
+                                // Cleanup
+                                document.body.removeChild(iframe);
+                                resolve();
+
+                            } catch (error) {
+                                document.body.removeChild(iframe);
+                                reject(error);
+                            }
+                        };
+
+                        // Trigger iframe load
+                        iframe.src = 'about:blank';
+                    },
+                    error: function(xhr, status, error) {
+                        reject(new Error(`AJAX error: ${error}`));
+                    }
+                });
+            });
+        }
+
+     
     </script>
 }
