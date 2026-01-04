@@ -518,7 +518,7 @@
   });
 }
 
-async function generateAndDownloadPdflast(htmlContent, name) {
+async function generateAndDownloadPdfLast(htmlContent, name) {
   return new Promise((resolve, reject) => {
     try {
 
@@ -593,6 +593,9 @@ async function generateAndDownloadPdflast(htmlContent, name) {
 }
 
 
+
+
+
               async function generateAndDownloadPdf(htmlContent, name) {
             return new Promise((resolve, reject) => {
                 try {
@@ -631,17 +634,19 @@ async function generateAndDownloadPdflast(htmlContent, name) {
                     filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: {
-                        scale: 3, // Higher scale for better quality
+                        scale: 1, // Higher scale for better quality
                         useCORS: true,
                         backgroundColor: '#ffffff',
                         logging: false,
-                        width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
-                        height: 148 * 3.78  // Convert mm to pixels
+                        width: 95 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                        height: 53 * 3.78  // Convert mm to pixels
                     },
                     jsPDF: {
                         unit: 'mm',
-                        format: 'a6',
-                        orientation: 'portrait'
+                      format: [95, 53],
+                      orientation: 'landscape'
+                        // format: 'a6',
+                        // orientation: 'portrait'
                     }
                 };
 
