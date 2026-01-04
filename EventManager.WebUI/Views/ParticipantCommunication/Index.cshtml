@@ -61,7 +61,7 @@
                         <p class="text-muted small mb-0">Manage participants and access credentials</p>
                     </div>
                 </div>
-                <button class="btn btn-primary btn-sm" id="generateAllPdfs">
+                <button class="btn btn-primary btn-sm" id="generateAllPdfs" style="display:none;">
                     <i class="fas fa-file-pdf"></i> Generate All PDFs
                 </button>
             </div>
@@ -307,7 +307,7 @@
                 const count = selectedParticipants.size;
                 $('.selected-count').text(count);
                 $('.bulk-actions-container').toggle(count > 0);
-                $('#generateAllPdfs').toggle(count === 0);
+               // $('#generateAllPdfs').toggle(count === 0);
             }
 
             // Clear selection
@@ -527,101 +527,116 @@
             });
         }
 
-        // Bulk generate
-               $('#bulkGeneratePdf').on('click', function(e) {
-            e.preventDefault();
-                    const btn = $(this);
+
+             // Function to download single PDF (modified from your original code)
+        async function downloadSinglePDF(id, name) {
+            try {
+                // Update counter (if needed)
+                incrementCounter(id, 'download');
+
+                const response = await fetch('/ParticipantCommunication/GenerateIdCard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        QrCode: id.toString(),
+                        IsPrintCenter: true
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to generate ID card');
+                }
+
+                // Generate PDF
+                await generateAndDownloadPdf(result.idCardHtml, name);
+
+                // Add a small delay between downloads to prevent overwhelming the server
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                return true;
+
+            } catch (error) {
+                console.error(`Error downloading PDF for ${name}:`, error);
+                throw error;
+            }
+        }
+
+         //$('#bulkGeneratePdf').on('click', function(e) {
+              $('#bulkGeneratePdf').on('click', async function(e) {
+            e.preventDefault(); 
 
             if (selectedParticipants.size === 0) {
-              //  toastr.warning('Please select at least one participant');
-                return;
+            alert('Please select at least one participant.');
+            return;
             }
 
-            // Get selected participant data
-            const selectedData = [];
-            participantsTable.rows().every(function() {
-                const data = this.data();
-                if (selectedParticipants.has(data.participantId)) {
-                    selectedData.push({
-                        QrCode: data.participantId.toString(),
-                        ParticipantName: data.fullName,
-                        IsPrintCenter: true // or get from checkbox/option
+            const btn = $(this);
+            const originalHtml = btn.html();
+            const total = selectedParticipants.size;
+            let processed = 0;
+
+        // Show loading
+            btn.html(`<i class="fas fa-spinner fa-spin"></i> Processing... (0/${total})`)
+           .prop('disabled', true);
+
+
+            try {
+            // Create an array to store all promises
+                        // Create an array to store all promises
+            const downloadPromises = [];
+
+            // For each selected participant
+            selectedParticipants.forEach(id => {
+                // Find the row data
+                const row = $(`.participant-checkbox[data-id="${id}"]`).closest('tr');
+                const name = row.find('.download-btn').data('name');
+
+                // Create a download promise
+                const downloadPromise = downloadSinglePDF(id, name)
+                    .then(() => {
+                        processed++;
+                        btn.html(`<i class="fas fa-spinner fa-spin"></i> Processing... (${processed}/${total})`);
+                        console.log(`Downloaded: ${name} (${id})`);
+                    })
+                    .catch(error => {
+                        console.error(`Failed to download ${name}:`, error);
+                        // Continue with other downloads even if one fails
                     });
-                }
+
+                downloadPromises.push(downloadPromise);
             });
 
-            if (selectedData.length === 0) {
-                //toastr.warning('No valid participants selected');
-                return;
+            // Wait for all downloads to complete
+            await Promise.allSettled(downloadPromises);
+
+            // Reset button
+            btn.html(originalHtml).prop('disabled', false);
+
+            // Show completion message
+            alert(`Successfully processed ${processed} out of ${total} PDFs.`);
+
+            // Clear selection after successful download
+            selectedParticipants.clear();
+            $('.participant-checkbox').prop('checked', false);
+           // $('#selectAll').prop('checked', false);
+            $('#selectAllCheckbox').prop('checked', false);
+           // updateBulkActions();
+           updateBulkUI();
+
+            }catch (error) {
+            console.error('Bulk download error:', error);
+            alert('An error occurred during bulk download. Check console for details.');
+            btn.html(originalHtml).prop('disabled', false);
             }
 
-
-            // Show loading
-            const $btn = $('#bulkGeneratePdf');
-            const originalHtml = $btn.html();
-            $btn.html('<i class="fas fa-spinner fa-spin me-2"></i>Generating...').prop('disabled', true);
-                    // Initialize zip and counters
+         });
 
 
-
-                    const zip = new JSZip();
-                    let processedCount = 0;
-                    let failedCount = 0;
-                    const totalCount = selectedData.length;
-
-                            // Create an array to hold all promises
-                    const promises = [];
-
-                    // Process each participant with delay
-                    selectedData.forEach((participant, index) => {
-                        // Create a promise for each participant
-                        const promise = new Promise((resolve) => {
-                            setTimeout(async () => {
-                                try {
-                                    await generateParticipantPDF(participant, zip);
-                                    processedCount++;
-
-                                    // Update progress
-                                    const percent = Math.round((processedCount / totalCount) * 100);
-                                    btn.html(`<i class="fas fa-spinner fa-spin"></i> ${percent}% (${processedCount}/${totalCount})`);
-
-                                    resolve(true);
-                                } catch (error) {
-                                    console.error(`Failed for ${participant.ParticipantName}:`, error);
-                                    processedCount++;
-
-                                    // Update progress even on failure
-                                    const percent = Math.round((processedCount / totalCount) * 100);
-                                    btn.html(`<i class="fas fa-spinner fa-spin"></i> ${percent}% (${processedCount}/${totalCount})`);
-
-                                    resolve(false); // Resolve even on failure to continue
-                                }
-                            }, index * 1000); // 1 second delay between requests
-                        });
-
-                        promises.push(promise);
-                    });
-
-                    // Wait for all promises to complete
-                    Promise.all(promises).then(results => {
-                        const successCount = results.filter(r => r === true).length;
-                        const failedCount = results.filter(r => r === false).length;
-
-                        console.log(`Completed: ${successCount} succeeded, ${failedCount} failed`);
-
-                        // Generate and download ZIP
-                        generateAndDownloadZip(zip, selectedData, btn, originalHtml, successCount, failedCount);
-                    });
-
-
-
-
-                    //VVVVV--------------------
-
-            // Create form for POST
-
-
-        });
+         
 
             // Initialize
             initializeDataTable();
