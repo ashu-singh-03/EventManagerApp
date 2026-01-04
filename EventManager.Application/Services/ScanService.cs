@@ -148,7 +148,9 @@ namespace EventManager.Application.Services
                 .Replace("@Department@", participant.Department?.ToString() ?? "")
                 .Replace("@ParticipantCode@", participant.ParticipantCode?.ToString() ?? "")
                 .Replace("@Email@", participant.Email?.ToString() ?? "")
-                .Replace("@EventDate@", participant.EventDate?.ToString() ?? "");
+                .Replace("@EventDate@", participant.EventDate?.ToString() ?? "")
+                .Replace("@Country@", participant.Country?.ToString() ?? "");
+                
 
             // IMPORTANT: Replace @QR_BASE64@ with JUST the base64 string, not the whole img tag
             if (!string.IsNullOrEmpty(qrCodeBase64))
