@@ -450,6 +450,149 @@
             }
         });
 
+        async function generateAndDownloadPdfttt(htmlContent, name) {
+  return new Promise((resolve, reject) => {
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, 'text/html');
+
+      const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+      const bodyContent = doc.body.innerHTML;
+
+      const styleContainer = document.createElement('div');
+      styles.forEach(style => styleContainer.appendChild(style.cloneNode(true)));
+      document.head.appendChild(styleContainer);
+
+      // ✅ MATCH PDF SIZE EXACTLY
+      const wrapper = document.createElement('div');
+      wrapper.style.width = '95mm';
+      wrapper.style.height = '53mm';
+      wrapper.style.margin = '0';
+      wrapper.style.padding = '0';
+      wrapper.style.overflow = 'hidden';
+      wrapper.style.background = '#fff';
+      wrapper.style.position = 'fixed';
+      wrapper.style.left = '0';
+      wrapper.style.top = '0';
+
+      wrapper.innerHTML = bodyContent;
+      document.body.appendChild(wrapper);
+
+       const opt = {
+        margin: 0,
+        filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+          scale: 1,
+          useCORS: true,
+          backgroundColor: '#ffffff'
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: [95, 53],
+          orientation: 'landscape'
+        },
+        pagebreak: { mode: ['avoid-all'] }
+      };
+
+       
+
+      html2pdf()
+        .set(opt)
+        .from(wrapper)
+        .save()
+        .then(() => {
+          document.body.removeChild(wrapper);
+          document.head.removeChild(styleContainer);
+          resolve();
+        })
+        .catch(err => {
+          document.body.removeChild(wrapper);
+          document.head.removeChild(styleContainer);
+          reject(err);
+        });
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+async function generateAndDownloadPdflast(htmlContent, name) {
+  return new Promise((resolve, reject) => {
+    try {
+
+      // 1️⃣ Parse HTML string properly
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlContent, 'text/html');
+
+      const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+      const bodyContent = doc.body.innerHTML;
+
+      // 2️⃣ Inject styles into real document head
+      const styleContainer = document.createElement('div');
+      styles.forEach(style => {
+        styleContainer.appendChild(style.cloneNode(true));
+      });
+      document.head.appendChild(styleContainer);
+
+      // 3️⃣ Create A6 wrapper
+      const wrapper = document.createElement('div');
+           wrapper.style.width = '95mm'; 
+           wrapper.style.height = '53mm';
+           wrapper.style.background = '#fff';
+           wrapper.style.boxSizing = 'border-box'; 
+           wrapper.style.overflow = 'hidden';
+
+
+
+
+
+              wrapper.innerHTML = bodyContent;
+      document.body.appendChild(wrapper);
+
+      const opt = {
+        margin: 0,
+        filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
+        image: { type: 'jpeg', quality: 1 },
+        html2canvas: {
+          scale: 1,
+          useCORS: true,
+          backgroundColor: '#ffffff'
+        },
+        jsPDF: {
+          unit: 'mm',
+          format: [95, 53],
+  orientation: 'landscape'
+        },
+        pagebreak: { mode: ['css', 'avoid-all'] }
+      };
+
+      // 4️⃣ Render PDF
+      setTimeout(() => {
+        html2pdf()
+          .set(opt)
+          .from(wrapper)
+          .save()
+          .then(() => {
+            document.body.removeChild(wrapper);
+            document.head.removeChild(styleContainer);
+            resolve();
+          })
+          .catch(err => {
+            document.body.removeChild(wrapper);
+            document.head.removeChild(styleContainer);
+            reject(err);
+          });
+      }, 500);
+
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+
               async function generateAndDownloadPdf(htmlContent, name) {
             return new Promise((resolve, reject) => {
                 try {
@@ -461,6 +604,7 @@
                 elementToPrint.style.margin = '0';
                 elementToPrint.style.boxShadow = 'none';
                 elementToPrint.style.border = 'none';
+                 element.innerHTML = htmlContent;
 
 
 
@@ -508,8 +652,8 @@
                             .from(elementToPrint)
                             .save()
                             .then(() => {
-                                document.body.removeChild(elementToPrint);
-                                document.body.removeChild(element);
+                                // document.body.removeChild(elementToPrint);
+                                // document.body.removeChild(element);
                                 resolve();
                             })
                             .catch(error => {
