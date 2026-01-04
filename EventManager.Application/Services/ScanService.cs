@@ -46,10 +46,19 @@ namespace EventManager.Application.Services
         {
             try
             {
-                var arreventId = request.QrCode.Replace("/","||").Split("||");
-                eventId = Convert.ToInt32(arreventId[1]);
+                var arreventId = request.QrCode.Replace("/", "||").Split("||");
+                if (arreventId.Length > 1)
+                {
+                    int value = Convert.ToInt32(arreventId[1]);
+
+                    if (value > 0)
+                    {
+                        eventId = Convert.ToInt32(arreventId[1]);
+
+                    }
+                }
                 var participantId = arreventId[0];
-                
+
                 if (!int.TryParse(request.AccessPoint, out int accessPointId))
                     return new ScanResultDto
                     {

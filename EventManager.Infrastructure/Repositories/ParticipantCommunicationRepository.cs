@@ -23,6 +23,29 @@ namespace EventManager.Infrastructure.Repositories
                 new { p_event_id = eventId },
                 commandType: CommandType.StoredProcedure)).AsList();
         }
+        public async Task<bool> LogCardActionAsync(int eventId, int participantId, int userId, bool isPrintAction)
+        {
+            try
+            {
+                using var connection = _context.CreateConnection();
+                var result = await connection.ExecuteAsync(
+                    "USP_LogCardAction",
+                    new
+                    {
+                        p_event_id = eventId,
+                        p_participant_id = participantId,
+                        p_user_id = userId,
+                        p_action_type = isPrintAction ? 1 : 0 
+                    },
+                    commandType: CommandType.StoredProcedure);
+
+                return result > 0;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
 
         public async Task<dynamic> GetEmailConfigurationAsync(int eventId)
         {

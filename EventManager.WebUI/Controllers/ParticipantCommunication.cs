@@ -104,6 +104,28 @@ namespace EventManager.WebUI.Controllers
             }
         }
 
+
+        [HttpPost]
+        public async Task<IActionResult> LogCardAction([FromBody] LogCardActionDto request)
+        {
+            try
+            {
+                int eventId = _eventClaimService.GetEventIdFromClaim();
+                if (eventId == 0)
+                    return Json(new { success = false, message = "Invalid event" });
+
+                int userId = 1;
+
+                var success = await _service.LogCardActionAsync(eventId, request.ParticipantId, userId, request.IsPrintAction);
+
+                return Json(new { success = success });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> GenerateBulkIdCards([FromBody] List<ScanRequestDto> requests)
         {

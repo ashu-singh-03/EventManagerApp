@@ -298,6 +298,7 @@
     <div class="row mb-3">
         <div class="col-12">
             <!-- Scanner Camera -->
+            <input type="hidden"  value="0" id="hdnparticipantid"/>
             <div class="card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                     <h4 class="mb-0">
@@ -495,6 +496,27 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <script>
+
+                // Function to log action to database
+        function logToDatabase(participantId, isPrintAction) {
+            $.ajax({
+                url: '/ParticipantCommunication/LogCardAction',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    ParticipantId: participantId,
+                    IsPrintAction: isPrintAction
+                }),
+                success: function(result) {
+                    // Successfully logged to database
+                    console.log('Logged to database:', isPrintAction ? 'Print' : 'Download', 'for participant', participantId);
+                },
+                error: function() {
+                    console.error('Failed to log to database');
+                }
+            });
+        }
+
                     function printIdCard(htmlContent) {
                 if (!htmlContent || htmlContent.trim() === '') return;
 
@@ -512,7 +534,7 @@
 
                 `);
                 iframeDoc.close();
-
+                logToDatabase( $('#hdnparticipantid').val(), true);
                 iframe.onload = function() {
                     setTimeout(() => {
                         iframe.contentWindow.focus();
@@ -523,6 +545,8 @@
                         }, 1000);
                     }, 500);
                 };
+
+
             }
 
           function reprintLastIdCard() {
@@ -1308,7 +1332,6 @@
                 return data;
             }
 
-            // Process scan - FIXED: Now sends correct code format
             function processScan(code, source) {
                 debugger;
                 const accessPointId = $('#accessPoint').val();
@@ -1316,8 +1339,6 @@
                     showAlert('Please select an access point first', 'warning');
                     return;
                 }
-
-                // FIXED: Check for string "True" not boolean true
                 const selectedOption = $('#accessPoint option:selected');
                 const isPrintCenter = selectedOption.data('print-center') === "True" || 
                                       selectedOption.data('print-center') === true;
@@ -1349,11 +1370,12 @@
                     data: JSON.stringify(requestData),
                     success: function (response) {
                         console.log('Server response:', response);
-                        
+                        $('#hdnparticipantid').val(response.participantId);
                         if (response.success && response.idCardHtml && isPrintCenter) {
                             console.log('Auto-printing ID card for print center...');
                             printIdCard(response.idCardHtml);
                         }
+
                         if (response.idCardHtml) {
                             window.lastIdCardHtml = response.idCardHtml;
                         }
@@ -1387,7 +1409,6 @@
                 });
             }
 
-            // Refresh button
             $('#btnRefresh').click(function () {
                 const currentAccessPoint = $('#accessPoint').val();
                 if (currentAccessPoint && currentAccessPoint !== '0') {
@@ -1396,7 +1417,7 @@
                     showAlert('Please select an access point first', 'warning');
                 }
             });
-             // Export button
+
             $('#btnExport').click(function () {
                 if (dataTable) {
                     dataTable.button('.buttons-csv').trigger();

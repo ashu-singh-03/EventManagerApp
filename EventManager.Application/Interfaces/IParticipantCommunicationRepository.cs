@@ -11,5 +11,7 @@ namespace EventManager.Application.Interfaces
         Task<dynamic> GetEmailConfigurationAsync(int eventId);
         Task<dynamic> GetParticipantsDetailsAsync(int eventId,int participantId);
         Task<dynamic> GetParticipantEmailDataAsync(int eventId, int participantId);
+        Task<bool> LogCardActionAsync(int eventId, int participantId, int userId, bool isPrintAction);
+
     }
 }
