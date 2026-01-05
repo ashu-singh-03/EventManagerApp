@@ -11,7 +11,7 @@ namespace EventManager.Application.Interfaces
         Task<List<ParticipantCommunicationDto>> GetParticipantsWithAssignmentsAsync(int eventId);
         Task<EmailResponse> SendEmailToParticipantAsync(int eventId, int participantId);
         Task<ScanResultDto> GenerateIdCardAsync(int eventId, int participantId);
-        Task<bool> LogCardActionAsync(int eventId, int participantId, int userId, bool isPrintAction);
+        Task<int> LogCardActionAsync(int eventId, int participantId, int userId, bool isPrintAction);
 
     }
 }

@@ -36,7 +36,7 @@ namespace EventManager.Application.Services
         {
             return await _repository.GetParticipantsWithAssignmentsAsync(eventId);
         }
-        public async Task<bool> LogCardActionAsync(int eventId, int participantId, int userId, bool isPrintAction)
+        public async Task<int> LogCardActionAsync(int eventId, int participantId, int userId, bool isPrintAction)
         {
             return await _repository.LogCardActionAsync(eventId, participantId, userId, isPrintAction);
         }

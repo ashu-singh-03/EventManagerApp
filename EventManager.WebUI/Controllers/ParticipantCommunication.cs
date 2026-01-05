@@ -114,11 +114,25 @@ namespace EventManager.WebUI.Controllers
                 if (eventId == 0)
                     return Json(new { success = false, message = "Invalid event" });
 
-                int userId = 1;
+                int userId = 1; // Get from claim/session
+                int actionType = request.IsPrintAction ? 1 : 0;
 
-                var success = await _service.LogCardActionAsync(eventId, request.ParticipantId, userId, request.IsPrintAction);
+                // Log the action and get updated count
+                int updatedCount = await _service.LogCardActionAsync(eventId, request.ParticipantId, userId, request.IsPrintAction);
 
-                return Json(new { success = success });
+                if (updatedCount >= 0)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        count = updatedCount,
+                        actionType = actionType
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Failed to log action" });
+                }
             }
             catch (Exception ex)
             {
