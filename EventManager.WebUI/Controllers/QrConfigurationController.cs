@@ -79,6 +79,7 @@ namespace EventManager.WebUI.Controllers
                 duplicateScans = stats.DuplicateScans
             });
         }
+
         [HttpPost]
         public async Task<JsonResult> ProcessScan([FromBody] ScanRequestDto request)
         {
@@ -88,26 +89,33 @@ namespace EventManager.WebUI.Controllers
 
             var result = await _scanService.ProcessScanAsync(eventId, request, request.IsPrintCenter);
 
+            string idCardBase64 = null;
+            if (result.pdfBytes != null && result.pdfBytes.Length > 0) // FIXED: Changed IdCardPdf to pdfBytes
+            {
+                idCardBase64 = Convert.ToBase64String(result.pdfBytes);
+            }
+
             return Json(new
             {
-                success = result.Success, // Already set correctly by service
+                success = result.Success,
                 ticketId = result.TicketId,
                 holderName = result.HolderName,
-                status = result.Status, // Validation status from stored procedure
+                status = result.Status,
                 scanTime = result.ScanTime,
                 accessPoint = result.AccessPoint,
-                message = result.Message, // Validation message from stored procedure
+                message = result.Message,
                 participantId = result.ParticipantId,
                 isPrintCenter = result.IsPrintCenter,
-                idCardHtml = result.IdCardHtml,
-                // These are redundant but you can keep them
+                idCardBase64 = idCardBase64,
                 validationStatus = result.Status,
                 validationMessage = result.Message,
-                fullName = result.HolderName,
-                participantCode = result.TicketId
+                fullName = result.FullName,
+                participantCode = result.ParticipantCode,
+                company = result.Company,
+                country = result.Country,
             });
         }
 
-        
+
     }
 }

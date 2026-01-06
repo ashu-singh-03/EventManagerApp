@@ -25,13 +25,17 @@ namespace EventManager.Application.DTOs
             public int? ParticipantId { get; set; }
             public bool IsPrintCenter { get; set; }
             public string IdCardHtml { get; set; }
+            public string idCardBase64 { get; set; }
             public byte[] IdCardPdf { get; set; }
+            public byte[] pdfBytes { get; set; }
             public string ValidationStatus { get; set; }
             public string ValidationMessage { get; set; }
             public string FullName { get; set; }
             public string ParticipantCode { get; set; }
             public string? Error { get; set; } // Add this
             public string? QrCodeBase64 { get; set; } // Add this
+            public string Company { get; set; }  // ADD THIS
+            public string Country { get; set; }
         }
 
         public class ScanStatisticsDto

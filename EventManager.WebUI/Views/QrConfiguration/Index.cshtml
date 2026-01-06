@@ -497,57 +497,72 @@
 
     <script>
 
-                // Function to log action to database
-        function logToDatabase(participantId, isPrintAction) {
+               function logToDatabase(participantId, isPrintAction) {
+                   debugger;
+            const idValue = parseInt(participantId);
+
+            if (isNaN(idValue) || idValue <= 0) {
+                console.error('Invalid Participant ID, skipping log.');
+                return;
+            }
+
             $.ajax({
                 url: '/ParticipantCommunication/LogCardAction',
                 type: 'POST',
-                contentType: 'application/json',
+                contentType: 'application/json; charset=utf-8',
                 data: JSON.stringify({
-                    ParticipantId: participantId,
-                    IsPrintAction: isPrintAction
+                    ParticipantId: idValue,
+                    IsPrintAction: !!isPrintAction
                 }),
                 success: function(result) {
-                    // Successfully logged to database
-                    console.log('Logged to database:', isPrintAction ? 'Print' : 'Download', 'for participant', participantId);
+                    console.log('Log Success:', result);
                 },
-                error: function() {
-                    console.error('Failed to log to database');
+                error: function(xhr) {
+                    console.error('Log Error:', xhr.status);
                 }
             });
         }
 
-                    function printIdCard(htmlContent) {
-                if (!htmlContent || htmlContent.trim() === '') return;
 
-                console.log('Auto-printing ID card...');
+              function printIdCard(base64Content) {
+            if (!base64Content || base64Content.trim() === '') return;
 
-                const iframe = document.createElement('iframe');
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
+            console.log('Auto-printing ID card PDF...');
 
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                iframeDoc.open();
-                iframeDoc.write(`
-
-                        ${htmlContent}
-
-                `);
-                iframeDoc.close();
-                logToDatabase( $('#hdnparticipantid').val(), true);
-                iframe.onload = function() {
-                    setTimeout(() => {
-                        iframe.contentWindow.focus();
-                        iframe.contentWindow.print();
-
-                        setTimeout(() => {
-                            document.body.removeChild(iframe);
-                        }, 1000);
-                    }, 500);
-                };
-
-
+            // 1. Convert Base64 to Blob
+            const byteCharacters = atob(base64Content);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
             }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            const blobUrl = URL.createObjectURL(blob);
+
+            // 2. Create hidden iframe
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = blobUrl;
+            document.body.appendChild(iframe);
+
+            // 3. Log the action (using the corrected parseInt logic)
+            logToDatabase(parseInt($('#hdnparticipantid').val()), true);
+
+            // 4. Print when loaded
+            iframe.onload = function() {
+                setTimeout(() => {
+                    iframe.contentWindow.focus();
+                    iframe.contentWindow.print();
+
+                    // Cleanup memory
+                    setTimeout(() => {
+                        document.body.removeChild(iframe);
+                        URL.revokeObjectURL(blobUrl);
+                    }, 2000);
+                }, 500);
+            };
+        }
+
 
           function reprintLastIdCard() {
             if (window.lastIdCardHtml && window.lastIdCardHtml.trim() !== '') {
@@ -1331,83 +1346,88 @@
                 console.log('No dash found, returning original:', data);
                 return data;
             }
+       function processScan(code, source) {
+    debugger;
+    const accessPointId = $('#accessPoint').val();
+    if (!accessPointId || accessPointId === '0') {
+        showAlert('Please select an access point first', 'warning');
+        return;
+    }
+    const selectedOption = $('#accessPoint option:selected');
+    const isPrintCenter = selectedOption.data('print-center') === "True" ||
+                          selectedOption.data('print-center') === true;
 
-            function processScan(code, source) {
-                debugger;
-                const accessPointId = $('#accessPoint').val();
-                if (!accessPointId || accessPointId === '0') {
-                    showAlert('Please select an access point first', 'warning');
-                    return;
-                }
-                const selectedOption = $('#accessPoint option:selected');
-                const isPrintCenter = selectedOption.data('print-center') === "True" || 
-                                      selectedOption.data('print-center') === true;
+    console.log('Print Center Check:', {
+        dataValue: selectedOption.data('print-center'),
+        isPrintCenter: isPrintCenter,
+        selectedText: selectedOption.text()
+    });
 
-                console.log('Print Center Check:', {
-                    dataValue: selectedOption.data('print-center'),
-                    isPrintCenter: isPrintCenter,
-                    selectedText: selectedOption.text()
-                });
+    if (source === 'scanner') {
+        $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Processing scan...');
+    } else if (source === 'manual') {
+        $('#manualStatus').html('<span class="text-warning">Processing...</span>');
+    }
 
-                if (source === 'scanner') {
-                    $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Processing scan...');
-                } else if (source === 'manual') {
-                    $('#manualStatus').html('<span class="text-warning">Processing...</span>');
-                }
+    const requestData = {
+        QrCode: code,
+        AccessPoint: accessPointId,
+        IsPrintCenter: isPrintCenter
+    };
 
-                const requestData = {
-                    QrCode: code,
-                    AccessPoint: accessPointId,
-                    IsPrintCenter: isPrintCenter
-                };
+    console.log('Sending to server:', requestData);
 
-                console.log('Sending to server:', requestData);
+             $.ajax({
+                url: '/QrConfiguration/ProcessScan',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
+                success: function (response) {
+                    debugger;
+                    console.log('Server response:', response);
+                    $('#hdnparticipantid').val(response.participantId);
 
-                $.ajax({
-                    url: '/QrConfiguration/ProcessScan',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(requestData),
-                    success: function (response) {
-                        console.log('Server response:', response);
-                        $('#hdnparticipantid').val(response.participantId);
-                        if (response.success && response.idCardHtml && isPrintCenter) {
-                            console.log('Auto-printing ID card for print center...');
-                            printIdCard(response.idCardHtml);
-                        }
-
-                        if (response.idCardHtml) {
-                            window.lastIdCardHtml = response.idCardHtml;
-                        }
-
-                        showScanResultPopup(response,isPrintCenter);
-
-                        if (response.success) {
-                            if (response.scanData) {
-                                addNewScanToTable(response.scanData);
-                            }
-                            loadStatistics(accessPointId);
-                        }
-
-
-                        if (source === 'manual') {
-                            $('#manualStatus').html('<span class="text-success">✓ Submitted</span>');
-                            setTimeout(() => $('#manualStatus').html(''), 2000);
-                        } else {
-                            $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
-                        }
-                    },
-                    error: function (xhr, status, error) {
-                        console.error('AJAX Error:', error);
-                        showAlert('Network error. Please try again.', 'danger');
-                        if (source === 'manual') {
-                            $('#manualStatus').html('<span class="text-danger">✗ Failed</span>');
-                        } else {
-                            $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
-                        }
+                    // Handle PDF printing if it's a print center scan
+                    if (response.success && response.idCardBase64 && isPrintCenter) {
+                        console.log('Auto-printing ID card for print center...');
+                        printIdCard(response.idCardBase64);
                     }
-                });
+
+                    // Store for later use
+                    if (response.idCardBase64) {
+                        window.lastIdCardBase64 = response.idCardBase64; // Store as base64
+                    }
+
+                    // Make sure to pass the idCardBase64 to the popup function
+                    response.idCardBase64 = response.idCardBase64; // Ensure it's passed
+
+                    showScanResultPopup(response, isPrintCenter);
+
+            if (response.success) {
+                if (response.scanData) {
+                    addNewScanToTable(response.scanData);
+                }
+                loadStatistics(accessPointId);
             }
+
+            if (source === 'manual') {
+                $('#manualStatus').html('<span class="text-success">✓ Submitted</span>');
+                setTimeout(() => $('#manualStatus').html(''), 2000);
+            } else {
+                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+            }
+        },
+        error: function (xhr, status, error) {
+            console.error('AJAX Error:', error);
+            showAlert('Network error. Please try again.', 'danger');
+            if (source === 'manual') {
+                $('#manualStatus').html('<span class="text-danger">✗ Failed</span>');
+            } else {
+                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+            }
+        }
+    });
+}
 
             $('#btnRefresh').click(function () {
                 const currentAccessPoint = $('#accessPoint').val();

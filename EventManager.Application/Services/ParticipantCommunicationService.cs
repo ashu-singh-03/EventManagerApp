@@ -264,12 +264,11 @@ namespace EventManager.Application.Services
         }
 
 
-
         public async Task<ScanResultDto> GenerateIdCardAsync(int eventId, int participantId)
         {
             try
             {
-                // 1. Get participant data from stored procedure
+                // 1. Get participant data
                 var participantData = await _repository.GetParticipantsDetailsAsync(eventId, participantId);
 
                 if (participantData == null)
@@ -277,17 +276,21 @@ namespace EventManager.Application.Services
                     return new ScanResultDto { Success = false, ValidationMessage = "Participant not found" };
                 }
 
-                // 2. Generate QR Code Value (Using the Prefixed Code from SP)
-                string qrCodeValue = participantData.ParticipantCode;
+                // 2. Prepare the combined string (This is what you want inside the QR)
+                string qrData = participantData.ParticipantCode + "||" + eventId;
 
-                // 3. Generate the PDF Byte Array
-                byte[] pdfBytes = await GenerateIDCard(participantData, qrCodeValue);
+                // 3. Generate QR Code Base64 (For UI/Preview)
+                var qrCodeBase64 = GenerateQRCode(participantData.ParticipantCode, eventId);
 
-                // 4. Create response
+                // 4. Generate the PDF (PASSING qrData instead of just participantCode)
+                byte[] pdfBytes = await GenerateIDCard(participantData, qrData);
+
+                // 5. Create response
                 return new ScanResultDto
                 {
                     Success = true,
                     IdCardPdf = pdfBytes,
+                    QrCodeBase64 = qrCodeBase64, // Added this so your frontend can use it
                     Message = "ID card generated successfully",
                     ParticipantId = participantId,
                     FullName = participantData.FullName ?? "",
@@ -306,8 +309,6 @@ namespace EventManager.Application.Services
                 };
             }
         }
-
-
         public async Task<byte[]> GenerateIDCard(dynamic participantData, string qrCodeValue)
         {
             double pointsPerMm = 72d / 25.4d;
@@ -316,6 +317,8 @@ namespace EventManager.Application.Services
             float contentWidth = (float)(95f * pointsPerMm);
             float contentHeight = (float)(53f * pointsPerMm);
             float qrSize = (float)(20f * pointsPerMm);
+
+            // Position of the main box
             float startY = (float)(25f * pointsPerMm);
             float startX = (a6Page.GetWidth() - contentWidth) / 2;
 
@@ -331,7 +334,7 @@ namespace EventManager.Application.Services
                     Document document = new Document(pdfDocument);
                     document.SetMargins(0, 0, 0, 0);
 
-                    // Container for the ID Card
+                    // --- 1. THE MAIN CONTENT BOX ---
                     Div container = new Div()
                         .SetWidth(contentWidth)
                         .SetHeight(contentHeight)
@@ -340,7 +343,7 @@ namespace EventManager.Application.Services
 
                     Table layoutTable = new Table(1).SetWidth(contentWidth).SetHeight(contentHeight);
 
-                    // 1. Participant Name & Company
+                    // Top Section: Name & Company
                     Div topText = new Div().SetTextAlignment(TextAlignment.CENTER).SetPaddingTop(5);
                     topText.Add(new Paragraph(participantData.FullName ?? "N/A")
                         .SetFont(fontBold).SetFontSize(23).SetMargin(0).SetMultipliedLeading(1.0f));
@@ -349,11 +352,12 @@ namespace EventManager.Application.Services
 
                     layoutTable.AddCell(new Cell().Add(topText).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.TOP));
 
-                    // 2. Country & QR Code
+                    // Bottom Section: Country & QR Code
                     Div bottomArea = new Div().SetTextAlignment(TextAlignment.CENTER);
                     bottomArea.Add(new Paragraph(participantData.Country ?? "")
                         .SetFont(fontRegular).SetFontSize(13).SetMarginBottom(2));
 
+                    // Generate QR Code Object
                     BarcodeQRCode qrCode = new BarcodeQRCode(qrCodeValue ?? "Empty");
                     Image qrImage = new Image(qrCode.CreateFormXObject(pdfDocument))
                         .SetWidth(qrSize).SetHeight(qrSize)
