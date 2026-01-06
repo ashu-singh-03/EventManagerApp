@@ -15,5 +15,7 @@ namespace EventManager.Application.DTOs
         public string TicketTypes { get; set; }
         public string AccessPoints { get; set; }
         public string? ParticipantCode { get; set; }
+        public int PrintCount { get; set; }
+        public int DownloadCount { get; set; }
     }
 }
