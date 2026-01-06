@@ -69,17 +69,11 @@ namespace EventManager.WebUI.Controllers
             try
             {
                 int eventId = _eventClaimService.GetEventIdFromClaim();
-                if (eventId == 0)
-                    return Json(new { success = false, message = "Invalid event" });
+                if (eventId == 0) return Json(new { success = false, message = "Invalid event" });
 
-                // Convert QR code to participant ID (assuming QR code contains the participant ID)
                 if (!int.TryParse(request.QrCode, out int participantId))
                 {
-                    return Json(new
-                    {
-                        success = false,
-                        message = "Invalid QR code format. Could not parse participant ID."
-                    });
+                    return Json(new { success = false, message = "Invalid QR code format." });
                 }
 
                 var result = await _service.GenerateIdCardAsync(eventId, participantId);
@@ -87,7 +81,7 @@ namespace EventManager.WebUI.Controllers
                 return Json(new
                 {
                     success = result.Success,
-                    idCardHtml = result.IdCardHtml,  // Added this
+                    idCardPdfBase64 = result.IdCardPdf != null ? Convert.ToBase64String(result.IdCardPdf) : null,
                     message = result.ValidationMessage,
                     participantId = result.ParticipantId,
                     fullName = result.FullName,
@@ -96,11 +90,7 @@ namespace EventManager.WebUI.Controllers
             }
             catch (Exception ex)
             {
-                return Json(new
-                {
-                    success = false,
-                    message = $"Error generating ID card: {ex.Message}"
-                });
+                return Json(new { success = false, message = $"Error: {ex.Message}" });
             }
         }
 

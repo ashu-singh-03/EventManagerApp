@@ -1,12 +1,20 @@
 ﻿using EventManager.Application.DTOs;
 using EventManager.Application.Interfaces;
+using iText.Barcodes;
+using iText.Kernel.Font;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout.Borders;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.Extensions.Configuration;
 using QRCoder;
-using System.Net;
-using System.Net.Mail;
-using System.Net.Sockets;
 using System.Text;
 using static EventManager.Application.DTOs.ScanDtos;
+using iText.Kernel.Colors;           
+using iText.IO.Font.Constants;      
+using Document = iText.Layout.Document;
+using Border = iText.Layout.Borders.Border;
 
 namespace EventManager.Application.Services
 {
@@ -199,7 +207,7 @@ namespace EventManager.Application.Services
             Console.WriteLine($"QR code saved. Expected text: '{expectedText}'");
             Console.WriteLine("Scan this file with iPhone Camera app to test.");
         }
-        public async Task<ScanResultDto> GenerateIdCardAsync(int eventId, int participantId)
+        public async Task<ScanResultDto> GenerateIdCardAsyncOld(int eventId, int participantId)
         {
             try
             {
@@ -255,6 +263,112 @@ namespace EventManager.Application.Services
             }
         }
 
+
+
+        public async Task<ScanResultDto> GenerateIdCardAsync(int eventId, int participantId)
+        {
+            try
+            {
+                // 1. Get participant data from stored procedure
+                var participantData = await _repository.GetParticipantsDetailsAsync(eventId, participantId);
+
+                if (participantData == null)
+                {
+                    return new ScanResultDto { Success = false, ValidationMessage = "Participant not found" };
+                }
+
+                // 2. Generate QR Code Value (Using the Prefixed Code from SP)
+                string qrCodeValue = participantData.ParticipantCode;
+
+                // 3. Generate the PDF Byte Array
+                byte[] pdfBytes = await GenerateIDCard(participantData, qrCodeValue);
+
+                // 4. Create response
+                return new ScanResultDto
+                {
+                    Success = true,
+                    IdCardPdf = pdfBytes,
+                    Message = "ID card generated successfully",
+                    ParticipantId = participantId,
+                    FullName = participantData.FullName ?? "",
+                    ParticipantCode = participantData.ParticipantCode ?? "",
+                    ValidationStatus = "VALID",
+                    ScanTime = DateTime.Now,
+                    IsPrintCenter = true
+                };
+            }
+            catch (Exception ex)
+            {
+                return new ScanResultDto
+                {
+                    Success = false,
+                    ValidationMessage = $"Failed to generate ID card: {ex.Message}"
+                };
+            }
+        }
+
+
+        public async Task<byte[]> GenerateIDCard(dynamic participantData, string qrCodeValue)
+        {
+            double pointsPerMm = 72d / 25.4d;
+            PageSize a6Page = PageSize.A6;
+
+            float contentWidth = (float)(95f * pointsPerMm);
+            float contentHeight = (float)(53f * pointsPerMm);
+            float qrSize = (float)(20f * pointsPerMm);
+            float startY = (float)(25f * pointsPerMm);
+            float startX = (a6Page.GetWidth() - contentWidth) / 2;
+
+            PdfFont fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont fontRegular = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+            using (MemoryStream pdfStream = new MemoryStream())
+            {
+                using (PdfWriter pdfWriter = new PdfWriter(pdfStream))
+                using (PdfDocument pdfDocument = new PdfDocument(pdfWriter))
+                {
+                    pdfDocument.SetDefaultPageSize(a6Page);
+                    Document document = new Document(pdfDocument);
+                    document.SetMargins(0, 0, 0, 0);
+
+                    // Container for the ID Card
+                    Div container = new Div()
+                        .SetWidth(contentWidth)
+                        .SetHeight(contentHeight)
+                        .SetFixedPosition(startX, startY, contentWidth)
+                        .SetBorder(new SolidBorder(ColorConstants.BLACK, 1f));
+
+                    Table layoutTable = new Table(1).SetWidth(contentWidth).SetHeight(contentHeight);
+
+                    // 1. Participant Name & Company
+                    Div topText = new Div().SetTextAlignment(TextAlignment.CENTER).SetPaddingTop(5);
+                    topText.Add(new Paragraph(participantData.FullName ?? "N/A")
+                        .SetFont(fontBold).SetFontSize(23).SetMargin(0).SetMultipliedLeading(1.0f));
+                    topText.Add(new Paragraph(participantData.Company ?? "")
+                        .SetFont(fontBold).SetFontSize(15).SetMargin(0));
+
+                    layoutTable.AddCell(new Cell().Add(topText).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.TOP));
+
+                    // 2. Country & QR Code
+                    Div bottomArea = new Div().SetTextAlignment(TextAlignment.CENTER);
+                    bottomArea.Add(new Paragraph(participantData.Country ?? "")
+                        .SetFont(fontRegular).SetFontSize(13).SetMarginBottom(2));
+
+                    BarcodeQRCode qrCode = new BarcodeQRCode(qrCodeValue ?? "Empty");
+                    Image qrImage = new Image(qrCode.CreateFormXObject(pdfDocument))
+                        .SetWidth(qrSize).SetHeight(qrSize)
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                    bottomArea.Add(qrImage);
+
+                    layoutTable.AddCell(new Cell().Add(bottomArea).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.BOTTOM).SetPaddingBottom(2));
+
+                    container.Add(layoutTable);
+                    document.Add(container);
+                    document.Close();
+                }
+                return pdfStream.ToArray();
+            }
+        }
         private string ReplaceIdCardPlaceholders(string template, dynamic participant, string qrCodeBase64 = null)
         {
             if (string.IsNullOrEmpty(template))

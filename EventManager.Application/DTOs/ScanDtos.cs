@@ -25,7 +25,7 @@ namespace EventManager.Application.DTOs
             public int? ParticipantId { get; set; }
             public bool IsPrintCenter { get; set; }
             public string IdCardHtml { get; set; }
-
+            public byte[] IdCardPdf { get; set; }
             public string ValidationStatus { get; set; }
             public string ValidationMessage { get; set; }
             public string FullName { get; set; }

@@ -333,107 +333,93 @@
                         });
                     });
 
-                    $(document).on('click', '.print-btn', function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
+                    // 1. Consolidated Helper Function
+        function handlePdfFile(base64Data, fileName, shouldPrint) {
+            // Convert Base64 to Binary Blob
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/pdf' });
+            const fileURL = URL.createObjectURL(blob);
 
-                                const btn = $(this);
-                                const id = btn.data('id');
-                                const name = btn.data('name');
+            if (shouldPrint) {
+                // --- PRINT LOGIC ---
+                // Create a hidden iframe to hold the PDF for printing
+                const printIframe = document.createElement('iframe');
+                printIframe.style.display = 'none';
+                printIframe.src = fileURL;
+                document.body.appendChild(printIframe);
 
-                                // Show loading
-                                const original = btn.html();
-                                btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+                printIframe.onload = function() {
+                    setTimeout(() => {
+                        printIframe.contentWindow.focus();
+                        printIframe.contentWindow.print();
+                        // Clean up iframe after print dialog opens
+                        setTimeout(() => document.body.removeChild(printIframe), 2000);
+                    }, 500);
+                };
+            } else {
+                // --- DOWNLOAD LOGIC ---
+                const link = document.createElement('a');
+                link.href = fileURL;
+                link.download = `${fileName.replace(/\s+/g, '_')}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
 
-                                // 1. Log to database and update counter
-                                logToDatabase(id, true, function(updatedCount) {
-                                    console.log(`Print count updated to: ${updatedCount}`);
+            // Free up memory
+            setTimeout(() => URL.revokeObjectURL(fileURL), 10000);
+        }
 
-                                    // 2. Print logic
-                                    $.ajax({
-                                        url: '/ParticipantCommunication/GenerateIdCard',
-                                        type: 'POST',
-                                        contentType: 'application/json',
-                                        data: JSON.stringify({
-                                            QrCode: id.toString(),
-                                            AccessPoint: "Print Center",
-                                            IsPrintCenter: true
-                                        }),
-                                        success: function(res) {
-                                            if (res.success && res.idCardHtml) {
-                                                // Print function
-                                                const iframe = document.createElement('iframe');
-                                                iframe.style.display = 'none';
-                                                document.body.appendChild(iframe);
-                                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-                                                iframeDoc.open();
-                                                iframeDoc.write(res.idCardHtml);
-                                                iframeDoc.close();
-                                                iframe.onload = function() {
-                                                    setTimeout(() => {
-                                                        iframe.contentWindow.focus();
-                                                        iframe.contentWindow.print();
-                                                        setTimeout(() => document.body.removeChild(iframe), 1000);
-                                                    }, 500);
-                                                };
-                                            } else {
-                                                alert('Error generating ID card');
-                                            }
-                                        },
-                                        error: function() {
-                                            alert('Failed to generate ID card');
-                                        },
-                                        complete: function() {
-                                            setTimeout(() => {
-                                                btn.html(original).prop('disabled', false);
-                                            }, 1000);
-                                        }
-                                    });
-                                });
-                            });
-                    $(document).on('click', '.download-btn', function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
+        // 2. Unified Event Listener for BOTH buttons
+        $(document).on('click', '.print-btn, .download-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-                                const btn = $(this);
-                                const id = btn.data('id');
-                                const name = btn.data('name');
+            const btn = $(this);
+            const isPrintAction = btn.hasClass('print-btn'); // Detect which button was clicked
+            const id = btn.data('id');
+            const name = btn.data('name');
+            const originalHtml = btn.html();
 
-                                // Show loading
-                                const original = btn.html();
-                                btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+            // UI Loading State
+            btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-                                // 1. Log to database and update counter
-                                logToDatabase(id, false, function(updatedCount) {
-                                    console.log(`Download count updated to: ${updatedCount}`);
+            // Step 1: Log to Database
+            logToDatabase(id, isPrintAction, function(updatedCount) {
 
-                                    // 2. Download logic
-                                    $.ajax({
-                                        url: '/ParticipantCommunication/GenerateIdCard',
-                                        type: 'POST',
-                                        contentType: 'application/json',
-                                        data: JSON.stringify({
-                                            QrCode: id.toString(),
-                                            IsPrintCenter: true
-                                        }),
-                                        success: function(res) {
-                                            if (res.success && res.idCardHtml) {
-                                                // Generate and download PDF
-                                                generateAndDownloadPdf(res.idCardHtml, name);
-                                            } else {
-                                                alert('Error generating ID card');
-                                            }
-                                        },
-                                        error: function() {
-                                            alert('Failed to generate ID card');
-                                        },
-                                        complete: function() {
-                                            btn.html(original).prop('disabled', false);
-                                        }
-                                    });
-                                });
-                            });
-
+                // Step 2: Ajax Call to your [HttpPost] GenerateIdCard
+                $.ajax({
+                    url: '/ParticipantCommunication/GenerateIdCard',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify({
+                        QrCode: id.toString(),
+                        IsPrintCenter: true,
+                        AccessPoint: isPrintAction ? "Print Center" : "Download"
+                    }),
+                    success: function(res) {
+                        if (res.success && res.idCardPdfBase64) {
+                            // Step 3: Use helper to Print or Download
+                            handlePdfFile(res.idCardPdfBase64, `ID_Card_${name}`, isPrintAction);
+                        } else {
+                            alert(res.message || 'Error generating ID card');
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to connect to the server');
+                    },
+                    complete: function() {
+                        // Reset button state
+                        btn.html(originalHtml).prop('disabled', false);
+                    }
+                });
+            });
+        });
                     function logToDatabase(participantId, isPrintAction, callback) {
                     $.ajax({
                         url: '/ParticipantCommunication/LogCardAction',
@@ -663,8 +649,8 @@
                                     .from(elementToPrint)
                                     .save()
                                     .then(() => {
-                                        // document.body.removeChild(elementToPrint);
-                                        // document.body.removeChild(element);
+                                        document.body.removeChild(elementToPrint);
+                                        document.body.removeChild(element);
                                         resolve();
                                     })
                                     .catch(error => {
@@ -683,38 +669,56 @@
                 }
 
 
-                    async function downloadSinglePDF(id, name) {
-                    try {
-                        const response = await fetch('/ParticipantCommunication/GenerateIdCard', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                QrCode: id.toString(),
-                                IsPrintCenter: true
-                            })
-                        });
+                       async function downloadSinglePDF(id, name) {
+            try {
+                const response = await fetch('/ParticipantCommunication/GenerateIdCard', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        QrCode: id.toString(),
+                        IsPrintCenter: true
+                    })
+                });
 
-                        const result = await response.json();
+                const result = await response.json();
 
-                        if (!result.success) {
-                            throw new Error(result.message || 'Failed to generate ID card');
-                        }
-
-                        // Generate PDF
-                        await generateAndDownloadPdf(result.idCardHtml, name);
-
-                        // Add a small delay between downloads to prevent overwhelming the server
-                        await new Promise(resolve => setTimeout(resolve, 500));
-
-                        return true;
-
-                    } catch (error) {
-                        console.error(`Error downloading PDF for ${name}:`, error);
-                        throw error;
-                    }
+                if (!result.success) {
+                    throw new Error(result.message || 'Failed to generate ID card');
                 }
+
+                // FIX: Use idCardPdfBase64 like the single download button
+                if (result.success && result.idCardPdfBase64) {
+                    // Create a hidden link and trigger download
+                    const byteCharacters = atob(result.idCardPdfBase64);
+                    const byteNumbers = new Array(byteCharacters.length);
+                    for (let i = 0; i < byteCharacters.length; i++) {
+                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    }
+                    const byteArray = new Uint8Array(byteNumbers);
+                    const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+                    const link = document.createElement('a');
+                    link.href = window.URL.createObjectURL(blob);
+                    link.download = `ID_Card_${name.replace(/\s+/g, '_')}.pdf`;
+                    link.click();
+
+                    // Clean up
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(link.href);
+                    }, 100);
+
+                    return true;
+                } else {
+                    throw new Error(result.message || 'No PDF data received');
+                }
+
+            } catch (error) {
+                console.error(`Error downloading PDF for ${name}:`, error);
+                throw error;
+            }
+        }
                     $('#bulkGeneratePdf').on('click', async function(e) {
                         e.preventDefault();
 
