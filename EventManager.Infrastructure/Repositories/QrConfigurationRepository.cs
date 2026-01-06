@@ -28,7 +28,7 @@ namespace EventManager.Infrastructure.Repositories
                 commandType: CommandType.StoredProcedure);
         }
 
-        public async Task<dynamic> GetQRDetailsAsync(int eventId, string participantsCode, int accessPointId, int scannedByUserId)
+        public async Task<dynamic> GetQRDetailsAsync(int eventId, string participantsCode, int accessPointId, int scannedByUserId, bool isReprint = false)
         {
             using var connection = _context.CreateConnection();
             return await connection.QueryFirstOrDefaultAsync<dynamic>(
@@ -38,7 +38,8 @@ namespace EventManager.Infrastructure.Repositories
                     p_event_id = eventId,
                     p_participants_code = participantsCode,
                     p_access_point_id = accessPointId,
-                    p_scanned_by = scannedByUserId
+                    p_scanned_by = scannedByUserId,
+                    p_is_reprint = isReprint
                 },
                 commandType: CommandType.StoredProcedure);
         }

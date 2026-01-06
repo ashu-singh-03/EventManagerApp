@@ -52,7 +52,7 @@ namespace EventManager.Application.Services
                 return new ScanStatisticsDto();
             }
         }
-        public async Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false)
+        public async Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false, bool isReprint = false)
         {
             try
             {
@@ -60,7 +60,6 @@ namespace EventManager.Application.Services
                 if (arreventId.Length > 1)
                 {
                     int value = Convert.ToInt32(arreventId[1]);
-
                     if (value > 0)
                     {
                         eventId = Convert.ToInt32(arreventId[1]);
@@ -74,19 +73,18 @@ namespace EventManager.Application.Services
                         Success = false,
                         Status = "INVALID",
                         Message = "Invalid access point",
-                        ScanTime = DateTime.UtcNow,
-                        Error = "Invalid access point format" // Added Error property
+                        ScanTime = DateTime.UtcNow
                     };
 
-                // Hardcoded user ID for now
                 int scannedByUserId = 1;
 
-                // Get QR details from stored procedure
+                // Get QR details from stored procedure WITH isReprint parameter
                 var participant = await _repository.GetQRDetailsAsync(
                     eventId,
                     participantId,
                     accessPointId,
-                    scannedByUserId
+                    scannedByUserId,
+                    isReprint  // PASS isReprint parameter
                 );
 
                 if (participant == null)
@@ -96,23 +94,24 @@ namespace EventManager.Application.Services
                         Success = false,
                         Status = "ERROR",
                         Message = "Database error occurred",
-                        ScanTime = DateTime.UtcNow,
-                        Error = "Participant data not found" // Added Error property
+                        ScanTime = DateTime.UtcNow
                     };
                 }
 
-                // Get validation status from stored procedure result
                 string validationStatus = participant.ValidationStatus?.ToUpper() ?? "UNKNOWN";
                 string validationMessage = participant.ValidationMessage ?? "No validation message";
-
-                // IMPORTANT: Check if scan is valid based on validation status
-                bool isScanValid = validationStatus == "VALID";  // Only "VALID" means success
+                bool isScanValid = validationStatus == "VALID";
 
                 byte[] pdfBytes = null;
-                if (isPrintCenter && isScanValid)
+                string qrCodeBase64 = null;
+
+                if (isPrintCenter)
                 {
-                    // Generate QR code data
-                    var qrData = $"{participantId}/{eventId}";
+                    // Generate QR code image as base64 for frontend display
+                    qrCodeBase64 = GenerateQRCode(participantId, eventId);
+
+                    // Create QR data string for PDF generation
+                    var qrData = $"{participantId}||{eventId}";
 
                     // Generate ID card PDF
                     pdfBytes = await GenerateIDCard(participant, qrData);
@@ -121,12 +120,13 @@ namespace EventManager.Application.Services
                 return new ScanResultDto
                 {
                     Success = isScanValid,
-                    Status = validationStatus,  // "VALID", "INVALID", "INVALID_ACCESS", "DUPLICATE"
-                    Message = validationMessage,  // Message from stored procedure
+                    Status = validationStatus,
+                    Message = validationMessage,
                     TicketId = participant.ParticipantCode,
+                    QrCodeBase64 = qrCodeBase64, // ADDED: QR image for frontend
                     HolderName = participant.FullName,
-                    FullName = participant.FullName, // ADD THIS LINE
-                    ParticipantCode = participant.ParticipantCode, // ADD THIS LINE
+                    FullName = participant.FullName,
+                    ParticipantCode = participant.ParticipantCode,
                     Company = participant.Company,
                     Country = participant.Country,
                     ScanTime = DateTime.UtcNow,
@@ -135,8 +135,7 @@ namespace EventManager.Application.Services
                     IsPrintCenter = isPrintCenter,
                     pdfBytes = pdfBytes,
                     ValidationStatus = validationStatus,
-                    ValidationMessage = validationMessage,
-                    Error = null // ADD THIS LINE (no error)
+                    ValidationMessage = validationMessage
                 };
             }
             catch (Exception ex)
@@ -146,8 +145,7 @@ namespace EventManager.Application.Services
                     Success = false,
                     Status = "ERROR",
                     Message = ex.Message,
-                    ScanTime = DateTime.UtcNow,
-                    Error = ex.Message // ADD THIS LINE
+                    ScanTime = DateTime.UtcNow
                 };
             }
         }

@@ -9,7 +9,7 @@ namespace EventManager.Application.Interfaces
     public interface IScanRepository
     {
         Task <dynamic> GetPassConfigurationAsync(int eventId);
-        Task<dynamic> GetQRDetailsAsync(int eventId, string participantId, int accesspointid, int scannedByUserId);
+        Task<dynamic> GetQRDetailsAsync(int eventId, string participantId, int accesspointid, int scannedByUserId,bool isReprint);
         Task<List<object>> GetScanLogAsync(int eventId, int accesspointid);
 
         Task<ScanStatisticsDto> GetScanStatisticsAsync(int eventId, int accesspointid);

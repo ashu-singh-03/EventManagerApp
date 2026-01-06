@@ -19,17 +19,15 @@ namespace EventManager.WebUI.Controllers
             _scanService = scanService;
             _eventClaimService = eventClaimService;
         }
-
         [HttpGet]
         public IActionResult Index()
         {
             int eventId = _eventClaimService.GetEventIdFromClaim();
             if (eventId == 0) return BadRequest("Invalid event");
 
-            ViewBag.EventId = eventId;
+            ViewBag.EventId = eventId;  // This is already set
             return View();
         }
-
 
         [HttpGet]
         public async Task<IActionResult> AdminScanLog(int? accessPointId = null)
@@ -79,7 +77,6 @@ namespace EventManager.WebUI.Controllers
                 duplicateScans = stats.DuplicateScans
             });
         }
-
         [HttpPost]
         public async Task<JsonResult> ProcessScan([FromBody] ScanRequestDto request)
         {
@@ -87,10 +84,18 @@ namespace EventManager.WebUI.Controllers
             if (eventId == 0)
                 return Json(new { success = false, message = "Invalid event" });
 
-            var result = await _scanService.ProcessScanAsync(eventId, request, request.IsPrintCenter);
+            // Check if this is a reprint request
+            bool isReprint = HttpContext.Request.Query["isReprint"] == "true";
+
+            var result = await _scanService.ProcessScanAsync(
+                eventId,
+                request,
+                request.IsPrintCenter,
+                isReprint // PASS isReprint parameter
+            );
 
             string idCardBase64 = null;
-            if (result.pdfBytes != null && result.pdfBytes.Length > 0) // FIXED: Changed IdCardPdf to pdfBytes
+            if (result.pdfBytes != null && result.pdfBytes.Length > 0)
             {
                 idCardBase64 = Convert.ToBase64String(result.pdfBytes);
             }
@@ -113,6 +118,7 @@ namespace EventManager.WebUI.Controllers
                 participantCode = result.ParticipantCode,
                 company = result.Company,
                 country = result.Country,
+                isReprint = isReprint  // Return for debugging
             });
         }
 

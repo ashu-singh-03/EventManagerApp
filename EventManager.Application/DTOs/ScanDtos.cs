@@ -11,6 +11,8 @@ namespace EventManager.Application.DTOs
             public string AccessPoint { get; set; }
             public bool IsPrintCenter { get; set; }
             public string ParticipantName { get; set; }
+            public bool IsReprint { get; set; } = false; // Add this property
+
         }
 
         public class ScanResultDto

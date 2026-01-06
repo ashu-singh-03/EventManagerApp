@@ -298,6 +298,8 @@
     <div class="row mb-3">
         <div class="col-12">
             <!-- Scanner Camera -->
+            <input type="hidden" id="hdnEventId" value="@ViewBag.EventId" />
+
             <input type="hidden"  value="0" id="hdnparticipantid"/>
             <div class="card">
                 <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
@@ -343,9 +345,6 @@
                         </button>
                         <button class="btn btn-danger px-4" id="btnStop" disabled>
                             <i class="fas fa-stop me-2"></i>Stop
-                        </button>
-                        <button class="btn btn-warning px-4" id="btnTest" disabled>
-                            <i class="fas fa-bolt me-2"></i>Test
                         </button>
                     </div>
                 </div>
@@ -563,14 +562,68 @@
             };
         }
 
+                  function reprintLastIdCard() {
+            debugger;
 
-          function reprintLastIdCard() {
-            if (window.lastIdCardHtml && window.lastIdCardHtml.trim() !== '') {
-                printIdCard(window.lastIdCardHtml);
-            } else {
-                alert('No ID card available for reprint');
+            // Get the participant CODE (1, 2, 3, 4, 5), not ID (117, 118, etc.)
+            const participantCode = $('#hdnparticipantid').val();
+            const accessPointId = $('#accessPoint').val();
+
+            if (!participantCode || participantCode === '0') {
+                alert('No participant data available. Please scan again.');
+                return;
             }
+
+            if (!accessPointId || accessPointId === '0') {
+                alert('Please select an access point first.');
+                return;
             }
+
+            const selectedOption = $('#accessPoint option:selected');
+            const isPrintCenter = selectedOption.data('print-center') === "True" ||
+                                  selectedOption.data('print-center') === true;
+
+            console.log('Reprinting ID card for participant code:', participantCode);
+
+            const eventId = $('#hdnEventId').val() || getEventId();
+
+            // Use participant CODE in the QR code format
+            $.ajax({
+                url: '/QrConfiguration/ProcessScan?isReprint=true',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    QrCode: `${participantCode}/${eventId}`,  // Use CODE, not ID
+                    AccessPoint: accessPointId,
+                    IsPrintCenter: isPrintCenter
+                }),
+                success: function(response) {
+                    debugger;
+                    console.log('Reprint response:', response);
+                    console.log('Is reprint?', response.isReprint);
+
+                    if (response.idCardBase64) {
+                        console.log('Reprint PDF received, printing...');
+                        printIdCard(response.idCardBase64);
+                    } else {
+                        alert('ID card generated: ' + (response.message || 'Success'));
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error('Reprint error:', error);
+                    alert('Network error. Please try again.');
+                }
+            });
+        }
+        // Function to get event ID (you need to implement this)
+        function getEventId() {
+            // Option 1: From hidden field in HTML (add this to your page)
+            // <input type="hidden" id="hdnEventId" value="@ViewBag.EventId" />
+            return $('#hdnEventId').val(); // Default to 1
+
+            // Option 2: If you have eventId in scan response, store it
+            // return window.lastEventId || 1;
+        }
 
         $(document).ready(function () {
             let scanner = null;
@@ -586,7 +639,7 @@
                 const accessPoint = $(this).val();
                 const isEnabled = accessPoint !== '' && accessPoint !== '0';
 
-                $('#btnStart, #btnTest, #btnManualSubmit').prop('disabled', !isEnabled);
+                $('#btnStart,#btnManualSubmit').prop('disabled', !isEnabled);
                 $('#manualCodeInput').prop('disabled', !isEnabled);
 
                 if (isEnabled) {
@@ -621,8 +674,13 @@
 
             // Check the actual status/validationStatus from response
             const status = (response.status || response.validationStatus || '').toUpperCase();
-            console.log("Scan Status:", status, "isPrintCenter:", isPrintCenter);
-
+                  // Only store if we receive valid base64 (not null/empty)
+        if (response.idCardBase64 && response.idCardBase64 !== null && response.idCardBase64.trim() !== '' && response.idCardBase64 !== 'null') {
+            window.lastIdCardBase64 = response.idCardBase64;
+            console.log('✅ Base64 PDF stored in popup for reprinting');
+        } else {
+            console.log('ℹ️ No valid idCardBase64 in popup response, keeping previous PDF');
+        }
             // FIRST: Hide the reprint button for all cases
             reprintButton.hide();
 
@@ -1186,7 +1244,6 @@
 
                     $('#scannerOverlay').show();
                     $('#btnStop').prop('disabled', false);
-                    $('#btnTest').prop('disabled', false);
                     $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
 
                     console.log('Camera started successfully');
@@ -1237,19 +1294,7 @@
                 $('#cameraStatus').html('<span class="status-dot status-ready"></span>Ready to start');
             });
 
-            // TEST BUTTON
-            $('#btnTest').click(function () {
-                const accessPointId = $('#accessPoint').val();
-                if (!accessPointId || accessPointId === '0') {
-                    showAlert('Select access point first', 'warning');
-                    return;
-                }
-
-                const testCodes = ['TEST-001', 'TEST-002', 'A00-1', 'B12-5'];
-                const randomCode = testCodes[Math.floor(Math.random() * testCodes.length)];
-                processScan(randomCode, 'test');
-            });
-
+          
             // MANUAL CODE SUBMIT
             $('#btnManualSubmit').click(function () {
                 const code = $('#manualCodeInput').val().trim();
@@ -1346,88 +1391,113 @@
                 console.log('No dash found, returning original:', data);
                 return data;
             }
-       function processScan(code, source) {
-    debugger;
-    const accessPointId = $('#accessPoint').val();
-    if (!accessPointId || accessPointId === '0') {
-        showAlert('Please select an access point first', 'warning');
-        return;
-    }
-    const selectedOption = $('#accessPoint option:selected');
-    const isPrintCenter = selectedOption.data('print-center') === "True" ||
-                          selectedOption.data('print-center') === true;
+                    function processScan(code, source) {
+            debugger;
+            const accessPointId = $('#accessPoint').val();
+            if (!accessPointId || accessPointId === '0') {
+                showAlert('Please select an access point first', 'warning');
+                return;
+            }
+            const selectedOption = $('#accessPoint option:selected');
+            const isPrintCenter = selectedOption.data('print-center') === "True" ||
+                                  selectedOption.data('print-center') === true;
 
-    console.log('Print Center Check:', {
-        dataValue: selectedOption.data('print-center'),
-        isPrintCenter: isPrintCenter,
-        selectedText: selectedOption.text()
-    });
+            console.log('Print Center Check:', {
+                dataValue: selectedOption.data('print-center'),
+                isPrintCenter: isPrintCenter,
+                selectedText: selectedOption.text()
+            });
 
-    if (source === 'scanner') {
-        $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Processing scan...');
-    } else if (source === 'manual') {
-        $('#manualStatus').html('<span class="text-warning">Processing...</span>');
-    }
+            if (source === 'scanner') {
+                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Processing scan...');
+            } else if (source === 'manual') {
+                $('#manualStatus').html('<span class="text-warning">Processing...</span>');
+            }
 
-    const requestData = {
-        QrCode: code,
-        AccessPoint: accessPointId,
-        IsPrintCenter: isPrintCenter
-    };
+            const requestData = {
+                QrCode: code,
+                AccessPoint: accessPointId,
+                IsPrintCenter: isPrintCenter
+            };
 
-    console.log('Sending to server:', requestData);
+            console.log('Sending to server:', requestData);
 
-             $.ajax({
-                url: '/QrConfiguration/ProcessScan',
+            // IMPORTANT: Regular scan WITHOUT query parameter
+            $.ajax({
+                url: '/QrConfiguration/ProcessScan',  // NO query parameter for regular scans
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify(requestData),
                 success: function (response) {
                     debugger;
                     console.log('Server response:', response);
-                    $('#hdnparticipantid').val(response.participantId);
 
-                    // Handle PDF printing if it's a print center scan
-                    if (response.success && response.idCardBase64 && isPrintCenter) {
-                        console.log('Auto-printing ID card for print center...');
-                        printIdCard(response.idCardBase64);
+                    // STORE PARTICIPANT CODE, NOT PARTICIPANT ID
+                    // Get the code from participantCode or extract from ticketId
+                    let participantCode = '';
+
+                    if (response.participantCode) {
+                        // If response has participantCode directly
+                        participantCode = response.participantCode;
+                    } else if (response.ticketId && response.ticketId.includes('-')) {
+                        // Extract from ticketId like "A00-5" -> "5"
+                        participantCode = response.ticketId.split('-')[1];
+                    } else if (response.participantId) {
+                        // Fallback: Use participantId (but this might be wrong!)
+                        participantCode = response.participantId.toString();
                     }
 
-                    // Store for later use
-                    if (response.idCardBase64) {
-                        window.lastIdCardBase64 = response.idCardBase64; // Store as base64
+                    $('#hdnparticipantid').val(participantCode);
+                    console.log('Stored participant code:', participantCode);
+
+                    if (response.idCardBase64 && response.idCardBase64 !== null && response.idCardBase64.trim() !== '' && response.idCardBase64 !== 'null') {
+                        window.lastIdCardBase64 = response.idCardBase64;
+                        console.log('✅ Base64 PDF stored for reprinting');
+                    } else {
+                        console.log('ℹ️ No idCardBase64 in response, keeping previous stored PDF if any');
                     }
 
-                    // Make sure to pass the idCardBase64 to the popup function
-                    response.idCardBase64 = response.idCardBase64; // Ensure it's passed
+                    if (isPrintCenter && window.lastIdCardBase64) {
+                        const status = (response.status || response.validationStatus || '').toUpperCase();
 
+                        if (response.success && status === 'VALID') {
+                            console.log('🖨️ Auto-printing ID card for VALID scan at print center...');
+                            printIdCard(window.lastIdCardBase64);
+                        } else if (status === 'DUPLICATE') {
+                            console.log('⚠️ DUPLICATE scan at print center - Reprint button will be shown');
+                        }
+                    }
+
+                    // Show the result popup
                     showScanResultPopup(response, isPrintCenter);
 
-            if (response.success) {
-                if (response.scanData) {
-                    addNewScanToTable(response.scanData);
-                }
-                loadStatistics(accessPointId);
-            }
+                    // Update scan log and statistics
+                    if (response.success) {
+                        if (response.scanData) {
+                            addNewScanToTable(response.scanData);
+                        }
+                        loadStatistics(accessPointId);
+                    }
 
-            if (source === 'manual') {
-                $('#manualStatus').html('<span class="text-success">✓ Submitted</span>');
-                setTimeout(() => $('#manualStatus').html(''), 2000);
-            } else {
-                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
-            }
-        },
-        error: function (xhr, status, error) {
-            console.error('AJAX Error:', error);
-            showAlert('Network error. Please try again.', 'danger');
-            if (source === 'manual') {
-                $('#manualStatus').html('<span class="text-danger">✗ Failed</span>');
-            } else {
-                $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
-            }
+                    // Update status messages
+                    if (source === 'manual') {
+                        $('#manualStatus').html('<span class="text-success">✓ Submitted</span>');
+                        setTimeout(() => $('#manualStatus').html(''), 2000);
+                    } else {
+                        $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('❌ AJAX Error:', error);
+                    showAlert('Network error. Please try again.', 'danger');
+                    if (source === 'manual') {
+                        $('#manualStatus').html('<span class="text-danger">✗ Failed</span>');
+                    } else {
+                        $('#cameraStatus').html('<span class="status-dot status-scanning"></span>Scanning...');
+                    }
+                }
+            });
         }
-    });
-}
 
             $('#btnRefresh').click(function () {
                 const currentAccessPoint = $('#accessPoint').val();

@@ -8,9 +8,10 @@ namespace EventManager.Application.Interfaces
 {
     public interface IScanService
     {
-        Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false);
+        // Update to match implementation with isReprint parameter
+        Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false, bool isReprint = false);
+
         Task<List<object>> ScanLogDetailsAsync(int eventId, int accesspointid);
         Task<ScanStatisticsDto> GetScanStatisticsAsync(int eventId, int accesspointid);
     }
-
 }
