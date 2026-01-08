@@ -314,16 +314,22 @@ namespace EventManager.Application.Services
             double pointsPerMm = 72d / 25.4d;
             PageSize a6Page = PageSize.A6;
 
-            float contentWidth = (float)(95f * pointsPerMm);
-            float contentHeight = (float)(53f * pointsPerMm);
+            float contentWidth = (float)(101.6f * pointsPerMm);
+            float contentHeight = (float)(66f * pointsPerMm);
             float qrSize = (float)(20f * pointsPerMm);
 
             // Position of the main box
-            float startY = (float)(25f * pointsPerMm);
+            float startY = (float)(06f * pointsPerMm);
             float startX = (a6Page.GetWidth() - contentWidth) / 2;
 
             PdfFont fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             PdfFont fontRegular = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+            
+
+            // Create Arial Black font
+            // PdfFont fontArialBlack = PdfFontFactory.CreateFont("Fonts/ARIALBD.TTF", PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            // Note: You need to have Arial Black font file (ARIALBD.TTF) in your Fonts folder
+            // Alternatively, you can use another approach if you don't have the font file
 
             using (MemoryStream pdfStream = new MemoryStream())
             {
@@ -338,33 +344,73 @@ namespace EventManager.Application.Services
                     Div container = new Div()
                         .SetWidth(contentWidth)
                         .SetHeight(contentHeight)
-                        .SetFixedPosition(startX, startY, contentWidth)
-                        .SetBorder(new SolidBorder(ColorConstants.BLACK, 1f));
+                        .SetFixedPosition(startX, startY, contentWidth);
+                        //.SetBorder(new SolidBorder(ColorConstants.BLACK, 1f));
 
                     Table layoutTable = new Table(1).SetWidth(contentWidth).SetHeight(contentHeight);
 
-                    // Top Section: Name & Company
+                    // Top Section: Name & Company - Reduced spacing
                     Div topText = new Div().SetTextAlignment(TextAlignment.CENTER).SetPaddingTop(5);
                     topText.Add(new Paragraph(participantData.FullName ?? "N/A")
-                        .SetFont(fontBold).SetFontSize(23).SetMargin(0).SetMultipliedLeading(1.0f));
+                        .SetFont(fontBold).SetFontSize(24).SetMargin(0).SetMultipliedLeading(1.0f));
                     topText.Add(new Paragraph(participantData.Company ?? "")
-                        .SetFont(fontBold).SetFontSize(15).SetMargin(0));
+                        .SetFont(fontRegular).SetFontSize(15).SetMargin(0).SetMarginTop(-2)); // Negative margin to reduce space
 
-                    layoutTable.AddCell(new Cell().Add(topText).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.TOP));
+                    // Bottom Section: Country, QR, and "Delegate" text
+                    Div bottomArea = new Div()
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SetPaddingBottom(2);
 
-                    // Bottom Section: Country & QR Code
-                    Div bottomArea = new Div().SetTextAlignment(TextAlignment.CENTER);
+                    // Country - moved closer to the top
                     bottomArea.Add(new Paragraph(participantData.Country ?? "")
-                        .SetFont(fontRegular).SetFontSize(13).SetMarginBottom(2));
+                        .SetFont(fontRegular).SetFontSize(15).SetMarginBottom(2).SetMarginTop(0));
 
-                    // Generate QR Code Object
+                    // Generate QR Code
                     BarcodeQRCode qrCode = new BarcodeQRCode(qrCodeValue ?? "Empty");
                     Image qrImage = new Image(qrCode.CreateFormXObject(pdfDocument))
                         .SetWidth(qrSize).SetHeight(qrSize)
-                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                        .SetMarginBottom(2); // Reduced margin below QR
+
                     bottomArea.Add(qrImage);
 
-                    layoutTable.AddCell(new Cell().Add(bottomArea).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.BOTTOM).SetPaddingBottom(2));
+                    // Add "Delegate" text below QR with Arial Black 28pt
+                    // Note: If Arial Black font is not available, fall back to Helvetica Bold
+                    try
+                    {
+                        bottomArea.Add(new Paragraph("Delegate")
+                            .SetFont(fontBold)
+                            .SetFontSize(28)
+                            .SetFontColor(ColorConstants.BLACK)
+                            .SetMargin(0)
+                            .SetPadding(0));
+                    }
+                    catch
+                    {
+                        // Fallback if Arial Black is not available
+                        bottomArea.Add(new Paragraph("Delegate")
+                            .SetFont(fontBold)
+                            .SetFontSize(28)
+                            .SetFontColor(ColorConstants.BLACK)
+                            .SetMargin(0)
+                            .SetPadding(0));
+                    }
+
+                    // ADD CELLS CORRECTLY
+                    layoutTable.AddCell(
+                        new Cell().Add(topText)
+                                  .SetBorder(Border.NO_BORDER)
+                                  .SetVerticalAlignment(VerticalAlignment.TOP)
+                                  .SetPaddingBottom(0) // Reduced padding
+                    );
+
+                    layoutTable.AddCell(
+                        new Cell().Add(bottomArea)
+                                  .SetBorder(Border.NO_BORDER)
+                                  .SetVerticalAlignment(VerticalAlignment.BOTTOM)
+                                  .SetPaddingBottom(2)
+                                  .SetPaddingTop(0) // Remove top padding to bring content closer
+                    );
 
                     container.Add(layoutTable);
                     document.Add(container);
