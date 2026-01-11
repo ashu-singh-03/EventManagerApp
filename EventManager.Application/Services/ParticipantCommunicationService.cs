@@ -333,7 +333,7 @@ namespace EventManager.Application.Services
             string arialBoldPath = System.IO.Path.Combine(fontFolder, "ARIALBD.ttf");
             string arialBlackPath = System.IO.Path.Combine(fontFolder, "ariblk.ttf");
 
-            PdfFont fontArialBlack = null;
+            PdfFont fontArialBlack = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD); 
 
             if (File.Exists(arialRegularPath))
                 fontRegular = PdfFontFactory.CreateFont(arialRegularPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
