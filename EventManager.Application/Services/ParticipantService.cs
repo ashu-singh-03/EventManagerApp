@@ -387,6 +387,43 @@ namespace EventManager.Application.Services
                 }
             }
 
+
+            // OPTIMIZED: Remove rows where all required columns are empty using reverse iteration
+            int initialRowCount = dtImport.Rows.Count;
+
+            // Using for loop with reverse iteration to avoid index shifting issues
+            for (int i = dtImport.Rows.Count - 1; i >= 0; i--)
+            {
+                DataRow row = dtImport.Rows[i];
+                bool allEmpty = true;
+
+                
+
+                // Check if all required columns are empty
+                for (int j = 0; j < requiredColumns.Length; j++)
+                {
+                    object value = row[requiredColumns[j]];
+                    if (value != null && value != DBNull.Value && !string.IsNullOrWhiteSpace(value.ToString()))
+                    {
+                        allEmpty = false;
+                        break;
+                    }
+                }
+
+                if (allEmpty)
+                {
+                    dtImport.Rows.RemoveAt(i);
+                }
+            }
+
+            int removedRows = initialRowCount - dtImport.Rows.Count;
+            if (removedRows > 0)
+            {
+                _logger.LogInformation($"Removed {removedRows} rows where all required columns were empty");
+            }
+
+
+
             // ADD THIS: Add error_message column for stored procedure
             if (!dtImport.Columns.Contains("error_message"))
             {

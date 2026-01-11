@@ -22,12 +22,15 @@ namespace EventManager.WebUI.Controllers
     {
         private readonly IParticipantCommunicationService _service;
         private readonly IEventClaimService _eventClaimService;
+        private readonly IWebHostEnvironment _hostingEnvironment;
         public ParticipantCommunicationController(
             IParticipantCommunicationService service,
-            IEventClaimService eventClaimService)
+            IEventClaimService eventClaimService,
+            IWebHostEnvironment hostingEnvironment)
         {
             _service = service;
             _eventClaimService = eventClaimService;
+            _hostingEnvironment = hostingEnvironment;
         }
 
         public IActionResult Index()
@@ -68,6 +71,8 @@ namespace EventManager.WebUI.Controllers
         {
             try
             {
+                var fontFolder = Path.Combine(_hostingEnvironment.WebRootPath, "arial");
+
                 int eventId = _eventClaimService.GetEventIdFromClaim();
                 if (eventId == 0) return Json(new { success = false, message = "Invalid event" });
 
@@ -76,7 +81,7 @@ namespace EventManager.WebUI.Controllers
                     return Json(new { success = false, message = "Invalid QR code format." });
                 }
 
-                var result = await _service.GenerateIdCardAsync(eventId, participantId);
+                var result = await _service.GenerateIdCardAsync(eventId, participantId, fontFolder);
 
                 return Json(new
                 {
@@ -139,6 +144,8 @@ namespace EventManager.WebUI.Controllers
                 return Json(new { success = false, message = "No participants selected" });
             }
 
+            var fontFolder = Path.Combine(_hostingEnvironment.WebRootPath, "arial");
+
             QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
             try
@@ -159,7 +166,7 @@ namespace EventManager.WebUI.Controllers
                                 }
 
                                 // Get HTML from service
-                                var idCardResult = await _service.GenerateIdCardAsync(eventId, participantId);
+                                var idCardResult = await _service.GenerateIdCardAsync(eventId, participantId, fontFolder);
 
                                 if (!idCardResult.Success || string.IsNullOrEmpty(idCardResult.IdCardHtml))
                                 {

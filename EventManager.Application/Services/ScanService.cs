@@ -52,7 +52,7 @@ namespace EventManager.Application.Services
                 return new ScanStatisticsDto();
             }
         }
-        public async Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false, bool isReprint = false)
+        public async Task<ScanResultDto> ProcessScanAsync(int eventId, ScanRequestDto request, bool isPrintCenter = false, bool isReprint = false,string fontFolder="")
         {
             try
             {
@@ -114,7 +114,7 @@ namespace EventManager.Application.Services
                     var qrData = $"{participantId}||{eventId}";
 
                     // Generate ID card PDF
-                    pdfBytes = await GenerateIDCard(participant, qrData);
+                    pdfBytes = await GenerateIDCard(participant, qrData, fontFolder);
                 }
 
                 return new ScanResultDto
@@ -149,7 +149,7 @@ namespace EventManager.Application.Services
                 };
             }
         }
-        public async Task<byte[]> GenerateIDCard(dynamic participantData, string qrCodeValue)
+        public async Task<byte[]> GenerateIDCard(dynamic participantData, string qrCodeValue,string fontFolder)
         {
             double pointsPerMm = 72d / 25.4d;
             PageSize a6Page = PageSize.A6;
@@ -162,8 +162,31 @@ namespace EventManager.Application.Services
             float startY = (float)(25f * pointsPerMm);
             float startX = (a6Page.GetWidth() - contentWidth) / 2;
 
+            string arialRegularPath = System.IO.Path.Combine(fontFolder, "ARIAL.ttf");
+            string arialBoldPath = System.IO.Path.Combine(fontFolder, "ARIALBD.ttf");
+            string arialBlackPath = System.IO.Path.Combine(fontFolder, "ARIBLK.ttf");
+
             PdfFont fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             PdfFont fontRegular = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
+
+
+            PdfFont fontarialblack= PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+
+            if (File.Exists(arialRegularPath))
+            {
+                fontRegular = PdfFontFactory.CreateFont(arialRegularPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            }
+
+            if (File.Exists(arialRegularPath))
+            {
+                fontBold = PdfFontFactory.CreateFont(arialBoldPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            }
+            if (File.Exists(arialBlackPath))
+            {
+                fontarialblack = PdfFontFactory.CreateFont(arialBlackPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
+            }
+
+
 
             using (MemoryStream pdfStream = new MemoryStream())
             {
@@ -226,8 +249,8 @@ namespace EventManager.Application.Services
                 .Replace("@ParticipantCode@", participant.ParticipantCode?.ToString() ?? "")
                 .Replace("@Email@", participant.Email?.ToString() ?? "")
                 .Replace("@EventDate@", participant.EventDate?.ToString() ?? "")
-                .Replace("@Country@", participant.Country?.ToString() ?? "");
-                
+                .Replace("@Country@", participant.Country?.ToString() ?? "")                
+                .Replace("@Notes@", participant.Notes?.ToString() ?? "");
 
             // IMPORTANT: Replace @QR_BASE64@ with JUST the base64 string, not the whole img tag
             if (!string.IsNullOrEmpty(qrCodeBase64))

@@ -4,6 +4,7 @@ using EventManager.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using static EventManager.Application.DTOs.ScanDtos;
+using Microsoft.AspNetCore.Hosting;
 
 namespace EventManager.WebUI.Controllers
 {
@@ -12,12 +13,15 @@ namespace EventManager.WebUI.Controllers
         private readonly IScanService _scanService;
         private readonly IEventClaimService _eventClaimService;
 
+        private readonly IWebHostEnvironment _hostingEnvironment;
         public QrConfigurationController(
             IScanService scanService,
-            IEventClaimService eventClaimService)
+            IEventClaimService eventClaimService,
+            IWebHostEnvironment hostingEnvironment)
         {
             _scanService = scanService;
             _eventClaimService = eventClaimService;
+            _hostingEnvironment = hostingEnvironment;
         }
         [HttpGet]
         public IActionResult Index()
@@ -87,11 +91,14 @@ namespace EventManager.WebUI.Controllers
             // Check if this is a reprint request
             bool isReprint = HttpContext.Request.Query["isReprint"] == "true";
 
+            var fontFolder = Path.Combine(_hostingEnvironment.WebRootPath, "arial");
+
             var result = await _scanService.ProcessScanAsync(
                 eventId,
                 request,
                 request.IsPrintCenter,
-                isReprint // PASS isReprint parameter
+                isReprint, // PASS isReprint parameter
+                fontFolder
             );
 
             string idCardBase64 = null;

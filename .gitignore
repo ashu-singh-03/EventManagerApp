@@ -365,3 +365,4 @@ FodyWeavers.xsd
 /.gitignore
 /.gitignore
 /EventManager.WebUI/Views/ParticipantCommunication/Index - Copy.cshtml
+/EventManager.WebUI/wwwroot/Uploads
