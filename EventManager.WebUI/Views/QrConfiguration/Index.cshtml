@@ -898,25 +898,7 @@
                             next: "Next",
                             previous: "Previous"
                         }
-                    },
-                    dom: 'Bfrtip',
-                    buttons: [
-                        {
-                            extend: 'csv',
-                            text: '<i class="fas fa-file-csv"></i> CSV',
-                            className: 'btn btn-sm btn-outline-secondary'
-                        },
-                        {
-                            extend: 'excel',
-                            text: '<i class="fas fa-file-excel"></i> Excel',
-                            className: 'btn btn-sm btn-outline-secondary'
-                        },
-                        {
-                            extend: 'pdf',
-                            text: '<i class="fas fa-file-pdf"></i> PDF',
-                            className: 'btn btn-sm btn-outline-secondary'
-                        }
-                    ]
+                    }
                 });
 
                 var scanTimeIndex = columns.indexOf('ScanTime');
@@ -1508,14 +1490,127 @@
                 }
             });
 
-            $('#btnExport').click(function () {
-                if (dataTable) {
-                    dataTable.button('.buttons-csv').trigger();
-                } else {
-                    showAlert('No data to export. Please select an access point first.', 'warning');
+                   $('#btnExport').click(function () {
+            const currentAccessPoint = $('#accessPoint').val();
+
+            if (!currentAccessPoint || currentAccessPoint === '0') {
+                showAlert('Please select an access point first', 'warning');
+                return;
+            }
+
+            // Store the original table HTML to restore it later
+            const originalTableHtml = $('#scanLogContainer').html();
+
+            // Show loading
+            $('#scanLogContainer').html(`
+                <div class="text-center text-muted py-2">
+                    <div class="spinner-border spinner-border-sm text-primary me-2"></div>
+                    Loading data for export...
+                </div>
+            `);
+
+            // Load ALL scan data for export
+            $.ajax({
+                url: '/QrConfiguration/GetScanLog',
+                type: 'GET',
+                data: { accessPointId: currentAccessPoint },
+                success: function (response) {
+                    if (response.success && response.data && response.data.length > 0) {
+                        // Call export function with only data parameter
+                        exportToExcelQR(response.data);
+                    } else {
+                        showAlert('No data to export', 'warning');
+                    }
+
+                    // Restore the table view
+                    buildDynamicTable(response.data);
+                },
+                error: function (xhr) {
+                    console.error('Error loading data for export:', xhr);
+                    showAlert('Failed to load data for export', 'danger');
+                    // Restore original table
+                    $('#scanLogContainer').html(originalTableHtml);
                 }
             });
-           
+        });
+                   // Custom Excel export function for QR Scanner page
+              // Simple Excel export function (NO STYLING - compatible with basic XLSX.js)
+        function exportToExcelQR(data) {
+            if (!data || data.length === 0) {
+                console.error('No data to export');
+                showAlert('No data to export', 'warning');
+                return;
+            }
+
+            try {
+                const wb = XLSX.utils.book_new();
+                const excelData = [];
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                // 1. Title row with date
+                excelData.push([`QR Scan REPORT - Exported on: ${day}/${month}/${year}, ${hours}:${minutes}`]);
+                excelData.push([]); // Empty row
+
+                // 2. Headers row
+                excelData.push([
+                    'Event Name',
+                    'Access Point',
+                    'Event Date',
+                    'Participant Name',
+                    'Scan Time',
+                    'Status',
+                    'Message'
+                ]);
+
+                // 3. Data rows
+                data.forEach(row => {
+                    excelData.push([
+                        row['Event Name'] || row['eventName'] || '',
+                        row['Access Point'] || row['accessPoint'] || '',
+                        row['Event Date'] || row['eventDate'] || '',
+                        row['Participant Name'] || row['participantName'] || '',
+                        row['Scan Time'] || row['scanTime'] || '',
+                        row['Status'] || row['status'] || '',
+                        row['Message'] || row['message'] || ''
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                // Set column widths
+                ws['!cols'] = [
+                    { wch: 25 }, // Event Name
+                    { wch: 15 }, // Access Point
+                    { wch: 12 }, // Event Date
+                    { wch: 20 }, // Participant Name
+                    { wch: 18 }, // Scan Time
+                    { wch: 10 }, // Status
+                    { wch: 30 }  // Message
+                ];
+
+                XLSX.utils.book_append_sheet(wb, ws, "QR Scan");
+
+                // Generate filename with timestamp only
+                const filename = `QRScan_${day}-${month}-${year}_${hours}-${minutes}.xlsx`;
+
+                // Export file
+                XLSX.writeFile(wb, filename);
+
+                console.log('Excel exported successfully:', filename);
+
+                // Show success message
+                showAlert('Excel file downloaded successfully', 'success');
+
+            } catch (error) {
+                console.error('Export error:', error);
+                showAlert('Export failed: ' + error.message, 'danger');
+            }
+        }
             // Show alert function
             function showAlert(message, type) {
                 $('.alert-dismissible').remove();

@@ -154,6 +154,16 @@
                                 </button>
                             </div>
                         </div>
+                        <div class="col-md-4 text-end">
+                            <div class="btn-group">
+                                <button class="btn btn-outline-secondary" id="btnRefresh">
+                                    <i class="fas fa-redo me-1"></i>Refresh
+                                </button>
+                                <button class="btn btn-outline-primary" id="btnExport">
+                                    <i class="fas fa-file-export me-1"></i>Export
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Statistics Cards -->
@@ -254,35 +264,29 @@
     <script>
         $(document).ready(function () {
             let dataTable = null;
+            let allScanData = []; 
 
-            // Load ALL scan data by default on page load (NO access point required)
             loadAllScanData();
 
-            // Load button click - OPTIONAL filtering
             $('#btnLoad').click(function () {
                 var selectedId = $('#accessPoint').val();
                 if (!selectedId) {
-                    // If no access point selected, show all data
                     loadAllScanData();
                     showMessage('Showing all scan data', 'info');
                 } else {
-                    // Load filtered data (OPTIONAL filter)
                     loadFilteredScanData(selectedId);
                 }
             });
 
-            // Access point dropdown change - OPTIONAL filtering
             $('#accessPoint').change(function () {
                 var selectedId = $(this).val();
                 if (selectedId) {
                     loadFilteredScanData(selectedId);
                 } else {
-                    // If "Select Access Point" is chosen, show all data
                     loadAllScanData();
                 }
             });
 
-            // Refresh button
             $('#btnRefresh').click(function () {
                 var currentId = $('#accessPoint').val();
                 if (currentId) {
@@ -293,6 +297,137 @@
                     showMessage('All scan data refreshed', 'success');
                 }
             });
+
+            $('#btnExport').click(function() {
+                debugger;
+
+                if (allScanData.length === 0) {
+                    showMessage('No data to export', 'warning');
+                    return;
+                }
+
+                exportToExcel(allScanData);
+            });
+
+                    function exportToExcel(data) {
+            if (!data || data.length === 0) {
+                showMessage('No data to export', 'warning');
+                return;
+            }
+
+            showMessage('Preparing export...', 'info');
+
+            try {
+                const wb = XLSX.utils.book_new();
+                const excelData = [];
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                // Title row - SIMPLIFIED like your reference
+                excelData.push([`SCAN LOG REPORT - Exported on: ${day}/${month}/${year}, ${hours}:${minutes}`]);
+                excelData.push([]); // Empty row
+
+                // Headers row
+                excelData.push([
+                    'Event Name',
+                    'Access Point',
+                    'Event Date',
+                    'Participant Name',
+                    'Scan Time',
+                    'Status',
+                    'Message'
+                ]);
+
+                // Data rows
+                data.forEach(row => {
+                    excelData.push([
+                        row['Event Name'] || row['eventName'] || '',
+                        row['Access Point'] || row['accessPoint'] || '',
+                        row['Event Date'] || row['eventDate'] || '',
+                        row['Participant Name'] || row['participantName'] || '',
+                        row['Scan Time'] || row['scanTime'] || '',
+                        row['Status'] || row['status'] || '',
+                        row['Message'] || row['message'] || ''
+                    ]);
+                });
+
+                const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                // Set column widths - SIMILAR to your reference
+                ws['!cols'] = [
+                    { wch: 25 }, // Event Name
+                    { wch: 15 }, // Access Point
+                    { wch: 12 }, // Event Date
+                    { wch: 20 }, // Participant Name
+                    { wch: 18 }, // Scan Time
+                    { wch: 10 }, // Status
+                    { wch: 30 }  // Message
+                ];
+
+                // Add merge for title row (like your reference doesn't have, but can add)
+                // ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 6 } }];
+
+                XLSX.utils.book_append_sheet(wb, ws, "Scan Log");
+
+                // ALWAYS use ScanLog_ prefix with timestamp - SIMPLE like your reference
+                const filename = `ScanLog_${day}-${month}-${year}_${hours}-${minutes}.xlsx`;
+
+                XLSX.writeFile(wb, filename);
+                showMessage('Excel exported successfully', 'success');
+
+            } catch (error) {
+                console.error('Export error:', error);
+                showMessage('Export failed: ' + error.message, 'error');
+            }
+        }
+
+            function formatDateForDisplay(dateString) {
+                if (!dateString) return '';
+
+                try {
+                    let date = new Date(dateString);
+                    if (isNaN(date.getTime())) {
+                        return dateString;
+                    }
+
+                    // Format as DD/MM/YYYY
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+
+                    return `${day}/${month}/${year}`;
+                } catch (e) {
+                    return dateString;
+                }
+            }
+
+            // Format datetime for display
+            function formatDateTimeForDisplay(dateTimeString) {
+                if (!dateTimeString) return '';
+
+                try {
+                    let date = new Date(dateTimeString);
+                    if (isNaN(date.getTime())) {
+                        return dateTimeString;
+                    }
+
+                    // Format as DD/MM/YYYY HH:MM:SS
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const year = date.getFullYear();
+                    const hours = String(date.getHours()).padStart(2, '0');
+                    const minutes = String(date.getMinutes()).padStart(2, '0');
+                    const seconds = String(date.getSeconds()).padStart(2, '0');
+
+                    return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+                } catch (e) {
+                    return dateTimeString;
+                }
+            }
 
             // Function to load ALL scan data (no filter - DEFAULT)
             function loadAllScanData() {
@@ -313,6 +448,8 @@
 
                         if (response.success) {
                             if (response.data && response.data.length > 0) {
+                                // Store ALL data for export
+                                allScanData = response.data;
                                 buildScanTable(response.data);
                             } else {
                                 $('#scanLogContainer').html(`
@@ -323,9 +460,10 @@
                                     </div>
                                 `);
                                 showMessage('No scan data found', 'info');
+                                allScanData = [];
                             }
 
-                            // Load statistics for ALL data
+                            // Load statistics for ALL data (KEPT IN HTML PAGE)
                             loadAllStatistics();
                         } else {
                             $('#scanLogContainer').html(`
@@ -369,6 +507,8 @@
 
                         if (response.success) {
                             if (response.data && response.data.length > 0) {
+                                // Store filtered data for export
+                                allScanData = response.data;
                                 buildScanTable(response.data);
                                 showMessage('Loaded ' + response.data.length + ' records for selected access point', 'success');
                                 $('#recordCount').text(response.data.length + ' records (Filtered)');
@@ -381,9 +521,10 @@
                                     </div>
                                 `);
                                 showMessage('No scan data found for selected access point', 'info');
+                                allScanData = [];
                             }
 
-                            // Load statistics for filtered data
+                            // Load statistics for filtered data (KEPT IN HTML PAGE)
                             loadFilteredStatistics(accessPointId);
                         } else {
                             $('#scanLogContainer').html(`
@@ -408,7 +549,7 @@
                 });
             }
 
-            // Function to load statistics for ALL access points
+            // Function to load statistics for ALL access points (KEPT IN HTML PAGE)
             function loadAllStatistics() {
                 $.ajax({
                     url: '/QrConfiguration/GetStats',
@@ -438,7 +579,7 @@
                 });
             }
 
-            // Function to load statistics for filtered access point
+            // Function to load statistics for filtered access point (KEPT IN HTML PAGE)
             function loadFilteredStatistics(accessPointId) {
                 $.ajax({
                     url: '/QrConfiguration/GetStats',
@@ -465,6 +606,14 @@
                         });
                     }
                 });
+            }
+
+            // Function to update statistics in HTML page (KEPT IN HTML PAGE)
+            function updateStatistics(stats) {
+                $('#totalScans').text(stats.totalScans || 0);
+                $('#validScans').text(stats.validScans || 0);
+                $('#invalidScans').text(stats.invalidScans || 0);
+                $('#duplicateScans').text(stats.duplicateScans || 0);
             }
 
             // Function to show messages
@@ -518,7 +667,15 @@
                 `;
 
                 data.forEach(function(row) {
-                    var status = row.Status || '';
+                    // Get values with fallbacks for different property names
+                    var eventName = row['Event Name'] || row['eventName'] || '-';
+                    var accessPoint = row['Access Point'] || row['accessPoint'] || '-';
+                    var eventDate = row['Event Date'] || row['eventDate'] || '-';
+                    var participantName = row['Participant Name'] || row['participantName'] || '-';
+                    var scanTime = row['Scan Time'] || row['scanTime'] || '-';
+                    var status = row['Status'] || row['status'] || '';
+                    var message = row['Message'] || row['message'] || '-';
+
                     var statusClass = '';
 
                     switch(status.toLowerCase()) {
@@ -531,13 +688,13 @@
 
                     tableHtml += `
                         <tr>
-                            <td>${row['Event Name'] || '-'}</td>
-                            <td>${row['Access Point'] || '-'}</td>
-                            <td>${row['Event Date'] || '-'}</td>
-                            <td>${row['Participant Name'] || '-'}</td>
-                            <td>${row['Scan Time'] || '-'}</td>
+                            <td>${eventName}</td>
+                            <td>${accessPoint}</td>
+                            <td>${eventDate}</td>
+                            <td>${participantName}</td>
+                            <td>${scanTime}</td>
                             <td><span class="status-badge ${statusClass}">${status}</span></td>
-                            <td><small class="text-muted">${row['Message'] || '-'}</small></td>
+                            <td><small class="text-muted">${message}</small></td>
                         </tr>
                     `;
                 });
@@ -569,18 +726,28 @@
                         {
                             extend: 'excel',
                             text: '<i class="fas fa-file-excel me-1"></i> Excel',
-                            className: 'btn btn-sm btn-outline-secondary'
+                            className: 'btn btn-sm btn-outline-secondary',
+                            // These options export all data, not just current page
+                            exportOptions: {
+                                modifier: {
+                                    search: 'none',
+                                    page: 'all'
+                                },
+                                columns: ':visible'
+                            },
+                            title: 'Scan Log Report',
+                            filename: function() {
+                                var accessPoint = $('#accessPoint option:selected').text();
+                                var filename = 'Scan_Log';
+                                if (accessPoint && accessPoint !== 'Select Access Point') {
+                                    filename += '_' + accessPoint.replace(/[^a-zA-Z0-9]/g, '_');
+                                }
+                                filename += '_' + new Date().toISOString().slice(0,10);
+                                return filename;
+                            }
                         }
                     ]
                 });
-            }
-
-            // Update statistics
-            function updateStatistics(stats) {
-                $('#totalScans').text(stats.totalScans || 0);
-                $('#validScans').text(stats.validScans || 0);
-                $('#invalidScans').text(stats.invalidScans || 0);
-                $('#duplicateScans').text(stats.duplicateScans || 0);
             }
         });
     </script>
