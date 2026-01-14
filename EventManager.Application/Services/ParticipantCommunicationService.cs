@@ -359,6 +359,7 @@ namespace EventManager.Application.Services
                     Div container = new Div()
                         .SetWidth(contentWidth)
                         .SetHeight(contentHeight)
+                         //.SetBorder(new SolidBorder(ColorConstants.BLACK, 1)) // 1pt border
                         .SetFixedPosition(startX, startY, contentWidth);
 
                     // --------TOP SECTION--------
@@ -466,9 +467,9 @@ namespace EventManager.Application.Services
 
             float contentWidth = (float)(101.6f * pointsPerMm);
             float contentHeight = (float)(65.5f * pointsPerMm);
-            float qrSize = (float)(22f * pointsPerMm);
+            float qrSize = (float)(25f * pointsPerMm);
 
-            float startY = (float)(2f * pointsPerMm);
+            float startY = (float)(5f * pointsPerMm);
             float startX = (a6Page.GetWidth() - contentWidth) / 2;
 
             // ... font loading code remains the same ...
@@ -513,7 +514,7 @@ namespace EventManager.Application.Services
                         .SetFontSize(nameFontSize)
                         .SetTextAlignment(TextAlignment.CENTER)
                         .SetWidth(contentWidth)
-                      //  .SetBorder(new SolidBorder(ColorConstants.RED, 1))
+                        //.SetBorder(new SolidBorder(ColorConstants.RED, 1))
                         .SetFixedPosition(startX, startY + contentHeight - 45, contentWidth);
                         
                     document.Add(namePara);
@@ -533,7 +534,7 @@ namespace EventManager.Application.Services
                     string country = participantData.Country ?? "";
                     float countryFontSize = GetFittedFontSize(country, fontRegular, 15f, 10f, textMaxWidth);
 
-                    float countryY = startY + qrSize + 40; // Position above QR code
+                    float countryY = startY + qrSize + 30; // Position above QR code
                     Paragraph countryPara = new Paragraph(country)
                         .SetFont(fontRegular)
                         .SetFontSize(countryFontSize)
@@ -549,7 +550,7 @@ namespace EventManager.Application.Services
                         .SetWidth(qrSize)
                         .SetHeight(qrSize)
                         .SetHorizontalAlignment(HorizontalAlignment.CENTER)
-                        .SetFixedPosition(startX + (contentWidth - qrSize) / 2, startY + 35, qrSize);
+                        .SetFixedPosition(startX + (contentWidth - qrSize) / 2, startY + 25, qrSize);//decreas to take down and increase to take it up
 
                     document.Add(qrImage);
 
@@ -569,12 +570,13 @@ namespace EventManager.Application.Services
 
                         // Fixed position at bottom
                         Paragraph notesPara = new Paragraph(notes)
-                            .SetFont(fontBold)
-                            .SetFontSize(notesFontSize)
+                            .SetFont(fontArialBlack)
+                            .SetFontSize(28)
                             .SetFontColor(ColorConstants.BLACK)
                             .SetTextAlignment(TextAlignment.CENTER)
                             .SetWidth(contentWidth)
-                            .SetFixedPosition(startX, startY + 1, contentWidth); // 5pt from bottom
+                          //.SetBorder(new SolidBorder(ColorConstants.BLACK, 1f))
+                            .SetFixedPosition(startX, startY - 15f, contentWidth); // 5pt from bottom Shift down 3pt
 
                         document.Add(notesPara);
                     }
