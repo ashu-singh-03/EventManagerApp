@@ -11,7 +11,7 @@ namespace EventManager.Application.Interfaces
     {
         Task<IEnumerable<ParticipantDto>> GetParticipantsByEventAsync(int eventId);
         Task<ParticipantDto> GetParticipantByIdAsync(int participantId);
-        Task SaveParticipantAsync(ParticipantDto participantDto);
+        Task<(bool Success, string Message)> SaveParticipantAsync(ParticipantDto dto);
         Task DeleteParticipantAsync(int participantId);
 
         // Add uploadsFolder parameter with default value

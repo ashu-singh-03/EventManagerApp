@@ -4,10 +4,6 @@
 }
 
 <style>
-    /* CSS ONLY FOR ATTENDEES MANAGEMENT PAGE */
-    /* (Layout styles are already in _Layout.cshtml) */
-
-    /* Color variables specific to this page */
     :root {
         --primary: #FFC107;
         --primary-dark: #FFA000;
@@ -24,7 +20,27 @@
         --info: #1976D2;
     }
 
-    /* Alert styles specific to this page */
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+        background-color: var(--light);
+        color: var(--dark);
+        line-height: 1.6;
+        font-size: 14px;
+    }
+
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 15px;
+    }
+
+    /* ALERT STYLES - PROFESSIONAL */
     .alert-area {
         position: fixed;
         top: 20px;
@@ -42,35 +58,40 @@
         border: 1px solid transparent;
         display: flex;
         align-items: flex-start;
-        animation: slideInRight 0.4s ease-out;
+        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        backdrop-filter: blur(10px);
+        transition: transform 0.3s ease, opacity 0.3s ease;
     }
 
+        .alert:hover {
+            transform: translateX(-5px);
+        }
+
     .alert-success {
-        background: #d4edda;
+        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
         border-color: #b1d8b7;
         color: #155724;
         border-left: 5px solid #28a745;
     }
 
     .alert-danger {
-        background: #f8d7da;
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         border-color: #f1b0b7;
         color: #721c24;
         border-left: 5px solid #dc3545;
-    }
-
-    .alert-warning {
-        background: #fff3cd;
-        border-color: #ffeaa7;
-        color: #856404;
-        border-left: 5px solid #ffc107;
     }
 
     .alert-icon {
         font-size: 24px;
         margin-right: 15px;
         margin-top: 2px;
+        flex-shrink: 0;
+    }
+
+    .alert-content {
+        flex: 1;
+        min-width: 0;
     }
 
     .alert-title {
@@ -85,7 +106,67 @@
     .alert-message {
         font-size: 14px;
         line-height: 1.5;
+        margin-bottom: 8px;
     }
+
+    .alert-stats {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+    }
+
+    .stat-badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .stat-success {
+        background-color: rgba(40, 167, 69, 0.15);
+        color: #155724;
+    }
+
+    .stat-secondary {
+        background-color: rgba(108, 117, 125, 0.15);
+        color: #383d41;
+    }
+
+    .stat-danger {
+        background-color: rgba(220, 53, 69, 0.15);
+        color: #721c24;
+    }
+
+    .alert-actions {
+        margin-top: 8px;
+    }
+
+    .btn-download-error {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+        border: 1px solid #dc3545;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+        .btn-download-error:hover {
+            background-color: #dc3545;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+        }
 
     .btn-close-alert {
         background: none;
@@ -94,6 +175,20 @@
         opacity: 0.7;
         cursor: pointer;
         font-size: 18px;
+        padding: 0;
+        margin-left: 10px;
+        transition: opacity 0.3s ease;
+    }
+
+        .btn-close-alert:hover {
+            opacity: 1;
+        }
+
+    .no-error-report {
+        font-size: 13px;
+        color: var(--gray);
+        font-style: italic;
+        padding: 4px 0;
     }
 
     @@keyframes slideInRight {
@@ -118,14 +213,14 @@
         }
     }
 
-    /* Modal Error Styles for this page only */
+    /* Modal Error Styles */
     .modal-error-area {
         display: none;
         margin: 15px 0;
     }
 
     .modal-error {
-        background: #f8d7da;
+        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
         border: 1px solid #f1b0b7;
         border-left: 5px solid #dc3545;
         color: #721c24;
@@ -134,7 +229,16 @@
         margin: 10px 0;
     }
 
-    /* Page-specific layout */
+    /* REST OF YOUR EXISTING STYLES (unchanged) */
+    header {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: var(--dark);
+        padding: 15px 0;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
     .menu-bar {
         display: flex;
         background-color: white;
@@ -152,6 +256,7 @@
         transition: all 0.3s ease;
         font-weight: 600;
         color: var(--gray);
+        font-size: 0.9rem;
         border-right: 1px solid var(--border);
     }
 
@@ -182,30 +287,10 @@
             display: block;
         }
 
-    .action-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .section-title {
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-        color: var(--dark);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Table styles for this page */
-    .table-responsive {
+    .table-container {
         overflow-x: auto;
         border-radius: 8px;
         box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-        margin-top: 15px;
     }
 
     table {
@@ -231,52 +316,6 @@
         background-color: var(--primary-light);
     }
 
-    #attendeesTable td:last-child {
-        white-space: nowrap;
-    }
-
-    /* Form styles for this page */
-    .form-row {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-
-    .form-col {
-        flex: 1;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 600;
-        color: var(--dark);
-    }
-
-    input, select, textarea {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid var(--border);
-        border-radius: 5px;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
-        }
-
-    .is-invalid {
-        border-color: var(--danger) !important;
-    }
-
-    /* Button styles for this page */
     .btn {
         padding: 10px 18px;
         border: none;
@@ -286,6 +325,7 @@
         display: inline-flex;
         align-items: center;
         gap: 6px;
+        font-size: 0.9rem;
         transition: all 0.3s ease;
     }
 
@@ -307,17 +347,6 @@
             background-color: var(--border);
         }
 
-    .btn-success {
-        background-color: var(--success);
-        color: white;
-    }
-
-        .btn-success:hover {
-            background-color: #2e7d32;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
     .btn-danger {
         background-color: var(--danger);
         color: white;
@@ -333,7 +362,62 @@
         font-size: 0.8rem;
     }
 
-    /* Modal styles for this page */
+    .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .form-col {
+        flex: 1;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        margin-bottom: 6px;
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.9rem;
+    }
+
+    input, select, textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
+        }
+
+    .action-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 15px;
+        color: var(--dark);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Modal Styles */
     .modal {
         display: none;
         position: fixed;
@@ -343,12 +427,15 @@
         height: 100%;
         background-color: rgba(0, 0, 0, 0.5);
         z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
 
         .modal.show {
             display: flex;
             align-items: center;
             justify-content: center;
+            opacity: 1;
         }
 
     .modal-content {
@@ -386,7 +473,12 @@
         cursor: pointer;
         color: var(--gray);
         line-height: 1;
+        transition: color 0.3s ease;
     }
+
+        .modal-close:hover {
+            color: var(--dark);
+        }
 
     .modal-body {
         padding: 20px;
@@ -402,7 +494,7 @@
         gap: 10px;
     }
 
-    /* Upload area for this page */
+    /* Upload Area Styles */
     .upload-area {
         border: 2px dashed var(--border);
         border-radius: 8px;
@@ -426,107 +518,190 @@
         margin-bottom: 15px;
     }
 
-    /* Mobile responsive for this page */
-    @@media (max-width: 768px) {
-        .alert-area {
-            width: 90%;
-            left: 5%;
-            right: 5%;
-        }
-
-        .menu-bar {
-            flex-direction: column;
-        }
-
-        .menu-itemlocal {
-            border-right: none;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .action-bar {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .table-responsive {
-            border: 1px solid var(--border);
-        }
-
-        table {
-            min-width: 800px;
-        }
-
-        #exportExcelBtn {
-            width: 100%;
-            justify-content: center;
-        }
-
-        .form-row {
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .btn-sm {
-            padding: 5px 8px;
-            font-size: 0.75rem;
-            margin: 2px;
-        }
-
-        .modal-content {
-            width: 95%;
-            margin: 10px;
-        }
+    .upload-area h3 {
+        margin: 10px 0;
+        color: var(--dark);
     }
 
-    @@media (max-width: 480px) {
-        .modal-content {
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
-            border-radius: 0;
-        }
+    .upload-area p {
+        margin: 10px 0;
+        color: var(--gray);
     }
+
+    /* Preview Table Styles */
+    #previewTable {
+        font-size: 0.8rem;
+    }
+
+        #previewTable th {
+            background-color: var(--light-gray);
+            position: sticky;
+            top: 0;
+        }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .text-danger {
+        color: var(--danger);
+    }
+
+    .is-invalid {
+        border-color: var(--danger) !important;
+    }
+
+    .loading-text {
+        text-align: center;
+        padding: 20px;
+        color: var(--gray);
+        font-style: italic;
+    }
+
+    #previewTable_wrapper .dataTables_scrollBody {
+        max-height: 400px !important;
+        min-height: 200px !important;
+    }
+
+    .dataTables_wrapper {
+        margin: 10px 0;
+    }
+
+    .dataTables_length,
+    .dataTables_filter {
+        margin-bottom: 10px;
+    }
+
+    .dataTables_info {
+        margin-top: 10px;
+    }
+
+    .dataTables_paginate {
+        margin-top: 10px;
+    }
+
+    table.dataTable {
+        margin-top: 0 !important;
+        margin-bottom: 10px !important;
+        font-size: 0.85rem;
+    }
+
+    .dataTables_processing {
+        background-color: rgba(255, 193, 7, 0.8) !important;
+        color: #212121 !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        font-weight: bold !important;
+        border: none !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+    }
+
+    #previewTable thead th {
+        position: sticky;
+        top: 0;
+        background-color: var(--light-gray);
+        z-index: 10;
+    }
+
+    .dataTables_filter input {
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        width: 200px;
+    }
+
+    .dataTables_length select {
+        padding: 6px 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+    }
+
+    .paginate_button {
+        padding: 6px 12px !important;
+        margin: 0 2px !important;
+        border: 1px solid var(--border) !important;
+        border-radius: 4px !important;
+    }
+
+        .paginate_button.current {
+            background-color: var(--primary) !important;
+            color: var(--dark) !important;
+            border-color: var(--primary-dark) !important;
+        }
+
+        .paginate_button:hover {
+            background-color: var(--primary-light) !important;
+            color: var(--dark) !important;
+        }
+
+    #attendeesTable_wrapper {
+        margin-top: 15px;
+    }
+
+        #attendeesTable_wrapper .dataTables_filter {
+            margin-bottom: 15px;
+        }
+
+        #attendeesTable_wrapper .dataTables_length {
+            margin-bottom: 15px;
+        }
+
+    #attendeesTable td:last-child {
+        white-space: nowrap;
+    }
+
+    .form-col label[for="firstName"]::after,
+    .form-col label[for="lastName"]::after,
+    .form-col label[for="email"]::after {
+        content: ' *';
+        color: var(--danger);
+        margin-left: 2px;
+    }
+    /* Remove asterisks from error messages */
+    .text-danger::after,
+    .error::after {
+        content: none !important;
+    }
+
 </style>
-
 
 <div class="container-fluid">
     <div class="card">
         <div class="card-body p-4 p-lg-5">
 
-        <div class="menu-bar">
-            <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
-            <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
-        </div>
-
-        <div class="alert-area"></div>
-
-        <div class="content-section active" id="manage-attendees">
-            <div class="action-bar">
-                <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
-                <div>
-                    <button class="btn btn-primary" id="bulkUploadBtn">
-                        <i class="fas fa-file-upload"></i> Bulk Upload
-                    </button>
-                </div>
+            <div class="menu-bar">
+                <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
+                <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
             </div>
+
+            <div class="alert-area"></div>
+
+            <div class="content-section active" id="manage-attendees">
+                <div class="action-bar">
+                    <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
+                    <div>
+                        <button class="btn btn-primary" id="bulkUploadBtn">
+                            <i class="fas fa-file-upload"></i> Bulk Upload
+                        </button>
+                    </div>
+                </div>
                 <form id="attendeeForm">
                     <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
 
                     <div class="form-row">
                         <div class="form-col">
-                            <label for="firstName">First Name *</label>
+                            <label for="firstName">First Name</label>
                             <input type="text" id="firstName" name="FirstName" required>
                         </div>
                         <div class="form-col">
-                            <label for="lastName">Last Name *</label>
+                            <label for="lastName">Last Name</label>
                             <input type="text" id="lastName" name="LastName" required>
                         </div>
                     </div>
 
                     <div class="form-row">
                         <div class="form-col">
-                            <label for="email">Email Address *</label>
+                            <label for="email">Email Address</label>
                             <input type="email" id="email" name="Email" required>
                         </div>
                         <div class="form-col">
@@ -732,198 +907,194 @@
                 });
             }
 
-              function exportToExcel(data) {
-            if (!data || data.length === 0) {
-                showAlert('danger', 'No data to export');
-                return;
-            }
-
-            try {
-                const wb = XLSX.utils.book_new();
-                const excelData = [];
-                const now = new Date();
-                const day = String(now.getDate()).padStart(2, '0');
-                const month = String(now.getMonth() + 1).padStart(2, '0');
-                const year = now.getFullYear();
-                const hours = String(now.getHours()).padStart(2, '0');
-                const minutes = String(now.getMinutes()).padStart(2, '0');
-
-                // Title row
-                excelData.push([`ATTENDEES LIST REPORT - Exported on: ${day}/${month}/${year}, ${hours}:${minutes}`]);
-                excelData.push([]); // Empty row
-
-                // Headers row
-                excelData.push([
-                    'ID',
-                    'First Name',
-                    'Last Name',
-                    'Email',
-                    'Phone',
-                    'Company',
-                    'Department',
-                    'Country',
-                    'Notes'
-                ]);
-
-                // Data rows
-                data.forEach(attendee => {
-                    excelData.push([
-                        attendee.participantId || '',
-                        attendee.firstName || '',
-                        attendee.lastName || '',
-                        attendee.email || '',
-                        attendee.phone || '',
-                        attendee.company || '',
-                        attendee.department || '',
-                        attendee.country || '',
-                        attendee.notes || ''
-                    ]);
-                });
-
-                const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-                ws['!cols'] = [
-                    { wch: 8 }, 
-                    { wch: 15 },
-                    { wch: 15 },
-                    { wch: 25 },
-                    { wch: 15 },
-                    { wch: 20 },
-                    { wch: 15 },
-                    { wch: 15 },
-                    { wch: 30 }
-                ];
-
-                ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 9 } }];
-
-                XLSX.utils.book_append_sheet(wb, ws, "Attendees");
-
-                const filename = `Attendees_${day}-${month}-${year}_${hours}-${minutes}.xlsx`;
-
-                XLSX.writeFile(wb, filename);
-                showAlert('success', 'Excel exported successfully');
-
-            } catch (error) {
-                console.error('Export error:', error);
-                showAlert('danger', 'Export failed: ' + error.message);
-            }
-        }
-
-
-                   function initializeAttendeesDataTable() {
-            if ($.fn.DataTable.isDataTable('#attendeesTable')) {
-                attendeesDataTable.destroy();
-                $('#attendeesTable tbody').empty();
-            }
-
-            attendeesDataTable = $('#attendeesTable').DataTable({
-                paging: true,
-                pageLength: 10,
-                lengthMenu: [10, 25, 50, 100],
-                searching: true,
-                ordering: true,
-                info: true,
-                autoWidth: false,
-                responsive: true, // ADD THIS - makes it work on mobile
-                language: {
-                    processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
-                    emptyTable: 'No attendees found',
-                    info: 'Showing _START_ to _END_ of _TOTAL_ attendees',
-                    infoEmpty: 'Showing 0 to 0 of 0 attendees',
-                    infoFiltered: '(filtered from _MAX_ total attendees)',
-                    lengthMenu: 'Show _MENU_ attendees',
-                    search: 'Search:',
-                    paginate: {
-                        first: 'First',
-                        last: 'Last',
-                        next: 'Next',
-                        previous: 'Previous'
+            function exportToExcel(data) {
+                    if (!data || data.length === 0) {
+                        showAlert('danger', 'No data to export');
+                        return;
                     }
-                },
-                dom: 'Bfrtip',
-                buttons: [
-                    {
-                        extend: 'excel',
-                        text: '<i class="fas fa-file-excel"></i> Export',
-                        className: 'btn btn-success btn-sm',
-                        exportOptions: {
-                            modifier: {
-                                search: 'none',
-                                page: 'all'
-                            },
-                            columns: ':visible'
-                        },
-                        title: 'Attendees Report',
-                        filename: function() {
-                            const now = new Date();
-                            const day = String(now.getDate()).padStart(2, '0');
-                            const month = String(now.getMonth() + 1).padStart(2, '0');
-                            const year = now.getFullYear();
-                            return `Attendees_${day}-${month}-${year}`;
-                        }
+
+                    try {
+                        const wb = XLSX.utils.book_new();
+                        const excelData = [];
+                        const now = new Date();
+                        const day = String(now.getDate()).padStart(2, '0');
+                        const month = String(now.getMonth() + 1).padStart(2, '0');
+                        const year = now.getFullYear();
+                        const hours = String(now.getHours()).padStart(2, '0');
+                        const minutes = String(now.getMinutes()).padStart(2, '0');
+
+                        // Title row
+                        excelData.push([`ATTENDEES LIST REPORT - Exported on: ${day}/${month}/${year}, ${hours}:${minutes}`]);
+                        excelData.push([]); // Empty row
+
+                        // Headers row (NO ID)
+                        excelData.push([
+                            'First Name',
+                            'Last Name',
+                            'Email',
+                            'Phone',
+                            'Company',
+                            'Department',
+                            'Country',
+                            'Notes'
+                        ]);
+
+                        // Data rows (NO ID)
+                        data.forEach(attendee => {
+                            excelData.push([
+                                attendee.firstName || '',
+                                attendee.lastName || '',
+                                attendee.email || '',
+                                attendee.phone || '',
+                                attendee.company || '',
+                                attendee.department || '',
+                                attendee.country || '',
+                                attendee.notes || ''
+                            ]);
+                        });
+
+                        const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+                        ws['!cols'] = [
+                            { wch: 15 }, // First Name
+                            { wch: 15 }, // Last Name
+                            { wch: 25 }, // Email
+                            { wch: 15 }, // Phone
+                            { wch: 20 }, // Company
+                            { wch: 15 }, // Department
+                            { wch: 15 }, // Country
+                            { wch: 30 }  // Notes
+                        ];
+
+                        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }]; // 7 columns now (not 8)
+
+                        XLSX.utils.book_append_sheet(wb, ws, "Attendees");
+
+                        const filename = `Attendees_${day}-${month}-${year}_${hours}-${minutes}.xlsx`;
+
+                        XLSX.writeFile(wb, filename);
+                        showAlert('success', 'Excel exported successfully');
+
+                    } catch (error) {
+                        console.error('Export error:', error);
+                        showAlert('danger', 'Export failed: ' + error.message);
                     }
-                ],
-                columnDefs: [
-                    {
-                        targets: 0,
-                        width: "5%",
-                        searchable: false,
-                        responsivePriority: 2
-                    },
-                    {
-                        targets: 1,
-                        width: "15%",
-                        responsivePriority: 1
-                    },
-                    {
-                        targets: 2,
-                        width: "15%",
-                        responsivePriority: 1
-                    },
-                    {
-                        targets: 3,
-                        width: "12%",
-                        responsivePriority: 3
-                    },
-                    {
-                        targets: 4,
-                        width: "12%",
-                        responsivePriority: 4
-                    },
-                    {
-                        targets: 5,
-                        width: "12%",
-                        responsivePriority: 4
-                    },
-                    {
-                        targets: 6,
-                        width: "10%",
-                        responsivePriority: 5
-                    },
-                    {
-                        targets: 7,
-                        width: "14%",
-                        responsivePriority: 6,
-                        render: function(data, type, row) {
-                            if (type === 'display') {
-                                return data && data.length > 50 ?
-                                    data.substr(0, 50) + '...' :
-                                    data || '';
+                }
+
+
+            function initializeAttendeesDataTable() {
+                    if ($.fn.DataTable.isDataTable('#attendeesTable')) {
+                        attendeesDataTable.destroy();
+                        $('#attendeesTable tbody').empty();
+                    }
+
+                    attendeesDataTable = $('#attendeesTable').DataTable({
+                        paging: true,
+                        pageLength: 10,
+                        lengthMenu: [10, 25, 50, 100],
+                        searching: true,
+                        ordering: true,
+                        info: true,
+                        autoWidth: false,
+                        responsive: true,
+                        language: {
+                            processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
+                            emptyTable: 'No attendees found',
+                            info: 'Showing _START_ to _END_ of _TOTAL_ attendees',
+                            infoEmpty: 'Showing 0 to 0 of 0 attendees',
+                            infoFiltered: '(filtered from _MAX_ total attendees)',
+                            lengthMenu: 'Show _MENU_ attendees',
+                            search: 'Search:',
+                            paginate: {
+                                first: 'First',
+                                last: 'Last',
+                                next: 'Next',
+                                previous: 'Previous'
                             }
-                            return data;
-                        }
-                    },
-                    {
-                        targets: 8,
-                        width: "10%",
-                        orderable: false,
-                        searchable: false,
-                        responsivePriority: 1
-                    }
-                ],
-                order: [[0, 'desc']]
-            });
-        }
+                        },
+                        dom: 'Bfrtip',
+                        buttons: [
+                            {
+                                extend: 'excel',
+                                text: '<i class="fas fa-file-excel"></i> Export',
+                                className: 'btn btn-success btn-sm',
+                                exportOptions: {
+                                    columns: [1, 2, 3, 4, 5, 6, 7] // Export all columns EXCEPT ID (0) and Actions (8)
+                                },
+                                title: 'Attendees Report',
+                                filename: function() {
+                                    const now = new Date();
+                                    const day = String(now.getDate()).padStart(2, '0');
+                                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                                    const year = now.getFullYear();
+                                    return `Attendees_${day}-${month}-${year}`;
+                                },
+                                customize: function(xlsx) {
+                                    const sheet = xlsx.xl.worksheets['sheet1.xml'];
+                                    // Add your custom Excel formatting here if needed
+                                }
+                            }
+                        ],
+                        columnDefs: [
+                            {
+                                targets: 0, // ID column - HIDDEN
+                                visible: false, // Hide from display
+                                searchable: false
+                            },
+                            {
+                                targets: 1, // Name column
+                                width: "15%",
+                                responsivePriority: 1
+                            },
+                            {
+                                targets: 2, // Email column
+                                width: "15%",
+                                responsivePriority: 1
+                            },
+                            {
+                                targets: 3, // Phone column
+                                width: "12%",
+                                responsivePriority: 3
+                            },
+                            {
+                                targets: 4, // Company column
+                                width: "12%",
+                                responsivePriority: 4
+                            },
+                            {
+                                targets: 5, // Department column
+                                width: "12%",
+                                responsivePriority: 4
+                            },
+                            {
+                                targets: 6, // Country column
+                                width: "10%",
+                                responsivePriority: 5
+                            },
+                            {
+                                targets: 7, // Notes column
+                                width: "14%",
+                                responsivePriority: 6,
+                                render: function(data, type, row) {
+                                    if (type === 'display') {
+                                        return data && data.length > 50 ?
+                                            data.substr(0, 50) + '...' :
+                                            data || '';
+                                    }
+                                    return data;
+                                }
+                            },
+                            {
+                                targets: 8, // Actions column
+                                width: "10%",
+                                orderable: false,
+                                searchable: false,
+                                responsivePriority: 1
+                            }
+                        ],
+                        order: [[1, 'asc']] // Sort by Name column (column 1) instead of ID
+                    });
+                }
 
             initializeDataTable();
             initializeAttendeesDataTable();
@@ -1164,10 +1335,10 @@
                         loadParticipants();
                         $('.menu-itemlocal[data-section="attendees-list"]').click();
                     },
-                    error: function (xhr) {
-                        const errorMessage = xhr.responseJSON?.message || 'Error saving participant';
-                        showAlert('danger', errorMessage);
-                    }
+                            error: function (xhr) {
+                            const errorMessage = xhr.responseJSON?.error || xhr.responseJSON?.message || 'Error saving participant';
+                            showAlert('danger', errorMessage);
+                        }
                 });
             }
 
@@ -1282,7 +1453,7 @@
                     data: { id: participantId },
                     success: function () {
                         showAlert('success', 'Participant deleted successfully!');
-                        loadParticipants(); 
+                        loadParticipants();
                     },
                     error: function (xhr) {
                         showAlert('danger', 'Error deleting participant');
@@ -1604,7 +1775,7 @@
 
                 hideModalError();
                 fileInput.val('');
-                
+
                 dropZone.html(`
                     <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
                     <h3>Drag & Drop your Excel file here</h3>
@@ -1628,9 +1799,9 @@
                         e.stopPropagation();
                         fileInput.click();
                     });
-                    
+
                     fileInput.off('change').on('change', handleFileSelect);
-                    
+
                     dropZone.off('dragover dragleave drop')
                         .on('dragover', function(e) {
                             e.preventDefault();

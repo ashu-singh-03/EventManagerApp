@@ -70,7 +70,7 @@ namespace EventManager.Application.Services
             };
         }
 
-        public async Task SaveParticipantAsync(ParticipantDto dto)
+        public async Task<(bool Success, string Message)> SaveParticipantAsync(ParticipantDto dto)
         {
             var participant = new Participant
             {
@@ -84,11 +84,12 @@ namespace EventManager.Application.Services
                 Company = dto.Company,
                 Department = dto.Department,
                 Notes = dto.Notes,
-                QrCodeHash = Guid.NewGuid().ToString()
+                QrCodeHash = Guid.NewGuid().ToString(),
             };
 
-            await _repository.SaveParticipantAsync(participant);
+            return await _repository.SaveParticipantAsync(participant);
         }
+
 
         public async Task DeleteParticipantAsync(int participantId)
         {

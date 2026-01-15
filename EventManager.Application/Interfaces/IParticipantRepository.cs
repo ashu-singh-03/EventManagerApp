@@ -10,7 +10,7 @@ namespace EventManager.Application.Interfaces
     {
         Task<IEnumerable<Participant>> GetParticipantsByEventAsync(int eventId);
         Task<Participant> GetParticipantByIdAsync(int participantId);
-        Task SaveParticipantAsync(Participant participant);
+        Task<(bool Success, string Message)> SaveParticipantAsync(Participant participant);
         Task DeleteParticipantAsync(int participantId);
         Task DeleteTempParticipantsAsync(int eventId, string createdBy);
         Task BulkInsertToTempTableAsync(DataTable data);

@@ -41,7 +41,7 @@ namespace EventManager.Infrastructure.Repositories
         }
 
 
-        public async Task SaveParticipantAsync(Participant participant)
+        public async Task<(bool Success, string Message)> SaveParticipantAsync(Participant participant)
         {
             using var connection = _context.CreateConnection();
 
@@ -53,20 +53,31 @@ namespace EventManager.Infrastructure.Repositories
                 p_LastName = participant.LastName,
                 p_Email = participant.Email,
                 p_Phone = participant.Phone,
+                p_Company = participant.Company,
+                p_Department = participant.Department,
                 p_Country = participant.Country,
-                p_Company = participant.Company,         
-                p_Department = participant.Department,  
                 p_Notes = participant.Notes,
                 p_QrCodeHash = participant.QrCodeHash,
                 p_CreatedBy = participant.CreatedBy,
                 p_UpdatedBy = participant.UpdatedBy
             };
 
-            await connection.ExecuteAsync(
+            var result = await connection.QueryFirstOrDefaultAsync<dynamic>(
                 "sp_SaveParticipant",
                 parameters,
-                commandType: System.Data.CommandType.StoredProcedure);
+                commandType: CommandType.StoredProcedure
+            );
+
+            if (result == null)
+                return (false, "Unexpected error");
+
+            if (result.Status == 0)
+                return (false, result.ErrorMessage);
+
+            return (true, "OK");
         }
+
+
 
 
         public async Task DeleteParticipantAsync(int participantId)

@@ -63,6 +63,7 @@ namespace EventManager.WebUI.Controllers
         public async Task<IActionResult> Save([FromBody] ParticipantDto dto)
         {
             dto.EventId = _eventClaimService.GetEventIdFromClaim();
+
             if (dto.EventId <= 0)
                 return BadRequest(new { error = "EventId must be greater than 0" });
 
@@ -80,10 +81,18 @@ namespace EventManager.WebUI.Controllers
                 });
             }
 
-            await _service.SaveParticipantAsync(dto);
+            // Call service and capture result
+            var result = await _service.SaveParticipantAsync(dto);
+
+            if (!result.Success)
+            {
+                // Return duplicate email error
+                return BadRequest(new { error = result.Message });
+            }
 
             return Ok(new { message = "Participant saved successfully" });
         }
+
 
         [HttpPost]
         public async Task<IActionResult> Delete(int id)
