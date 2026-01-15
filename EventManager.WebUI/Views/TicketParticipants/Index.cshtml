@@ -425,7 +425,13 @@
                 $.ajax({
                     url: form.attr('action'),
                     type: 'POST',
-                    data: postData,
+                        contentType: 'application/json; charset=utf-8',
+        dataType: 'json',
+                    //data: postData,
+                      data: JSON.stringify({
+            TicketTypeId: ticketTypeId,
+            ParticipantIds: checkedIds
+        }),
                     success: function(response) {
                         if (response && response.success) {
                             let alertMessage;
