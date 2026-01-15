@@ -150,9 +150,14 @@
                                 {
                                     data: 'participantCode',
                                     className: 'text-center',
-                                    render: function(data) {
+                                    render: function(data, type, row) {
+                                        if (type === 'sort') {
+                                            // Extract number for sorting: "A00-11" -> 11
+                                            return parseInt(data?.replace('A00-', '')) || 0;
+                                        }
                                         return data ? `<span class="badge bg-primary">${data}</span>` : 'N/A';
-                                    }
+                                    },
+                                    type: 'num'
                                 },
                                 {
                                     data: null,
@@ -195,10 +200,9 @@
                                     className: 'text-center',
                                     orderable: false,
                                     render: function(data) {
-
-                                       const printCount = data.printCount || 0;
-                                       const downloadCount = data.downloadCount || 0;
-                                       const isSelected = selectedParticipants.has(data.participantId.toString());
+                                        const printCount = data.printCount || 0;
+                                        const downloadCount = data.downloadCount || 0;
+                                        const isSelected = selectedParticipants.has(data.participantId.toString());
                                         return `
                                             <div class="action-buttons">
                                                 <button class="btn btn-outline-warning btn-sm email-btn"
@@ -206,7 +210,6 @@
                                                         data-name="${data.fullName}" title="Send Email">
                                                     <i class="fas fa-envelope"></i>
                                                 </button>
-
                                                 <div class="btn-with-badge">
                                                     <button class="btn btn-outline-primary btn-sm print-btn"
                                                             data-id="${data.participantId}" data-name="${data.fullName}"
@@ -218,14 +221,12 @@
                                                         ${printCount}
                                                     </span>
                                                 </div>
-
                                                 <div class="btn-with-badge">
                                                     <button class="btn btn-outline-success btn-sm download-btn"
                                                             data-id="${data.participantId}" data-name="${data.fullName}"
                                                             title="Download PDF">
                                                         <i class="fas fa-file-download"></i>
                                                       ${isSelected ? '<span class="badge bg-danger selection-badge"></span>' : ''}
-
                                                     </button>
                                                     <span class="counter-badge download-counter" data-id="${data.participantId}"
                                                           data-type="download" ${downloadCount > 0 ? '' : 'style="display: none;"'}>
@@ -244,10 +245,9 @@
                             responsive: true,
                             pageLength: 10,
                             lengthMenu: [5, 10, 25, 50],
-                            order: [[1, 'asc']]
+                            order: [[1, 'asc']] // Column index 1 is the Code column
                         });
                     }
-
                     $(document).on('change', '.participant-checkbox', function() {
                         const id = $(this).data('id');
                         const isChecked = $(this).prop('checked');

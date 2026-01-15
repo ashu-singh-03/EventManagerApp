@@ -119,7 +119,7 @@ namespace EventManager.Infrastructure.Repositories
             using var connection = _context.CreateConnection() as MySqlConnection;
             if (connection != null)
             {
-                var cmd = new MySqlCommand("sp_ValidateTempParticipants", connection);
+                var cmd = new MySqlCommand("sp_ValidateTempParticipants_V1", connection);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@p_event_id", eventId);
                 cmd.Parameters.AddWithValue("@p_created_by", createdBy);
