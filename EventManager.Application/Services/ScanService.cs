@@ -2,6 +2,7 @@
 using EventManager.Application.Interfaces;
 using EventManager.Domain.Entities;
 using iText.Barcodes;
+using iText.IO.Font;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Kernel.Font;
@@ -149,44 +150,41 @@ namespace EventManager.Application.Services
                 };
             }
         }
-        public async Task<byte[]> GenerateIDCard(dynamic participantData, string qrCodeValue,string fontFolder)
+        public async Task<byte[]> GenerateIDCard(dynamic participantData, string qrCodeValue, string fontFolder)
         {
             double pointsPerMm = 72d / 25.4d;
             PageSize a6Page = PageSize.A6;
 
-            float contentWidth = (float)(95f * pointsPerMm);
-            float contentHeight = (float)(53f * pointsPerMm);
-            float qrSize = (float)(20f * pointsPerMm);
+            float contentWidth = (float)(101.6f * pointsPerMm);
+            float contentHeight = (float)(65.5f * pointsPerMm);
+            float qrSize = (float)(25f * pointsPerMm);
 
-            // Position of the main box
-            float startY = (float)(25f * pointsPerMm);
+            float startY = (float)(5f * pointsPerMm);
             float startX = (a6Page.GetWidth() - contentWidth) / 2;
 
-            string arialRegularPath = System.IO.Path.Combine(fontFolder, "ARIAL.ttf");
-            string arialBoldPath = System.IO.Path.Combine(fontFolder, "ARIALBD.ttf");
-            string arialBlackPath = System.IO.Path.Combine(fontFolder, "ARIBLK.ttf");
+            // ... font loading code remains the same ...
 
             PdfFont fontBold = PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
             PdfFont fontRegular = PdfFontFactory.CreateFont(StandardFonts.HELVETICA);
 
+            string arialRegularPath = System.IO.Path.Combine(fontFolder, "ARIAL.ttf");
+            string arialBoldPath = System.IO.Path.Combine(fontFolder, "ARIALBD.ttf");
+            string arialBlackPath = System.IO.Path.Combine(fontFolder, "ariblk.ttf");
 
-            PdfFont fontarialblack= PdfFontFactory.CreateFont(StandardFonts.HELVETICA_BOLD);
+            PdfFont fontArialBlack = null;
 
             if (File.Exists(arialRegularPath))
-            {
                 fontRegular = PdfFontFactory.CreateFont(arialRegularPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
-            }
 
-            if (File.Exists(arialRegularPath))
-            {
+            if (File.Exists(arialBoldPath))
                 fontBold = PdfFontFactory.CreateFont(arialBoldPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
-            }
+
             if (File.Exists(arialBlackPath))
-            {
-                fontarialblack = PdfFontFactory.CreateFont(arialBlackPath, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
-            }
+                fontArialBlack = PdfFontFactory.CreateFont(arialBlackPath, PdfEncodings.IDENTITY_H, PdfFontFactory.EmbeddingStrategy.FORCE_EMBEDDED);
 
 
+
+            float textMaxWidth = contentWidth - 10;
 
             using (MemoryStream pdfStream = new MemoryStream())
             {
@@ -197,44 +195,104 @@ namespace EventManager.Application.Services
                     Document document = new Document(pdfDocument);
                     document.SetMargins(0, 0, 0, 0);
 
-                    // --- 1. THE MAIN CONTENT BOX ---
-                    Div container = new Div()
+                    // -------- NAME SECTION (Fixed position at top) --------
+                    string fullName = participantData.FullName ?? "N/A";
+                    float nameFontSize = GetFittedFontSize(fullName, fontBold, 24f, 14f, textMaxWidth);
+
+                    Paragraph namePara = new Paragraph(fullName)
+                        .SetFont(fontBold)
+                        .SetFontSize(nameFontSize)
+                        .SetTextAlignment(TextAlignment.CENTER)
                         .SetWidth(contentWidth)
-                        .SetHeight(contentHeight)
-                        .SetFixedPosition(startX, startY, contentWidth)
-                        .SetBorder(new SolidBorder(ColorConstants.BLACK, 1f));
+                        //.SetBorder(new SolidBorder(ColorConstants.RED, 1))
+                        .SetFixedPosition(startX, startY + contentHeight - 45, contentWidth);
 
-                    Table layoutTable = new Table(1).SetWidth(contentWidth).SetHeight(contentHeight);
+                    document.Add(namePara);
 
-                    // Top Section: Name & Company
-                    Div topText = new Div().SetTextAlignment(TextAlignment.CENTER).SetPaddingTop(5);
-                    topText.Add(new Paragraph(participantData.FullName ?? "N/A")
-                        .SetFont(fontBold).SetFontSize(23).SetMargin(0).SetMultipliedLeading(1.0f));
-                    topText.Add(new Paragraph(participantData.Company ?? "")
-                        .SetFont(fontBold).SetFontSize(15).SetMargin(0));
+                    // -------- COMPANY SECTION (Below name) --------
+                    float companyY = startY + contentHeight - 28 - nameFontSize * 1.5f;
+                    Paragraph companyPara = new Paragraph(participantData.Company ?? "")
+                        .SetFont(fontRegular)
+                        .SetFontSize(15)
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SetWidth(contentWidth)
+                        .SetFixedPosition(startX, companyY, contentWidth);
 
-                    layoutTable.AddCell(new Cell().Add(topText).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.TOP));
+                    document.Add(companyPara);
 
-                    // Bottom Section: Country & QR Code
-                    Div bottomArea = new Div().SetTextAlignment(TextAlignment.CENTER);
-                    bottomArea.Add(new Paragraph(participantData.Country ?? "")
-                        .SetFont(fontRegular).SetFontSize(13).SetMarginBottom(2));
+                    // -------- COUNTRY SECTION (Fixed position above QR) --------
+                    string country = participantData.Country ?? "";
+                    float countryFontSize = GetFittedFontSize(country, fontRegular, 15f, 10f, textMaxWidth);
 
-                    // Generate QR Code Object
+                    float countryY = startY + qrSize + 30; // Position above QR code
+                    Paragraph countryPara = new Paragraph(country)
+                        .SetFont(fontRegular)
+                        .SetFontSize(countryFontSize)
+                        .SetTextAlignment(TextAlignment.CENTER)
+                        .SetWidth(contentWidth)
+                        .SetFixedPosition(startX, countryY, contentWidth);
+
+                    document.Add(countryPara);
+
+                    // -------- QR CODE (Fixed position in middle) --------
                     BarcodeQRCode qrCode = new BarcodeQRCode(qrCodeValue ?? "Empty");
                     Image qrImage = new Image(qrCode.CreateFormXObject(pdfDocument))
-                        .SetWidth(qrSize).SetHeight(qrSize)
-                        .SetHorizontalAlignment(HorizontalAlignment.CENTER);
-                    bottomArea.Add(qrImage);
+                        .SetWidth(qrSize)
+                        .SetHeight(qrSize)
+                        .SetHorizontalAlignment(HorizontalAlignment.CENTER)
+                        .SetFixedPosition(startX + (contentWidth - qrSize) / 2, startY + 25, qrSize);//decreas to take down and increase to take it up
 
-                    layoutTable.AddCell(new Cell().Add(bottomArea).SetBorder(Border.NO_BORDER).SetVerticalAlignment(VerticalAlignment.BOTTOM).SetPaddingBottom(2));
+                    document.Add(qrImage);
 
-                    container.Add(layoutTable);
-                    document.Add(container);
+                    // -------- NOTES SECTION (Always at bottom, fixed position) --------
+                    string notes = participantData.Notes ?? "";
+                    if (!string.IsNullOrEmpty(notes))
+                    {
+                        float notesFontSize = 28f;
+
+                        // Scale only for width, not height
+                        float textWidthAt28pt = fontBold.GetWidth(notes, 28f);
+                        if (textWidthAt28pt > textMaxWidth)
+                        {
+                            notesFontSize = 28f * (textMaxWidth / textWidthAt28pt);
+                            notesFontSize = Math.Max(12f, notesFontSize);
+                        }
+
+                        // Fixed position at bottom
+                        Paragraph notesPara = new Paragraph(notes)
+                            .SetFont(fontArialBlack)
+                            .SetFontSize(28)
+                            .SetFontColor(ColorConstants.BLACK)
+                            .SetTextAlignment(TextAlignment.CENTER)
+                            .SetWidth(contentWidth)
+                            //.SetBorder(new SolidBorder(ColorConstants.BLACK, 1f))
+                            .SetFixedPosition(startX, startY - 15f, contentWidth); // 5pt from bottom Shift down 3pt
+
+                        document.Add(notesPara);
+                    }
+
                     document.Close();
                 }
+
                 return pdfStream.ToArray();
             }
+        }
+        private float GetFittedFontSize(string text, PdfFont font, float maxSize, float minSize, float maxWidth)
+        {
+            if (string.IsNullOrEmpty(text))
+                return minSize;
+
+            float fontSize = maxSize;
+
+            while (fontSize > minSize)
+            {
+                float textWidth = font.GetWidth(text, fontSize);
+                if (textWidth <= maxWidth)
+                    break;
+                fontSize -= 0.5f; // Reduce gradually
+            }
+
+            return Math.Max(fontSize, minSize);
         }
         private string ReplaceIdCardPlaceholders(string template, dynamic participant, string qrCodeBase64 = null)
         {
