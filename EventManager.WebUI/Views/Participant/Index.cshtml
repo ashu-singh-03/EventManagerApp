@@ -4,216 +4,85 @@
 }
 
 <style>
-    :root {
-        --primary: #FFC107;
-        --primary-dark: #FFA000;
-        --primary-light: #FFECB3;
-        --secondary: #212121;
-        --light: #FFFDE7;
-        --dark: #212121;
-        --gray: #757575;
-        --light-gray: #F5F5F5;
-        --border: #E0E0E0;
-        --danger: #D32F2F;
-        --success: #388E3C;
-        --warning: #F57C00;
-        --info: #1976D2;
+    .form-col label[for="firstName"]::after,
+    .form-col label[for="lastName"]::after,
+    .form-col label[for="email"]::after {
+        content: ' *';
+        color: #D32F2F;
+        margin-left: 2px;
     }
 
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    @@media (max-width: 768px) {
+        #attendeesTable td:last-child {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
     }
 
-    body {
-        background-color: var(--light);
-        color: var(--dark);
-        line-height: 1.6;
-        font-size: 14px;
-    }
-
-    .container {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 15px;
-    }
-
-    /* ALERT STYLES - PROFESSIONAL */
-    .alert-area {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        width: 400px;
-        z-index: 9999;
+    /* Fix for DataTable in modal - Minimal CSS */
+    .modal-body {
+        overflow: hidden;
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        height: 100%;
     }
 
-    .alert {
-        border-radius: 10px;
-        padding: 18px 20px;
-        border: 1px solid transparent;
-        display: flex;
-        align-items: flex-start;
-        animation: slideInRight 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        backdrop-filter: blur(10px);
-        transition: transform 0.3s ease, opacity 0.3s ease;
-    }
-
-        .alert:hover {
-            transform: translateX(-5px);
-        }
-
-    .alert-success {
-        background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
-        border-color: #b1d8b7;
-        color: #155724;
-        border-left: 5px solid #28a745;
-    }
-
-    .alert-danger {
-        background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
-        border-color: #f1b0b7;
-        color: #721c24;
-        border-left: 5px solid #dc3545;
-    }
-
-    .alert-icon {
-        font-size: 24px;
-        margin-right: 15px;
-        margin-top: 2px;
-        flex-shrink: 0;
-    }
-
-    .alert-content {
+    .attendee-list {
         flex: 1;
-        min-width: 0;
-    }
-
-    .alert-title {
-        font-weight: 700;
-        font-size: 16px;
-        margin-bottom: 5px;
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+        flex-direction: column;
+        min-height: 0;
     }
 
-    .alert-message {
-        font-size: 14px;
-        line-height: 1.5;
-        margin-bottom: 8px;
+        .attendee-list .table-container {
+            flex: 1;
+            overflow: auto;
+            min-height: 0;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+        }
+
+    #previewTable {
+        width: 100% !important;
+        margin-bottom: 0 !important;
     }
 
-    .alert-stats {
+        #previewTable thead th {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+            padding: 8px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        #previewTable tbody td {
+            padding: 6px 8px;
+            vertical-align: middle;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+    /* Ensure DataTables pagination/info stays visible */
+    .dataTables_wrapper {
         display: flex;
-        gap: 10px;
-        margin-bottom: 12px;
-        flex-wrap: wrap;
+        flex-direction: column;
+        height: 100%;
+        min-height: 0;
     }
 
-    .stat-badge {
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-size: 12px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
+    .dataTables_scroll {
+        flex: 1;
+        min-height: 0;
     }
 
-    .stat-success {
-        background-color: rgba(40, 167, 69, 0.15);
-        color: #155724;
+    .dataTables_scrollBody {
+        max-height: none !important;
     }
 
-    .stat-secondary {
-        background-color: rgba(108, 117, 125, 0.15);
-        color: #383d41;
-    }
-
-    .stat-danger {
-        background-color: rgba(220, 53, 69, 0.15);
-        color: #721c24;
-    }
-
-    .alert-actions {
-        margin-top: 8px;
-    }
-
-    .btn-download-error {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background-color: rgba(220, 53, 69, 0.1);
-        color: #dc3545;
-        border: 1px solid #dc3545;
-        border-radius: 6px;
-        font-size: 13px;
-        font-weight: 600;
-        text-decoration: none;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-
-        .btn-download-error:hover {
-            background-color: #dc3545;
-            color: white;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
-        }
-
-    .btn-close-alert {
-        background: none;
-        border: none;
-        color: inherit;
-        opacity: 0.7;
-        cursor: pointer;
-        font-size: 18px;
-        padding: 0;
-        margin-left: 10px;
-        transition: opacity 0.3s ease;
-    }
-
-        .btn-close-alert:hover {
-            opacity: 1;
-        }
-
-    .no-error-report {
-        font-size: 13px;
-        color: var(--gray);
-        font-style: italic;
-        padding: 4px 0;
-    }
-
-    @@keyframes slideInRight {
-        from {
-            transform: translateX(100%);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateX(0);
-            opacity: 1;
-        }
-    }
-
-    @@keyframes fadeOut {
-        from {
-            opacity: 1;
-        }
-
-        to {
-            opacity: 0;
-        }
-    }
-
-    /* Modal Error Styles */
     .modal-error-area {
         display: none;
         margin: 15px 0;
@@ -228,530 +97,27 @@
         padding: 15px;
         margin: 10px 0;
     }
-
-    /* REST OF YOUR EXISTING STYLES (unchanged) */
-    header {
-        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-        color: var(--dark);
-        padding: 15px 0;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
-
-    .menu-bar {
-        display: flex;
-        background-color: white;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-bottom: 20px;
-        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-    }
-
-    .menu-itemlocal {
-        flex: 1;
-        text-align: center;
-        padding: 15px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        font-weight: 600;
-        color: var(--gray);
-        font-size: 0.9rem;
-        border-right: 1px solid var(--border);
-    }
-
-        .menu-itemlocal:last-child {
-            border-right: none;
-        }
-
-        .menu-itemlocal.active {
-            background-color: var(--primary);
-            color: var(--dark);
-        }
-
-        .menu-itemlocal:hover:not(.active) {
-            background-color: var(--primary-light);
-        }
-
-    .content-section {
-        display: none;
-        background-color: white;
-        border-radius: 8px;
-        padding: 20px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-        margin-bottom: 20px;
-        min-height: 600px;
-    }
-
-        .content-section.active {
-            display: block;
-        }
-
-    .table-container {
-        overflow-x: auto;
-        border-radius: 8px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        background-color: white;
-        font-size: 0.85rem;
-    }
-
-    th, td {
-        padding: 12px;
-        text-align: left;
-        border-bottom: 1px solid var(--border);
-    }
-
-    th {
-        background-color: var(--light-gray);
-        font-weight: 600;
-        color: var(--dark);
-    }
-
-    tr:hover {
-        background-color: var(--primary-light);
-    }
-
-    .btn {
-        padding: 10px 18px;
-        border: none;
-        border-radius: 5px;
-        font-weight: 600;
-        cursor: pointer;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-    .btn-primary {
-        background-color: var(--primary);
-        color: var(--dark);
-    }
-
-        .btn-primary:hover {
-            background-color: var(--primary-dark);
-        }
-
-    .btn-secondary {
-        background-color: var(--light-gray);
-        color: var(--dark);
-    }
-
-        .btn-secondary:hover {
-            background-color: var(--border);
-        }
-
-    .btn-danger {
-        background-color: var(--danger);
-        color: white;
-    }
-
-    .btn-warning {
-        background-color: var(--warning);
-        color: white;
-    }
-
-    .btn-sm {
-        padding: 6px 12px;
-        font-size: 0.8rem;
-    }
-
-    .form-row {
-        display: flex;
-        gap: 15px;
-        margin-bottom: 15px;
-    }
-
-    .form-col {
-        flex: 1;
-    }
-
-    .form-group {
-        margin-bottom: 15px;
-    }
-
-    label {
-        display: block;
-        margin-bottom: 6px;
-        font-weight: 600;
-        color: var(--dark);
-        font-size: 0.9rem;
-    }
-
-    input, select, textarea {
-        width: 100%;
-        padding: 10px 12px;
-        border: 1px solid var(--border);
-        border-radius: 5px;
-        font-size: 0.9rem;
-        transition: all 0.3s ease;
-    }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(255, 193, 7, 0.2);
-        }
-
-    .action-bar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-        padding-bottom: 15px;
-        border-bottom: 1px solid var(--border);
-    }
-
-    .section-title {
-        font-size: 1.2rem;
-        margin-bottom: 15px;
-        color: var(--dark);
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    /* Modal Styles */
-    .modal {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-        z-index: 1000;
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-
-        .modal.show {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 1;
-        }
-
-    .modal-content {
-        background-color: white;
-        width: 90%;
-        max-width: 900px;
-        max-height: 90vh;
-        border-radius: 10px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        display: flex;
-        flex-direction: column;
-    }
-
-    .modal-header {
-        padding: 20px;
-        border-bottom: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .modal-title {
-        margin: 0;
-        font-size: 1.3rem;
-        color: var(--dark);
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .modal-close {
-        background: none;
-        border: none;
-        font-size: 28px;
-        cursor: pointer;
-        color: var(--gray);
-        line-height: 1;
-        transition: color 0.3s ease;
-    }
-
-        .modal-close:hover {
-            color: var(--dark);
-        }
-
-    .modal-body {
-        padding: 20px;
-        overflow-y: auto;
-        flex: 1;
-    }
-
-    .modal-footer {
-        padding: 15px 20px;
-        border-top: 1px solid var(--border);
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-    }
-
-    /* Upload Area Styles */
-    .upload-area {
-        border: 2px dashed var(--border);
-        border-radius: 8px;
-        padding: 40px 20px;
-        text-align: center;
-        margin: 20px 0;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        background-color: var(--light-gray);
-    }
-
-        .upload-area:hover,
-        .upload-area.drag-over {
-            border-color: var(--primary);
-            background-color: var(--primary-light);
-        }
-
-    .upload-icon {
-        font-size: 48px;
-        color: var(--gray);
-        margin-bottom: 15px;
-    }
-
-    .upload-area h3 {
-        margin: 10px 0;
-        color: var(--dark);
-    }
-
-    .upload-area p {
-        margin: 10px 0;
-        color: var(--gray);
-    }
-
-    /* Preview Table Styles */
-    #previewTable {
-        font-size: 0.8rem;
-    }
-
-        #previewTable th {
-            background-color: var(--light-gray);
-            position: sticky;
-            top: 0;
-        }
-
-    .text-center {
-        text-align: center;
-    }
-
-    .text-danger {
-        color: var(--danger);
-    }
-
-    .is-invalid {
-        border-color: var(--danger) !important;
-    }
-
-    .loading-text {
-        text-align: center;
-        padding: 20px;
-        color: var(--gray);
-        font-style: italic;
-    }
-
-    #previewTable_wrapper .dataTables_scrollBody {
-        max-height: 400px !important;
-        min-height: 200px !important;
-    }
-
-    .dataTables_wrapper {
-        margin: 10px 0;
-    }
-
-    .dataTables_length,
-    .dataTables_filter {
-        margin-bottom: 10px;
-    }
-
-    .dataTables_info {
-        margin-top: 10px;
-    }
-
-    .dataTables_paginate {
-        margin-top: 10px;
-    }
-
-    table.dataTable {
-        margin-top: 0 !important;
-        margin-bottom: 10px !important;
-        font-size: 0.85rem;
-    }
-
-    .dataTables_processing {
-        background-color: rgba(255, 193, 7, 0.8) !important;
-        color: #212121 !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        font-weight: bold !important;
-        border: none !important;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
-    }
-
-    #previewTable thead th {
-        position: sticky;
-        top: 0;
-        background-color: var(--light-gray);
-        z-index: 10;
-    }
-
-    .dataTables_filter input {
-        padding: 8px 12px;
-        border: 1px solid var(--border);
-        border-radius: 5px;
-        width: 200px;
-    }
-
-    .dataTables_length select {
-        padding: 6px 12px;
-        border: 1px solid var(--border);
-        border-radius: 5px;
-    }
-
-    .paginate_button {
-        padding: 6px 12px !important;
-        margin: 0 2px !important;
-        border: 1px solid var(--border) !important;
-        border-radius: 4px !important;
-    }
-
-        .paginate_button.current {
-            background-color: var(--primary) !important;
-            color: var(--dark) !important;
-            border-color: var(--primary-dark) !important;
-        }
-
-        .paginate_button:hover {
-            background-color: var(--primary-light) !important;
-            color: var(--dark) !important;
-        }
-
-    #attendeesTable_wrapper {
-        margin-top: 15px;
-    }
-
-        #attendeesTable_wrapper .dataTables_filter {
-            margin-bottom: 15px;
-        }
-
-        #attendeesTable_wrapper .dataTables_length {
-            margin-bottom: 15px;
-        }
-
-    #attendeesTable td:last-child {
-        white-space: nowrap;
-    }
-
-    .form-col label[for="firstName"]::after,
-    .form-col label[for="lastName"]::after,
-    .form-col label[for="email"]::after {
-        content: ' *';
-        color: var(--danger);
-        margin-left: 2px;
-    }
-    /* Remove asterisks from error messages */
-    .text-danger::after,
-    .error::after {
-        content: none !important;
-    }
-
 </style>
 
 <div class="container-fluid">
     <div class="card">
         <div class="card-body p-4 p-lg-5">
-
-            <div class="menu-bar">
-                <div class="menu-itemlocal active" data-section="manage-attendees">Manage Attendees</div>
-                <div class="menu-itemlocal" data-section="attendees-list">Attendees List</div>
-            </div>
-
-            <div class="alert-area"></div>
-
-            <div class="content-section active" id="manage-attendees">
+            <div class="content-section active" id="attendees-list">
                 <div class="action-bar">
-                    <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Attendees</h2>
-                    <div>
-                        <button class="btn btn-primary" id="bulkUploadBtn">
+                    <h2 class="section-title"><i class="fas fa-list-alt"></i> Participants List</h2>
+                    <div class="btn-group">
+                        <button class="btn btn-warning" id="showManageFormBtn">
+                            <i class="fas fa-user-plus"></i> Add Participant
+                        </button>
+                        <button class="btn btn-success" id="bulkUploadBtn">
                             <i class="fas fa-file-upload"></i> Bulk Upload
                         </button>
-                    </div>
-                </div>
-                <form id="attendeeForm">
-                    <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
-
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="firstName">First Name</label>
-                            <input type="text" id="firstName" name="FirstName" required>
-                        </div>
-                        <div class="form-col">
-                            <label for="lastName">Last Name</label>
-                            <input type="text" id="lastName" name="LastName" required>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="email">Email Address</label>
-                            <input type="email" id="email" name="Email" required>
-                        </div>
-                        <div class="form-col">
-                            <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" name="Phone">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="company">Company</label>
-                            <input type="text" id="company" name="Company">
-                        </div>
-                        <div class="form-col">
-                            <label for="department">Department</label>
-                            <input type="text" id="department" name="Department">
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="form-col">
-                            <label for="country">Country</label>
-                            <input type="text" id="country" name="Country">
-                        </div>
-                        <div class="form-col">
-                        </div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="notes">Additional Notes</label>
-                        <textarea id="notes" name="Notes" rows="2"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <button type="submit" class="btn btn-primary">Save Attendee</button>
-                    </div>
-                </form>
-            </div>
-
-            <div class="content-section" id="attendees-list">
-                <div class="action-bar">
-                    <h2 class="section-title"><i class="fas fa-list-alt"></i> Attendees List</h2>
-                    <div>
-                        <button class="btn btn-success" id="exportExcelBtn">
+                        <button class="btn btn-info" id="exportExcelBtn">
                             <i class="fas fa-file-excel"></i> Export All to Excel
                         </button>
                     </div>
                 </div>
                 <div class="table-responsive">
-                    <!-- ADD THIS WRAPPER -->
                     <table id="attendeesTable" class="table table-hover" style="width:100%">
                         <thead>
                             <tr>
@@ -771,6 +137,76 @@
                     </table>
                 </div>
             </div>
+
+            <div class="content-section" id="manage-attendees">
+                <div class="action-bar">
+                    <button type="button" class="btn btn-secondary mb-3" id="backToListBtn">
+                        <i class="fas fa-arrow-left"></i> Back to List
+                    </button>
+                    <h2 class="section-title"><i class="fas fa-user-edit"></i> Manage Participants</h2>
+                </div>
+
+                <div class="form-card">
+                    <h3><i class="fas fa-user-plus"></i> Participant Details</h3>
+                    <form id="attendeeForm">
+                        <input type="hidden" id="EventId" name="EventId" value="@ViewBag.EventId" />
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="firstName">First Name</label>
+                                <input type="text" id="firstName" name="FirstName" required>
+                            </div>
+                            <div class="form-col">
+                                <label for="lastName">Last Name</label>
+                                <input type="text" id="lastName" name="LastName" required>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="email">Email Address</label>
+                                <input type="email" id="email" name="Email" required>
+                            </div>
+                            <div class="form-col">
+                                <label for="phone">Phone Number</label>
+                                <input type="tel" id="phone" name="Phone">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="company">Company</label>
+                                <input type="text" id="company" name="Company">
+                            </div>
+                            <div class="form-col">
+                                <label for="department">Department</label>
+                                <input type="text" id="department" name="Department">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label for="country">Country</label>
+                                <input type="text" id="country" name="Country">
+                            </div>
+                            <div class="form-col">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="notes">Additional Notes</label>
+                            <textarea id="notes" name="Notes" rows="2"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="btn-group">
+                                <button type="submit" class="btn btn-primary">Save Participant</button>
+                                <button type="reset" class="btn btn-secondary">Reset Form</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -782,7 +218,7 @@
             <button class="modal-close" id="modalClose">&times;</button>
         </div>
         <div class="modal-body">
-            <p>Upload an Excel file to create or update multiple attendees at once.</p>
+            <p>Upload an Excel file to create or update multiple participants at once.</p>
 
             <div class="upload-area" id="dropZone">
                 <div class="upload-icon">
@@ -796,7 +232,6 @@
                 <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" style="display: none;">
             </div>
 
-            <!-- Error Message Area in Modal -->
             <div id="modalErrorArea" class="modal-error-area" style="display: none;">
                 <div class="modal-error">
                     <div style="display: flex; align-items: flex-start;">
@@ -817,22 +252,9 @@
             <div class="attendee-list">
                 <h3 class="section-title"><i class="fas fa-list"></i> Preview</h3>
                 <div class="table-container">
-                    <table id="previewTable">
-                        <thead>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Email</th>
-                                <th>Phone</th>
-                                <th>Company</th>
-                                <th>Department</th>
-                                <th>Country</th>
-                                <th>Notes</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Preview data will be inserted here -->
-                        </tbody>
+                    <!-- REMOVE THE HARDCODED TABLE - Let DataTables create it -->
+                    <table id="previewTable" style="width:100%">
+                        <!-- DataTables will populate this -->
                     </table>
                 </div>
             </div>
@@ -850,27 +272,53 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
+              $(document).ready(function () {
             let previewDataTable = null;
             let attendeesDataTable = null;
             let allAttendeesData = [];
+
+            // Show/hide sections
+            function showListSection() {
+                $('#attendees-list').addClass('active');
+                $('#manage-attendees').removeClass('active');
+                loadParticipants();
+            }
+
+            function showManageFormSection() {
+                $('#attendees-list').removeClass('active');
+                $('#manage-attendees').addClass('active');
+                $('#attendeeForm')[0].reset();
+                $('#attendeeForm').removeData('participant-id');
+                $('#attendeeForm button[type="submit"]').text('Save Participant');
+
+                // Reset validation
+                if ($('#attendeeForm').validate()) {
+                    $('#attendeeForm').validate().resetForm();
+                }
+                $('#attendeeForm').find('.is-invalid').removeClass('is-invalid');
+            }
+
+            // Event listeners for navigation
+            $('#showManageFormBtn').click(showManageFormSection);
+            $('#backToListBtn').click(showListSection);
+
+            // Initialize DataTables
             function initializeDataTable() {
                 if ($.fn.DataTable.isDataTable('#previewTable')) {
                     previewDataTable.destroy();
-                    $('#previewTable').empty();
                 }
 
                 $('#previewTable').html(`
                     <thead>
                         <tr>
-                            <th>First Name</th>
-                            <th>Last Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Company</th>
-                            <th>Department</th>
-                            <th>Country</th>
-                            <th>Notes</th>
+                            <th width="15%">First Name</th>
+                            <th width="15%">Last Name</th>
+                            <th width="20%">Email</th>
+                            <th width="12%">Phone</th>
+                            <th width="15%">Company</th>
+                            <th width="13%">Department</th>
+                            <th width="10%">Country</th>
+                            <th width="10%">Notes</th>
                         </tr>
                     </thead>
                     <tbody></tbody>
@@ -885,6 +333,11 @@
                     info: true,
                     autoWidth: false,
                     processing: false,
+                    responsive: false,
+                    scrollY: '300px',
+                    scrollCollapse: true,
+                    scrollX: false,
+                    order: [[0, 'asc']],
                     language: {
                         processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
                         emptyTable: 'No data available in table',
@@ -900,287 +353,217 @@
                             previous: 'Previous'
                         }
                     },
-                    dom: '<"top"lf>rt<"bottom"ip><"clear">',
-                    scrollY: '400px',
-                    scrollCollapse: true,
-                    order: [[0, 'asc']]
+                    columnDefs: [
+                        {
+                            targets: [0, 1],
+                            render: function(data, type) {
+                                if (type === 'display' && data && data.length > 15) {
+                                    return '<span title="' + escapeHtml(data) + '">' + data.substr(0, 15) + '...</span>';
+                                }
+                                return data;
+                            }
+                        },
+                        {
+                            targets: 2,
+                            render: function(data, type) {
+                                if (type === 'display' && data && data.length > 20) {
+                                    return '<span title="' + escapeHtml(data) + '">' + data.substr(0, 20) + '...</span>';
+                                }
+                                return data;
+                            }
+                        },
+                        {
+                            targets: 4,
+                            render: function(data, type) {
+                                if (type === 'display' && data && data.length > 20) {
+                                    return '<span title="' + escapeHtml(data) + '">' + data.substr(0, 20) + '...</span>';
+                                }
+                                return data;
+                            }
+                        },
+                        {
+                            targets: 7,
+                            render: function(data, type) {
+                                if (type === 'display' && data && data.length > 30) {
+                                    return '<span title="' + escapeHtml(data) + '">' + data.substr(0, 30) + '...</span>';
+                                }
+                                return data;
+                            }
+                        }
+                    ]
                 });
             }
 
-            function exportToExcel(data) {
-                    if (!data || data.length === 0) {
-                        showAlert('danger', 'No data to export');
-                        return;
-                    }
-
-                    try {
-                        const wb = XLSX.utils.book_new();
-                        const excelData = [];
-                        const now = new Date();
-                        const day = String(now.getDate()).padStart(2, '0');
-                        const month = String(now.getMonth() + 1).padStart(2, '0');
-                        const year = now.getFullYear();
-                        const hours = String(now.getHours()).padStart(2, '0');
-                        const minutes = String(now.getMinutes()).padStart(2, '0');
-
-                        // Title row
-                        excelData.push([`ATTENDEES LIST REPORT - Exported on: ${day}/${month}/${year}, ${hours}:${minutes}`]);
-                        excelData.push([]); // Empty row
-
-                        // Headers row (NO ID)
-                        excelData.push([
-                            'First Name',
-                            'Last Name',
-                            'Email',
-                            'Phone',
-                            'Company',
-                            'Department',
-                            'Country',
-                            'Notes'
-                        ]);
-
-                        // Data rows (NO ID)
-                        data.forEach(attendee => {
-                            excelData.push([
-                                attendee.firstName || '',
-                                attendee.lastName || '',
-                                attendee.email || '',
-                                attendee.phone || '',
-                                attendee.company || '',
-                                attendee.department || '',
-                                attendee.country || '',
-                                attendee.notes || ''
-                            ]);
-                        });
-
-                        const ws = XLSX.utils.aoa_to_sheet(excelData);
-
-                        ws['!cols'] = [
-                            { wch: 15 }, // First Name
-                            { wch: 15 }, // Last Name
-                            { wch: 25 }, // Email
-                            { wch: 15 }, // Phone
-                            { wch: 20 }, // Company
-                            { wch: 15 }, // Department
-                            { wch: 15 }, // Country
-                            { wch: 30 }  // Notes
-                        ];
-
-                        ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }]; // 7 columns now (not 8)
-
-                        XLSX.utils.book_append_sheet(wb, ws, "Attendees");
-
-                        const filename = `Attendees_${day}-${month}-${year}_${hours}-${minutes}.xlsx`;
-
-                        XLSX.writeFile(wb, filename);
-                        showAlert('success', 'Excel exported successfully');
-
-                    } catch (error) {
-                        console.error('Export error:', error);
-                        showAlert('danger', 'Export failed: ' + error.message);
-                    }
+            function initializeAttendeesDataTable() {
+                if ($.fn.DataTable.isDataTable('#attendeesTable')) {
+                    attendeesDataTable.destroy();
+                    $('#attendeesTable tbody').empty();
                 }
 
-
-            function initializeAttendeesDataTable() {
-                    if ($.fn.DataTable.isDataTable('#attendeesTable')) {
-                        attendeesDataTable.destroy();
-                        $('#attendeesTable tbody').empty();
-                    }
-
-                    attendeesDataTable = $('#attendeesTable').DataTable({
-                        paging: true,
-                        pageLength: 10,
-                        lengthMenu: [10, 25, 50, 100],
-                        searching: true,
-                        ordering: true,
-                        info: true,
-                        autoWidth: false,
-                        responsive: true,
-                        language: {
-                            processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
-                            emptyTable: 'No attendees found',
-                            info: 'Showing _START_ to _END_ of _TOTAL_ attendees',
-                            infoEmpty: 'Showing 0 to 0 of 0 attendees',
-                            infoFiltered: '(filtered from _MAX_ total attendees)',
-                            lengthMenu: 'Show _MENU_ attendees',
-                            search: 'Search:',
-                            paginate: {
-                                first: 'First',
-                                last: 'Last',
-                                next: 'Next',
-                                previous: 'Previous'
+                attendeesDataTable = $('#attendeesTable').DataTable({
+                    paging: true,
+                    pageLength: 10,
+                    lengthMenu: [10, 25, 50, 100],
+                    searching: true,
+                    ordering: true,
+                    info: true,
+                    autoWidth: false,
+                    responsive: true,
+                    language: {
+                        processing: '<i class="fas fa-spinner fa-spin fa-2x"></i> Loading...',
+                        emptyTable: 'No participants found',
+                        info: 'Showing _START_ to _END_ of _TOTAL_ participants',
+                        infoEmpty: 'Showing 0 to 0 of 0 participants',
+                        infoFiltered: '(filtered from _MAX_ total participants)',
+                        lengthMenu: 'Show _MENU_ participants',
+                        search: 'Search:',
+                        paginate: {
+                            first: 'First',
+                            last: 'Last',
+                            next: 'Next',
+                            previous: 'Previous'
+                        }
+                    },
+                    columnDefs: [
+                        {
+                            targets: 0,
+                            visible: false,
+                            searchable: false
+                        },
+                        {
+                            targets: 1,
+                            width: "15%",
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: 2,
+                            width: "15%",
+                            responsivePriority: 1
+                        },
+                        {
+                            targets: 3,
+                            width: "12%",
+                            responsivePriority: 3
+                        },
+                        {
+                            targets: 4,
+                            width: "12%",
+                            responsivePriority: 4
+                        },
+                        {
+                            targets: 5,
+                            width: "12%",
+                            responsivePriority: 4
+                        },
+                        {
+                            targets: 6,
+                            width: "10%",
+                            responsivePriority: 5
+                        },
+                        {
+                            targets: 7,
+                            width: "14%",
+                            responsivePriority: 6,
+                            render: function(data, type, row) {
+                                if (type === 'display') {
+                                    return data && data.length > 50 ?
+                                        data.substr(0, 50) + '...' :
+                                        data || '';
+                                }
+                                return data;
                             }
                         },
-                        dom: 'Bfrtip',
-                        buttons: [
-                            {
-                                extend: 'excel',
-                                text: '<i class="fas fa-file-excel"></i> Export',
-                                className: 'btn btn-success btn-sm',
-                                exportOptions: {
-                                    columns: [1, 2, 3, 4, 5, 6, 7] // Export all columns EXCEPT ID (0) and Actions (8)
-                                },
-                                title: 'Attendees Report',
-                                filename: function() {
-                                    const now = new Date();
-                                    const day = String(now.getDate()).padStart(2, '0');
-                                    const month = String(now.getMonth() + 1).padStart(2, '0');
-                                    const year = now.getFullYear();
-                                    return `Attendees_${day}-${month}-${year}`;
-                                },
-                                customize: function(xlsx) {
-                                    const sheet = xlsx.xl.worksheets['sheet1.xml'];
-                                    // Add your custom Excel formatting here if needed
-                                }
-                            }
-                        ],
-                        columnDefs: [
-                            {
-                                targets: 0, // ID column - HIDDEN
-                                visible: false, // Hide from display
-                                searchable: false
-                            },
-                            {
-                                targets: 1, // Name column
-                                width: "15%",
-                                responsivePriority: 1
-                            },
-                            {
-                                targets: 2, // Email column
-                                width: "15%",
-                                responsivePriority: 1
-                            },
-                            {
-                                targets: 3, // Phone column
-                                width: "12%",
-                                responsivePriority: 3
-                            },
-                            {
-                                targets: 4, // Company column
-                                width: "12%",
-                                responsivePriority: 4
-                            },
-                            {
-                                targets: 5, // Department column
-                                width: "12%",
-                                responsivePriority: 4
-                            },
-                            {
-                                targets: 6, // Country column
-                                width: "10%",
-                                responsivePriority: 5
-                            },
-                            {
-                                targets: 7, // Notes column
-                                width: "14%",
-                                responsivePriority: 6,
-                                render: function(data, type, row) {
-                                    if (type === 'display') {
-                                        return data && data.length > 50 ?
-                                            data.substr(0, 50) + '...' :
-                                            data || '';
-                                    }
-                                    return data;
-                                }
-                            },
-                            {
-                                targets: 8, // Actions column
-                                width: "10%",
-                                orderable: false,
-                                searchable: false,
-                                responsivePriority: 1
-                            }
-                        ],
-                        order: [[1, 'asc']] // Sort by Name column (column 1) instead of ID
-                    });
-                }
+                        {
+                            targets: 8,
+                            width: "10%",
+                            orderable: false,
+                            searchable: false,
+                            responsivePriority: 1
+                        }
+                    ],
+                    order: [[1, 'asc']]
+                });
+            }
 
-            initializeDataTable();
+            // Initialize only the attendees table on page load
             initializeAttendeesDataTable();
 
             function showAlert(type, message, totalRecords = null, processedRecords = null, errorFileUrl = null) {
-            const alertId = 'alert-' + Date.now();
-            const isSuccess = type === 'success';
+                const alertId = 'alert-' + Date.now();
+                const isSuccess = type === 'success';
 
-            // Check if we should show stats (when totalRecords is provided)
-            const showStats = totalRecords !== null;
+                const showStats = totalRecords !== null;
+                const totalNum = showStats ? Number(totalRecords) || 0 : 0;
+                const processedNum = showStats ? Number(processedRecords) || 0 : 0;
+                const failedNum = showStats && isSuccess ? totalNum - processedNum : processedRecords || 0;
 
-            // Convert to numbers if showing stats
-            const totalNum = showStats ? Number(totalRecords) || 0 : 0;
-            const processedNum = showStats ? Number(processedRecords) || 0 : 0;
-            const failedNum = showStats && isSuccess ? totalNum - processedNum : processedRecords || 0;
+                const config = {
+                    success: {
+                        title: 'Success!',
+                        icon: 'fa-check-circle',
+                        primaryStatIcon: 'fa-check-circle',
+                        primaryStatClass: 'stat-success',
+                        timeout: 8000
+                    },
+                    danger: {
+                        title: 'Error',
+                        icon: 'fa-exclamation-triangle',
+                        primaryStatIcon: 'fa-times-circle',
+                        primaryStatClass: 'stat-danger',
+                        timeout: 10000
+                    }
+                };
 
-            // Configuration for different alert types
-            const config = {
-                success: {
-                    title: 'Success!',
-                    icon: 'fa-check-circle',
-                    primaryStatIcon: 'fa-check-circle',
-                    primaryStatClass: 'stat-success',
-                    timeout: 8000
-                },
-                danger: {
-                    title: 'Error',
-                    icon: 'fa-exclamation-triangle',
-                    primaryStatIcon: 'fa-times-circle',
-                    primaryStatClass: 'stat-danger',
-                    timeout: 10000
-                }
-            };
+                const currentConfig = config[type] || config.danger;
 
-            const currentConfig = config[type] || config.danger;
+                let alertHtml = `
+                    <div id="${alertId}" class="alert alert-${type}">
+                        <i class="fas ${currentConfig.icon} alert-icon"></i>
+                        <div class="alert-content">
+                            <div class="alert-title">
+                                <span>${currentConfig.title}</span>
+                                <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <div class="alert-message">${message}</div>`;
 
-            let alertHtml = `
-                <div id="${alertId}" class="alert alert-${type}">
-                    <i class="fas ${currentConfig.icon} alert-icon"></i>
-                    <div class="alert-content">
-                        <div class="alert-title">
-                            <span>${currentConfig.title}</span>
-                            <button class="btn-close-alert" onclick="closeAlert('${alertId}')">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div class="alert-message">${message}</div>`;
-
-            // Add stats section only if needed
-            if (showStats) {
-                alertHtml += `
-                        <div class="alert-stats">
-                            <span class="stat-badge stat-secondary">
-                                <i class="fas fa-users"></i> Total: ${totalNum}
-                            </span>`;
-
-                if (isSuccess) {
+                if (showStats) {
                     alertHtml += `
-                            <span class="stat-badge stat-success">
-                                <i class="fas ${currentConfig.primaryStatIcon}"></i> Imported: ${processedNum}
-                            </span>`;
-                } else {
-                    alertHtml += `
-                            <span class="stat-badge stat-danger">
-                                <i class="fas ${currentConfig.primaryStatIcon}"></i> Failed: ${failedNum}
-                            </span>`;
+                            <div class="alert-stats">
+                                <span class="stat-badge stat-secondary">
+                                    <i class="fas fa-users"></i> Total: ${totalNum}
+                                </span>`;
+
+                    if (isSuccess) {
+                        alertHtml += `
+                                <span class="stat-badge stat-success">
+                                    <i class="fas ${currentConfig.primaryStatIcon}"></i> Imported: ${processedNum}
+                                </span>`;
+                    } else {
+                        alertHtml += `
+                                <span class="stat-badge stat-danger">
+                                    <i class="fas ${currentConfig.primaryStatIcon}"></i> Failed: ${failedNum}
+                                </span>`;
+                    }
+
+                    alertHtml += `</div>`;
                 }
 
-                alertHtml += `</div>`;
+                if (!isSuccess && errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '') {
+                    alertHtml += `
+                            <div class="alert-actions">
+                                <a href="${errorFileUrl}" class="btn-download-error" target="_blank" download>
+                                    <i class="fas fa-download"></i> Download Error Report
+                                </a>
+                            </div>`;
+                }
+
+                alertHtml += `</div></div>`;
+
+                $('.alert-area').append(alertHtml);
+                setTimeout(() => closeAlert(alertId), currentConfig.timeout);
             }
-
-            // Add error report section only for error alerts with valid URL
-            if (!isSuccess && errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '') {
-                alertHtml += `
-                        <div class="alert-actions">
-                            <a href="${errorFileUrl}" class="btn-download-error" target="_blank" download>
-                                <i class="fas fa-download"></i> Download Error Report
-                            </a>
-                        </div>`;
-            }
-
-            alertHtml += `</div></div>`;
-
-            $('.alert-area').append(alertHtml);
-            setTimeout(() => closeAlert(alertId), currentConfig.timeout);
-        }
 
             window.closeAlert = function(alertId) {
                 const alert = $('#' + alertId);
@@ -1196,14 +579,11 @@
                 const statsEl = $('#modalErrorStats');
                 const actionsEl = $('#modalErrorActions');
 
-                // Convert to numbers
                 const totalNum = totalRecords || 0;
                 const failedNum = failedRecords || 0;
 
-                // Set message
                 messageEl.text(message || 'Unknown error');
 
-                // Set stats
                 statsEl.html(`
                     <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; background-color: rgba(108, 117, 125, 0.15); color: #383d41;">
                         <i class="fas fa-users"></i> Total: ${totalNum}
@@ -1213,7 +593,6 @@
                     </span>
                 `);
 
-                // Set actions (download link)
                 if (errorFileUrl && errorFileUrl !== 'null' && errorFileUrl.trim() !== '' && errorFileUrl !== 'undefined') {
                     actionsEl.html(`
                         <div style="display: flex; gap: 10px; align-items: center;">
@@ -1226,7 +605,6 @@
                         </div>
                     `);
 
-                    // Add click handler for retry button
                     setTimeout(() => {
                         $('#retryUploadBtn').off('click').on('click', function(e) {
                             e.preventDefault();
@@ -1234,7 +612,6 @@
                             hideModalError();
                             fileInput.val('');
 
-                            // Reset drop zone
                             dropZone.html(`
                                 <div class="upload-icon"><i class="fas fa-file-upload"></i></div>
                                 <h3>Drag & Drop your Excel file here</h3>
@@ -1243,12 +620,10 @@
                                     <i class="fas fa-folder-open"></i> Browse Files
                                 </button>`);
 
-                            // Clear DataTable
                             if (previewDataTable) {
                                 previewDataTable.clear().draw();
                             }
 
-                            // Re-attach browse button click event
                             setTimeout(() => {
                                 $('#browseBtn').off('click').on('click', function(e) {
                                     e.preventDefault();
@@ -1260,7 +635,6 @@
                     }, 100);
                 }
 
-                // Show error area
                 errorArea.show();
             }
 
@@ -1270,25 +644,6 @@
                 $('#modalErrorStats').empty();
                 $('#modalErrorActions').empty();
             }
-
-            $('.menu-itemlocal').click(function () {
-                $('.menu-itemlocal').removeClass('active');
-                $(this).addClass('active');
-                $('.content-section').removeClass('active');
-                $('#' + $(this).data('section')).addClass('active');
-
-                if ($(this).data('section') === 'attendees-list') {
-                    // Initialize or reload DataTable
-                    if (!attendeesDataTable || !$.fn.DataTable.isDataTable('#attendeesTable')) {
-                        initializeAttendeesDataTable();
-                    }
-                    loadParticipants();
-                } else if ($(this).data('section') === 'manage-attendees') {
-                    $('#attendeeForm')[0].reset();
-                    $('#attendeeForm').removeData('participant-id');
-                    $('#attendeeForm button[type="submit"]').text('Save Attendee');
-                }
-            });
 
             $('#attendeeForm').validate({
                 rules: {
@@ -1331,91 +686,155 @@
                         showAlert('success', 'Participant saved successfully!');
                         $('#attendeeForm')[0].reset();
                         $('#attendeeForm').removeData('participant-id');
-                        $('#attendeeForm button[type="submit"]').text('Save Attendee');
+                        $('#attendeeForm button[type="submit"]').text('Save Participant');
                         loadParticipants();
-                        $('.menu-itemlocal[data-section="attendees-list"]').click();
+                        showListSection();
                     },
-                            error: function (xhr) {
-                            const errorMessage = xhr.responseJSON?.error || xhr.responseJSON?.message || 'Error saving participant';
-                            showAlert('danger', errorMessage);
-                        }
+                    error: function (xhr) {
+                        const errorMessage = xhr.responseJSON?.error || xhr.responseJSON?.message || 'Error saving participant';
+                        showAlert('danger', errorMessage);
+                    }
                 });
             }
 
-             function loadParticipants() {
-            // Show loading state
-            if (attendeesDataTable) {
-                attendeesDataTable.clear().draw();
+            function loadParticipants() {
+                if (attendeesDataTable) {
+                    attendeesDataTable.clear().draw();
+                }
+
+                $.ajax({
+                    url: '@Url.Action("LoadParticipants", "Participant")',
+                    type: 'GET',
+                    data: { eventId: $('#EventId').val() },
+                    success: function (participants) {
+                        allAttendeesData = participants || [];
+
+                        if (!attendeesDataTable || !$.fn.DataTable.isDataTable('#attendeesTable')) {
+                            initializeAttendeesDataTable();
+                        }
+
+                        attendeesDataTable.clear();
+
+                        if (!participants?.length) {
+                            attendeesDataTable.draw();
+                            return;
+                        }
+
+                        participants.forEach(p => {
+                            attendeesDataTable.row.add([
+                                p.participantId,
+                                `${p.firstName} ${p.lastName}`,
+                                p.email || '',
+                                p.phone || '',
+                                p.company || '',
+                                p.department || '',
+                                p.country || '',
+                                p.notes || '',
+                                `
+                                    <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
+                                    <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
+                                `
+                            ]);
+                        });
+
+                        attendeesDataTable.draw();
+                    },
+                    error: function (xhr) {
+                        showAlert('danger', 'Error loading participants');
+                        if (attendeesDataTable) {
+                            attendeesDataTable.clear().draw();
+                        }
+                    }
+                });
             }
 
-            $.ajax({
-                url: '@Url.Action("LoadParticipants", "Participant")',
-                type: 'GET',
-                data: { eventId: $('#EventId').val() },
-                success: function (participants) {
-                    // Store the original data for export
-                    allAttendeesData = participants || [];
+            function exportToExcel(data) {
+                if (!data || data.length === 0) {
+                    showAlert('warning', 'No data to export');
+                    return;
+                }
 
-                    // Initialize DataTable if not already initialized
-                    if (!attendeesDataTable || !$.fn.DataTable.isDataTable('#attendeesTable')) {
-                        initializeAttendeesDataTable();
-                    }
+                try {
+                    const wb = XLSX.utils.book_new();
+                    const excelData = [];
+                    const now = new Date();
+                    const day = String(now.getDate()).padStart(2, '0');
+                    const month = String(now.getMonth() + 1).padStart(2, '0');
+                    const year = now.getFullYear();
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
 
-                    // Clear existing data
-                    attendeesDataTable.clear();
+                    excelData.push([`PARTICIPANTS LIST REPORT - Exported on: ${day}/${month}/${year}, ${hours}:${minutes}`]);
+                    excelData.push([]);
 
-                    if (!participants?.length) {
-                        attendeesDataTable.draw();
-                        return;
-                    }
+                    excelData.push([
+                        'First Name',
+                        'Last Name',
+                        'Email',
+                        'Phone',
+                        'Company',
+                        'Department',
+                        'Country',
+                        'Notes'
+                    ]);
 
-                    // Add data to DataTable
-                    participants.forEach(p => {
-                        attendeesDataTable.row.add([
-                            p.participantId,
-                            `${p.firstName} ${p.lastName}`,
-                            p.email || '',
-                            p.phone || '',
-                            p.company || '',
-                            p.department || '',
-                            p.country || '',
-                            p.notes || '',
-                            `
-                                <button class="btn btn-warning btn-sm edit-btn" data-id="${p.participantId}">Edit</button>
-                                <button class="btn btn-danger btn-sm delete-btn" data-id="${p.participantId}">Delete</button>
-                            `
+                    data.forEach(attendee => {
+                        excelData.push([
+                            attendee.firstName || '',
+                            attendee.lastName || '',
+                            attendee.email || '',
+                            attendee.phone || '',
+                            attendee.company || '',
+                            attendee.department || '',
+                            attendee.country || '',
+                            attendee.notes || ''
                         ]);
                     });
 
-                    // Draw the table
-                    attendeesDataTable.draw();
-                },
-                error: function (xhr) {
-                    showAlert('danger', 'Error loading participants');
-                    if (attendeesDataTable) {
-                        attendeesDataTable.clear().draw();
-                    }
-                }
-            });
-        }
+                    const ws = XLSX.utils.aoa_to_sheet(excelData);
 
-                 $('#exportExcelBtn').click(function() {
-            if (!allAttendeesData || allAttendeesData.length === 0) {
-                showAlert('warning', 'No attendees data to export. Please load attendees first.');
-                return;
+                    ws['!cols'] = [
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 25 },
+                        { wch: 15 },
+                        { wch: 20 },
+                        { wch: 15 },
+                        { wch: 15 },
+                        { wch: 30 }
+                    ];
+
+                    ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 7 } }];
+
+                    XLSX.utils.book_append_sheet(wb, ws, "Participants");
+
+                    const filename = `Participants_${day}-${month}-${year}_${hours}-${minutes}.xlsx`;
+
+                    XLSX.writeFile(wb, filename);
+                    showAlert('success', 'Excel exported successfully');
+
+                } catch (error) {
+                    console.error('Export error:', error);
+                    showAlert('danger', 'Export failed: ' + error.message);
+                }
             }
 
-            // Add loading state
-            const originalText = $(this).html();
-            $(this).html('<i class="fas fa-spinner fa-spin"></i> Exporting...').prop('disabled', true);
+            $('#exportExcelBtn').click(function() {
+                if (!allAttendeesData || allAttendeesData.length === 0) {
+                    showAlert('warning', 'No participants data to export. Please load participants first.');
+                    return;
+                }
 
-            exportToExcel(allAttendeesData);
+                const originalText = $(this).html();
+                $(this).html('<i class="fas fa-spinner fa-spin"></i> Exporting...').prop('disabled', true);
 
-            // Re-enable after 2 seconds
-            setTimeout(() => {
-                $(this).html(originalText).prop('disabled', false);
-            }, 2000);
-        });
+                exportToExcel(allAttendeesData);
+
+                setTimeout(() => {
+                    $(this).html(originalText).prop('disabled', false);
+                }, 2000);
+            });
+
             $(document).on('click', '.edit-btn', function () {
                 debugger;
                 const participantId = $(this).data('id');
@@ -1424,7 +843,7 @@
                     type: 'GET',
                     data: { id: participantId },
                     success: function (participant) {
-                        $('.menu-itemlocal[data-section="manage-attendees"]').click();
+                        showManageFormSection();
                         $('#EventId').val(participant.eventId);
                         $('#firstName').val(participant.firstName);
                         $('#lastName').val(participant.lastName);
@@ -1435,10 +854,10 @@
                         $('#country').val(participant.country);
                         $('#notes').val(participant.notes);
                         $('#attendeeForm').data('participant-id', participant.participantId);
-                        $('#attendeeForm button[type="submit"]').text('Update Attendee');
+                        $('#attendeeForm button[type="submit"]').text('Update Participant');
                     },
                     error: function () {
-                        showError('Error fetching participant details.', 0, 0);
+                        showAlert('danger', 'Error fetching participant details.', 0, 0);
                     }
                 });
             });
@@ -1469,7 +888,17 @@
             $('#bulkUploadBtn').click(() => {
                 hideModalError();
                 modal.addClass('show');
-                initializeDataTable();
+
+                // Set modal height for better display
+                $('.modal-content').css('max-height', '85vh');
+
+                // Only initialize if not already done
+                if (!previewDataTable) {
+                    initializeDataTable();
+                } else {
+                    // Clear existing data
+                    previewDataTable.clear().draw();
+                }
             });
 
             $('#modalClose').click(() => {
@@ -1560,45 +989,51 @@
                         const headers = jsonData[0] || [];
                         const attendeeData = [];
 
-                        for (let i = 1; i < jsonData.length; i++) {
-                            const row = jsonData[i];
-                            const hasData = row.some(cell => cell?.toString().trim());
-                            if (!hasData) continue;
+                        // Process data in batches for better performance
+                        const batchSize = 500;
+                        for (let i = 1; i < jsonData.length; i += batchSize) {
+                            const end = Math.min(i + batchSize, jsonData.length);
 
-                            const attendee = {
-                                firstName: '',
-                                lastName: '',
-                                email: '',
-                                phone: '',
-                                company: '',
-                                department: '',
-                                country: '',
-                                notes: ''
-                            };
+                            for (let j = i; j < end; j++) {
+                                const row = jsonData[j];
+                                const hasData = row.some(cell => cell?.toString().trim());
+                                if (!hasData) continue;
 
-                            for (let j = 0; j < headers.length && j < row.length; j++) {
-                                const header = (headers[j] || '').toString().toLowerCase();
-                                const value = (row[j] || '').toString().trim();
-                                if (!value) continue;
+                                const attendee = {
+                                    firstName: '',
+                                    lastName: '',
+                                    email: '',
+                                    phone: '',
+                                    company: '',
+                                    department: '',
+                                    country: '',
+                                    notes: ''
+                                };
 
-                                if (header.includes('first')) attendee.firstName = value;
-                                else if (header.includes('last')) attendee.lastName = value;
-                                else if (header.includes('email')) attendee.email = value;
-                                else if (header.includes('phone')) attendee.phone = value;
-                                else if (header.includes('company')) attendee.company = value;
-                                else if (header.includes('department') || header.includes('dept')) attendee.department = value;
-                                else if (header.includes('country')) attendee.country = value;
-                                else if (header.includes('note')) attendee.notes = value;
-                            }
+                                for (let k = 0; k < headers.length && k < row.length; k++) {
+                                    const header = (headers[k] || '').toString().toLowerCase();
+                                    const value = (row[k] || '').toString().trim();
+                                    if (!value) continue;
 
-                            if (attendee.firstName || attendee.lastName || attendee.email) {
-                                attendeeData.push(attendee);
+                                    if (header.includes('first')) attendee.firstName = value;
+                                    else if (header.includes('last')) attendee.lastName = value;
+                                    else if (header.includes('email')) attendee.email = value;
+                                    else if (header.includes('phone')) attendee.phone = value;
+                                    else if (header.includes('company')) attendee.company = value;
+                                    else if (header.includes('department') || header.includes('dept')) attendee.department = value;
+                                    else if (header.includes('country')) attendee.country = value;
+                                    else if (header.includes('note')) attendee.notes = value;
+                                }
+
+                                if (attendee.firstName || attendee.lastName || attendee.email) {
+                                    attendeeData.push(attendee);
+                                }
                             }
                         }
 
                         dropZone.find('p').html(`
                             <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                            ${(file.size/1024).toFixed(2)} KB • ${attendeeData.length} attendees found`);
+                            ${(file.size/1024).toFixed(2)} KB • ${attendeeData.length} participants found`);
 
                         renderDataTable(attendeeData);
 
@@ -1618,6 +1053,7 @@
                 if (!previewDataTable) {
                     initializeDataTable();
                 }
+
                 previewDataTable.clear();
 
                 if (!data?.length) {
@@ -1625,21 +1061,41 @@
                     return;
                 }
 
-                data.forEach(row => {
-                    previewDataTable.row.add([
-                        escapeHtml(row.firstName || ''),
-                        escapeHtml(row.lastName || ''),
-                        escapeHtml(row.email || ''),
-                        escapeHtml(row.phone || ''),
-                        escapeHtml(row.company || ''),
-                        escapeHtml(row.department || ''),
-                        escapeHtml(row.country || ''),
-                        escapeHtml(row.notes || '')
-                    ]);
-                });
+                // Add data in smaller batches for better performance
+                const batchSize = 100;
+                let rowIndex = 0;
 
-                previewDataTable.draw();
-                updateDataTableInfo(data.length);
+                function addBatch(startIndex) {
+                    const endIndex = Math.min(startIndex + batchSize, data.length);
+
+                    for (let i = startIndex; i < endIndex; i++) {
+                        const row = data[i];
+                        previewDataTable.row.add([
+                            escapeHtml(row.firstName || ''),
+                            escapeHtml(row.lastName || ''),
+                            escapeHtml(row.email || ''),
+                            escapeHtml(row.phone || ''),
+                            escapeHtml(row.company || ''),
+                            escapeHtml(row.department || ''),
+                            escapeHtml(row.country || ''),
+                            escapeHtml(row.notes || '')
+                        ]);
+                        rowIndex++;
+                    }
+
+                    previewDataTable.draw(false); // false means don't redraw yet
+
+                    if (rowIndex < data.length) {
+                        // Add next batch after a short delay
+                        setTimeout(() => addBatch(rowIndex), 50);
+                    } else {
+                        // Final draw with all data
+                        previewDataTable.draw();
+                        updateDataTableInfo(data.length);
+                    }
+                }
+
+                addBatch(0);
             }
 
             function updateDataTableInfo(totalCount) {
@@ -1653,7 +1109,7 @@
                             const start = pageInfo.start + 1;
                             const end = pageInfo.end;
 
-                            infoElement.text(`Showing ${start} to ${end} of ${totalCount} attendees`);
+                            infoElement.text(`Showing ${start} to ${end} of ${totalCount} Participants`);
                         }
                     }
                 }, 100);
@@ -1793,7 +1249,6 @@
                 }
 
                 setTimeout(() => {
-
                     $('#browseBtn').off('click').on('click', function(e) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -1825,6 +1280,8 @@
                         });
                 }, 100);
             });
+
+            showListSection();
         });
     </script>
 }

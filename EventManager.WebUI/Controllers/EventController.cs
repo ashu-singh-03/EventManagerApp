@@ -24,6 +24,14 @@ namespace EventManager.WebUI.Controllers
         public async Task<IActionResult> Index()
         {
             var events = await _eventService.GetAllEventsAsync();
+
+            // Use TempData instead of ViewBag (persists for one more request)
+            if (events.Any())
+            {
+                ViewBag.CurrentEventId = events.First().EventId;
+                TempData["CurrentEventId"] = events.First().EventId; // ADD THIS
+            }
+
             return View(events);
         }
 
@@ -35,17 +43,25 @@ namespace EventManager.WebUI.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(int id) 
+        public async Task<IActionResult> Edit(int id = 0) // Make optional
         {
+            // If no ID provided, get first event
+            if (id <= 0)
+            {
+                var events = await _eventService.GetAllEventsAsync();
+                if (!events.Any())
+                {
+                    return RedirectToAction("Create"); // No events, go create one
+                }
+                id = events.First().EventId;
+            }
+
             if (id <= 0) return BadRequest();
 
-            // Store eventId in claims (your security logic)
             await _eventClaimService.SetEventIdClaimAsync(id);
-
             var eventWithTickets = await _eventService.GetEventWithTicketsByIdAsync(id);
             if (eventWithTickets == null) return NotFound();
 
-            // Reuse Create view for editing
             return View("Create", eventWithTickets);
         }
 
