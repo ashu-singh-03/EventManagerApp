@@ -61,6 +61,9 @@
                         <p class="text-muted small mb-0">Manage participants and access credentials</p>
                     </div>
                 </div>
+                <button class="btn btn-danger btn-sm" id="quickScanBtn">
+                    <i class="fas fa-qrcode"></i> Quick Scan
+                </button>
                 <button class="btn btn-primary btn-sm" id="generateAllPdfs" style="display:none;">
                     <i class="fas fa-file-pdf"></i> Generate All PDFs
                 </button>
@@ -125,6 +128,10 @@
 @section Scripts {
     <script>
                 $(document).ready(function() {
+
+                    $('#quickScanBtn').on('click', function() {
+                        window.location.href = '/QrConfiguration/Index?fromQuickScan=true';
+                    });
 
                     let participantsTable;
                     let selectedParticipants = new Set();
@@ -1193,7 +1200,5 @@
                         });
                     });
                 }
-
-
     </script>
 }
