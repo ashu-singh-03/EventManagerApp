@@ -495,22 +495,27 @@
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
 
     <script>
-           $(document).ready(function() {
-                const urlParams = new URLSearchParams(window.location.search);
-                const fromQuickScan = urlParams.get('fromQuickScan');
+                   $(document).ready(function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fromQuickScan = urlParams.get('fromQuickScan');
 
-                if (fromQuickScan === 'true') {
-                    const $accessPointDropdown = $('#accessPoint');
-                    const $trueOptions = $accessPointDropdown.find('option[data-print-center="True"]');
-                    if ($trueOptions.length === 1) {
-                        $accessPointDropdown.val($trueOptions.val()).trigger('change');
-                    } else if ($trueOptions.length > 1) {
-                        $accessPointDropdown.val('').trigger('change');
-                    } else {
-                        $accessPointDropdown.val('').trigger('change');
-                    }
+            // FIX: Keep buttons enabled when coming from Quick Scan
+            if (fromQuickScan === 'true') {
+                $('#btnStart,#btnManualSubmit').prop('disabled', false);
+            }
+
+            if (fromQuickScan === 'true') {
+                const $accessPointDropdown = $('#accessPoint');
+                const $trueOptions = $accessPointDropdown.find('option[data-print-center="True"]');
+                if ($trueOptions.length === 1) {
+                    $accessPointDropdown.val($trueOptions.val()).trigger('change');
+                } else if ($trueOptions.length > 1) {
+                    $accessPointDropdown.val('').trigger('change');
+                } else {
+                    $accessPointDropdown.val('').trigger('change');
                 }
-            });
+            }
+        });
                function logToDatabase(participantId, isPrintAction) {
                    debugger;
             const idValue = parseInt(participantId);
