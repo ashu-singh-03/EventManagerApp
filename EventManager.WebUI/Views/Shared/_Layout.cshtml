@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - EventManagerApp</title>
+    <title>Travplatforms</title>
 
     <!-- Bootstrap & Font Awesome -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" />
@@ -543,6 +543,22 @@
                 opacity: 1;
             }
         }
+        /* Logo Styles */
+        /* Logo – responsive & mobile friendly */
+        .nav-logo {
+            width: clamp(110px, 20vw, 140px); /* auto scales */
+            height: auto;
+            border-radius: 6px;
+            object-fit: contain;
+        }
+
+        /* Center logo properly on mobile */
+        @@media (max-width: 992px) {
+            .navbar-brand {
+                margin: 0 auto;
+            }
+        }
+
     </style>
 
     @RenderSection("Styles", required: false)
@@ -555,7 +571,9 @@
                 <i class="fa-solid fa-bars"></i>
             </button>
 
-            <a class="navbar-brand fw-bold fs-4 mx-auto mx-lg-0">EventManagerApp</a>
+            <a class="navbar-brand mx-auto mx-lg-0">
+                <img src="~/images/travPlatformsLogo.jpg" alt="Event Manager Logo" class="nav-logo">
+            </a>
 
             <div class="d-flex align-items-center">
                 <a class="nav-link" asp-controller="Event" asp-action="Index">
