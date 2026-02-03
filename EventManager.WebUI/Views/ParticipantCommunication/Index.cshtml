@@ -46,6 +46,25 @@
         gap: 8px;
         justify-content: center;
     }
+
+    #pdfPreviewModal {
+        z-index: 1060;
+    }
+
+    .modal-backdrop {
+        z-index: 1050;
+    }
+
+    /* Mobile responsive - simple fix */
+    @@media (max-width: 768px) {
+        .action-buttons-container .d-flex {
+            flex-wrap: wrap;
+        }
+
+        #pdfPreviewFrame {
+            height: 60vh;
+        }
+    }
 </style>
 
 <div class="container-fluid py-4">
@@ -118,268 +137,172 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Table rows will be populated here -->
                 </tbody>
             </table>
         </div>
     </div>
 </div>
 
+
+<div class="modal fade" id="pdfPreviewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalTitle">ID Card Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0">
+                <iframe id="pdfPreviewFrame"
+                        style="width: 100%; height: 70vh; border: none;"
+                        title="ID Card Preview">
+                </iframe>
+            </div>
+            <div class="modal-footer">
+                <div class="action-buttons-container" id="previewActionsContainer">
+                    <!-- All buttons in one line - View button removed -->
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <!-- ADDED flex-wrap CLASS HERE -->
+                        <!-- Print button with badge -->
+                        <div class="btn-with-badge">
+                            <button class="btn btn-outline-primary btn-sm print-btn"
+                                    id="previewPrintBtn"
+                                    title="Print ID Card">
+                                <i class="fas fa-print"></i>
+                            </button>
+                            <span class="counter-badge print-counter"
+                                  id="previewPrintCounter"
+                                  data-type="print"
+                                  style="display: none;"></span>
+                        </div>
+
+                        <!-- Download button with badge -->
+                        <div class="btn-with-badge">
+                            <button class="btn btn-outline-success btn-sm download-btn"
+                                    id="previewDownloadBtn"
+                                    title="Download PDF">
+                                <i class="fas fa-file-download"></i>
+                            </button>
+                            <span class="counter-badge download-counter"
+                                  id="previewDownloadCounter"
+                                  data-type="download"
+                                  style="display: none;"></span>
+                        </div>
+
+                        <!-- Email button -->
+                        <button class="btn btn-outline-warning btn-sm email-btn"
+                                id="previewEmailBtn"
+                                title="Send Email">
+                            <i class="fas fa-envelope"></i>
+                        </button>
+
+                        <!-- WhatsApp button -->
+                        <button class="btn btn-outline-success btn-sm whatsapp-btn"
+                                id="previewWhatsappBtn"
+                                title="Send WhatsApp Message">
+                            <i class="fab fa-whatsapp"></i>
+                        </button>
+
+                        <!-- Telegram button -->
+                        <button class="btn btn-outline-info btn-sm telegram-btn"
+                                id="previewTelegramBtn"
+                                title="Send Telegram Message">
+                            <i class="fab fa-telegram"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
-    <script>
-                $(document).ready(function() {
+<script>
+            $(document).ready(function() {
+            let currentPreviewBlobUrl = null;
+            let currentPreviewParticipantId = null;
+            let currentPreviewParticipantName = null;
+            let pdfPreviewModal = null;
 
-                    $('#quickScanBtn').on('click', function() {
-                        window.location.href = '/QrConfiguration/Index?fromQuickScan=true';
-                        return true;
-                    });
+            $(document).on('click', '.view-btn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
 
-                    let participantsTable;
-                    let selectedParticipants = new Set();
-                    // Initialize DataTable
-                    function initializeDataTable() {
-                        participantsTable = $('#participantsTable').DataTable({
-                            ajax: {
-                                url: '/ParticipantCommunication/LoadParticipantsWithAssignments',
-                                type: 'GET',
-                                dataSrc: function(response) {
-                                    return response.success ? response.data : [];
-                                }
-                            },
-                            columns: [
-                                {
-                                    data: null,
-                                    className: 'text-center',
-                                    orderable: false,
-                                    render: function(data) {
-                                        return `<input type="checkbox" class="participant-checkbox" data-id="${data.participantId}">`;
-                                    }
-                                },
-                                {
-                                    data: 'participantCode',
-                                    className: 'text-center',
-                                    render: function(data, type, row) {
-                                        if (type === 'sort') {
-                                            // Extract number for sorting: "A00-11" -> 11
-                                            return parseInt(data?.replace('A00-', '')) || 0;
-                                        }
-                                        return data ? `<span class="badge bg-primary">${data}</span>` : 'N/A';
-                                    },
-                                    type: 'num'
-                                },
-                                {
-                                    data: null,
-                                    render: function(data) {
-                                        return `<div>${data.fullName}<br><small class="text-muted">${data.email}</small></div>`;
-                                    }
-                                },
-                                {
-                                    data: 'phone',
-                                    render: function(data) {
-                                        return data || 'N/A';
-                                    }
-                                },
-                                {
-                                    data: 'company',
-                                    render: function(data) {
-                                        return data || 'N/A';
-                                    }
-                                },
-                                {
-                                    data: 'ticketTypes',
-                                    render: function(data) {
-                                        return data && data !== 'Not Assigned' ?
-                                            `<span class="badge bg-warning">${data}</span>` :
-                                            '<span class="badge bg-secondary">Not Assigned</span>';
-                                    }
-                                },
-                                {
-                                    data: 'accessPoints',
-                                    render: function(data) {
-                                        if (!data || data === 'No Access') {
-                                            return '<span class="badge bg-secondary">No Access</span>';
-                                        }
-                                        const points = data.split(', ');
-                                        return points.map(point => `<span class="badge bg-info me-1">${point}</span>`).join('');
-                                    }
-                                },
-                                {
-                                    data: null,
-                                    className: 'text-center',
-                                    orderable: false,
-                                    render: function(data) {
-                                        const printCount = data.printCount || 0;
-                                        const downloadCount = data.downloadCount || 0;
-                                        const isSelected = selectedParticipants.has(data.participantId.toString());
+            const btn = $(this);
+            const id = btn.data('id');
+            const name = btn.data('name');
+            const originalHtml = btn.html();
 
-                                        return `
-                                            <div class="action-buttons-container">
-                                                <!-- First Row -->
-                                                <div class="d-flex justify-content-center mb-2">
-                                                    <button class="btn btn-outline-info btn-sm view-btn me-1"
-                                                            data-id="${data.participantId}"
-                                                            data-name="${data.fullName}"
-                                                            title="View Details">
-                                                        <i class="fas fa-eye"></i>
-                                                    </button>
+            // Show loading state
+            btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
 
-                                                    <div class="btn-with-badge me-1">
-                                                        <button class="btn btn-outline-primary btn-sm print-btn"
-                                                                data-id="${data.participantId}"
-                                                                data-name="${data.fullName}"
-                                                                title="Print ID Card">
-                                                            <i class="fas fa-print"></i>
-                                                        </button>
-                                                        <span class="counter-badge print-counter" data-id="${data.participantId}"
-                                                              data-type="print" ${printCount > 0 ? '' : 'style="display: none;"'}>
-                                                            ${printCount}
-                                                        </span>
-                                                    </div>
-
-                                                    <div class="btn-with-badge">
-                                                        <button class="btn btn-outline-success btn-sm download-btn"
-                                                                data-id="${data.participantId}"
-                                                                data-name="${data.fullName}"
-                                                                title="Download PDF">
-                                                            <i class="fas fa-file-download"></i>
-                                                            ${isSelected ? '<span class="badge bg-danger selection-badge"></span>' : ''}
-                                                        </button>
-                                                        <span class="counter-badge download-counter" data-id="${data.participantId}"
-                                                              data-type="download" ${downloadCount > 0 ? '' : 'style="display: none;"'}>
-                                                            ${downloadCount}
-                                                        </span>
-                                                    </div>
-                                                </div>
-
-                                                <!-- Second Row -->
-                                                <div class="d-flex justify-content-center">
-                                                    <button class="btn btn-outline-warning btn-sm email-btn me-1"
-                                                            data-id="${data.participantId}"
-                                                            data-email="${data.email}"
-                                                            data-name="${data.fullName}"
-                                                            title="Send Email">
-                                                        <i class="fas fa-envelope"></i>
-                                                    </button>
-
-                                                    <button class="btn btn-outline-success btn-sm whatsapp-btn me-1"
-                                                            data-id="${data.participantId}"
-                                                            data-phone="${data.phone}"
-                                                            data-name="${data.fullName}"
-                                                            title="Send WhatsApp Message">
-                                                        <i class="fab fa-whatsapp"></i>
-                                                    </button>
-
-                                                    <button class="btn btn-outline-info btn-sm telegram-btn"
-                                                            data-id="${data.participantId}"
-                                                            data-telegram="${data.telegram || ''}"
-                                                            data-name="${data.fullName}"
-                                                            title="Send Telegram Message">
-                                                        <i class="fab fa-telegram"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        `;
-                                    }
-                                }
-                            ],
-                            language: {
-                                emptyTable: "No participants found",
-                                zeroRecords: "No matching participants found"
-                            },
-                            responsive: true,
-                            pageLength: 10,
-                            lengthMenu: [5, 10, 25, 50],
-                            order: [[1, 'asc']] // Column index 1 is the Code column
-                        });
+            // Call the preview API (doesn't log to database)
+            $.ajax({
+                url: '/ParticipantCommunication/GenerateIdCard',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    QrCode: id.toString(),
+                    IsPrintCenter: true,
+                    AccessPoint: "Preview"
+                }),
+                success: function(res) {
+                    if (res.success && res.idCardPdfBase64) {
+                        // Show PDF in modal preview
+                        showPdfPreview(res.idCardPdfBase64, name, id);
+                    } else {
+                        alert(res.message || 'Error generating preview');
                     }
-                    $(document).on('change', '.participant-checkbox', function() {
-                        const id = $(this).data('id');
-                        const isChecked = $(this).prop('checked');
+                },
+                error: function() {
+                    alert('Failed to connect to the server');
+                },
+                complete: function() {
+                    // Reset button state
+                    btn.html(originalHtml).prop('disabled', false);
+                }
+            });
+        });
 
-                        if (isChecked) {
-                            selectedParticipants.add(id);
-                        } else {
-                            selectedParticipants.delete(id);
-                            $('#selectAllCheckbox').prop('checked', false);
-                        }
+        function showPdfPreview(base64Data, participantName, participantId) {
+            window.currentPreviewData = {
+                participantId: participantId,
+                participantName: participantName
+            };
 
-                        updateBulkUI();
+            let participantData = null;
+            if (participantsTable) {
+                const rowData = participantsTable.rows({ search: 'applied' }).data().toArray()
+                    .find(row => row.participantId == participantId);
+                participantData = rowData;
 
-                        // UPDATE SELECTION BADGE ON DOWNLOAD BUTTON
-                        const downloadBtn = $(`.download-btn[data-id="${id}"]`);
-                        if (isChecked) {
-                            // Add selection badge if not already present
-                            if (!downloadBtn.find('.selection-badge').length) {
-                                downloadBtn.append('<span class="badge bg-danger selection-badge"></span>');
-                            }
-                        } else {
-                            // Remove selection badge
-                            downloadBtn.find('.selection-badge').remove();
-                        }
-                    });
+                // SET DATA ATTRIBUTES ON MODAL BUTTONS - JUST LIKE IN TABLE
+                $('#previewViewBtn').data('id', participantId).data('name', participantName);
+                $('#previewPrintBtn').data('id', participantId).data('name', participantName);
+                $('#previewDownloadBtn').data('id', participantId).data('name', participantName);
+                $('#previewEmailBtn').data('id', participantId).data('email', participantData.email).data('name', participantName);
+                $('#previewWhatsappBtn').data('id', participantId).data('phone', participantData.phone).data('name', participantName);
+                $('#previewTelegramBtn').data('id', participantId).data('telegram', participantData.telegram || '').data('name', participantName);
 
-                            // In your Select All handler (around line 165), add badge update:
-                    $('#selectAllCheckbox').on('change', function() {
-                        const checked = $(this).prop('checked');
-                        $('.participant-checkbox').prop('checked', checked);
+                // Update counter badges - FIXED: Always set data-id attribute
+                const printCount = participantData.printCount || 0;
+                const downloadCount = participantData.downloadCount || 0;
 
-                        if (checked) {
-                            participantsTable.rows({ search: 'applied' }).every(function() {
-                                const id = this.data().participantId;
-                                selectedParticipants.add(id);
-                                // Add selection badge
-                                $(`.download-btn[data-id="${id}"]`).append('<span class="badge bg-danger selection-badge"></span>');
-                            });
-                        } else {
-                            selectedParticipants.clear();
-                            // Remove all selection badges
-                            $('.selection-badge').remove();
-                        }
-                        updateBulkUI();
-                    });
+                // Print counter - ALWAYS set data-id
+                if (printCount > 0) {
+                    $('#previewPrintCounter').text(printCount).attr('data-id', participantId).show();
+                } else {
+                    $('#previewPrintCounter').attr('data-id', participantId).text('0').hide();
+                }
 
-                    function updateBulkUI() {
-                        const count = selectedParticipants.size;
-                        $('.selected-count').text(count);
-                        $('.bulk-actions-container').toggle(count > 0);
-                    }
+                // Download counter - ALWAYS set data-id
+                if (downloadCount > 0) {
+                    $('#previewDownloadCounter').text(downloadCount).attr('data-id', participantId).show();
+                } else {
+                    $('#previewDownloadCounter').attr('data-id', participantId).text('0').hide();
+                }
+            }
 
-                    $('#clearSelection').on('click', function(e) {
-                        e.preventDefault();
-                        selectedParticipants.clear();
-                        $('.participant-checkbox').prop('checked', false);
-                        $('#selectAllCheckbox').prop('checked', false);
-                        updateBulkUI();
-                        // REMOVE ALL SELECTION BADGES
-                        $('.selection-badge').remove();
-                    });
-
-                    $(document).on('click', '.email-btn', function(e) {
-                        e.preventDefault();
-                        const btn = $(this);
-                        const original = btn.html();
-                        btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
-
-                        $.ajax({
-                            url: '/ParticipantCommunication/SendEmailToParticipant',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({ participantId: btn.data('id') }),
-                            success: function(res) {
-                                alert(res.success ? 'Email sent!' : 'Error: ' + res.message);
-                            },
-                            error: function() {
-                                alert('Failed to send email');
-                            },
-                            complete: function() {
-                                btn.html(original).prop('disabled', false);
-                            }
-                        });
-                    });
-
-                    // 1. Consolidated Helper Function
-        function handlePdfFile(base64Data, fileName, shouldPrint) {
-            // Convert Base64 to Binary Blob
             const byteCharacters = atob(base64Data);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -387,855 +310,1153 @@
             }
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'application/pdf' });
-            const fileURL = URL.createObjectURL(blob);
+            const blobUrl = URL.createObjectURL(blob);
 
-            if (shouldPrint) {
-                // --- PRINT LOGIC ---
-                // Create a hidden iframe to hold the PDF for printing
-                const printIframe = document.createElement('iframe');
-                printIframe.style.display = 'none';
-                printIframe.src = fileURL;
-                document.body.appendChild(printIframe);
+            window.currentPreviewData.blobUrl = blobUrl;
 
-                printIframe.onload = function() {
-                    setTimeout(() => {
-                        printIframe.contentWindow.focus();
-                        printIframe.contentWindow.print();
-                        // Clean up iframe after print dialog opens
-                        setTimeout(() => document.body.removeChild(printIframe), 2000);
-                    }, 500);
-                };
-            } else {
-                // --- DOWNLOAD LOGIC ---
-                const link = document.createElement('a');
-                link.href = fileURL;
-                link.download = `${fileName.replace(/\s+/g, '_')}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+            $('#previewModalTitle').text(`ID Card Preview - ${participantName}`);
+            $('#pdfPreviewFrame').attr('src', '');
+
+            $('#pdfPreviewFrame').attr('src', blobUrl);
+            const modalElement = document.getElementById('pdfPreviewModal');
+
+            if (pdfPreviewModal) {
+                pdfPreviewModal.hide();
+                $(modalElement).off('hidden.bs.modal');
             }
 
-            // Free up memory
-            setTimeout(() => URL.revokeObjectURL(fileURL), 10000);
-        }
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
 
-        // 2. Unified Event Listener for BOTH buttons
-        $(document).on('click', '.print-btn, .download-btn', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
+            pdfPreviewModal = new bootstrap.Modal(modalElement);
 
-            const btn = $(this);
-            const isPrintAction = btn.hasClass('print-btn'); // Detect which button was clicked
-            const id = btn.data('id');
-            const name = btn.data('name');
-            const originalHtml = btn.html();
+            pdfPreviewModal.show();
 
-            // UI Loading State
-            btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+            $(modalElement).on('hidden.bs.modal', function() {
+                if (window.currentPreviewData && window.currentPreviewData.blobUrl) {
+                    URL.revokeObjectURL(window.currentPreviewData.blobUrl);
+                }
+                window.currentPreviewData = null;
 
-            // Step 1: Log to Database
-            logToDatabase(id, isPrintAction, function(updatedCount) {
-
-                // Step 2: Ajax Call to your [HttpPost] GenerateIdCard
-                $.ajax({
-                    url: '/ParticipantCommunication/GenerateIdCard',
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({
-                        QrCode: id.toString(),
-                        IsPrintCenter: true,
-                        AccessPoint: isPrintAction ? "Print Center" : "Download"
-                    }),
-                    success: function(res) {
-                        if (res.success && res.idCardPdfBase64) {
-                            // Step 3: Use helper to Print or Download
-                            handlePdfFile(res.idCardPdfBase64, `ID_Card_${name}`, isPrintAction);
-                        } else {
-                            alert(res.message || 'Error generating ID card');
-                        }
-                    },
-                    error: function() {
-                        alert('Failed to connect to the server');
-                    },
-                    complete: function() {
-                        // Reset button state
-                        btn.html(originalHtml).prop('disabled', false);
-                    }
-                });
+                $('#pdfPreviewFrame').attr('src', '');
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                $('body').css('padding-right', '');
+                if (pdfPreviewModal) {
+                    pdfPreviewModal.dispose();
+                    pdfPreviewModal = null;
+                }
             });
-        });
-                    function logToDatabase(participantId, isPrintAction, callback) {
-                    $.ajax({
-                        url: '/ParticipantCommunication/LogCardAction',
-                        type: 'POST',
-                        contentType: 'application/json',
-                        data: JSON.stringify({
-                            ParticipantId: participantId,
-                            IsPrintAction: isPrintAction
-                        }),
-                        success: function(result) {
-                            if (result.success) {
-                                // Update the counter badge immediately
-                                const counterBadge = $(`.counter-badge[data-id="${participantId}"][data-type="${isPrintAction ? 'print' : 'download'}"]`);
-                                counterBadge.text(result.count);
-                                counterBadge.show();
+        }                $('#quickScanBtn').on('click', function() {
+                    window.location.href = '/QrConfiguration/Index?fromQuickScan=true';
+                    return true;
+                });
 
-                                // Refresh DataTable to show updated counts for all participants
-                                participantsTable.ajax.reload(null, false);
+                let participantsTable;
+                let selectedParticipants = new Set();
 
-                                if (callback) callback(result.count);
+                function initializeDataTable() {
+                    participantsTable = $('#participantsTable').DataTable({
+                        ajax: {
+                            url: '/ParticipantCommunication/LoadParticipantsWithAssignments',
+                            type: 'GET',
+                            dataSrc: function(response) {
+                                return response.success ? response.data : [];
                             }
                         },
-                        error: function() {
-                            console.error('Failed to log to database');
-                        }
+                        columns: [
+                            {
+                                data: null,
+                                className: 'text-center',
+                                orderable: false,
+                                render: function(data) {
+                                    return `<input type="checkbox" class="participant-checkbox" data-id="${data.participantId}">`;
+                                }
+                            },
+                            {
+                                data: 'participantCode',
+                                className: 'text-center',
+                                render: function(data, type, row) {
+                                    if (type === 'sort') {
+                                        // Extract number for sorting: "A00-11" -> 11
+                                        return parseInt(data?.replace('A00-', '')) || 0;
+                                    }
+                                    return data ? `<span class="badge bg-primary">${data}</span>` : 'N/A';
+                                },
+                                type: 'num'
+                            },
+                            {
+                                data: null,
+                                render: function(data) {
+                                    return `<div>${data.fullName}<br><small class="text-muted">${data.email}</small></div>`;
+                                }
+                            },
+                            {
+                                data: 'phone',
+                                render: function(data) {
+                                    return data || 'N/A';
+                                }
+                            },
+                            {
+                                data: 'company',
+                                render: function(data) {
+                                    return data || 'N/A';
+                                }
+                            },
+                            {
+                                data: 'ticketTypes',
+                                render: function(data) {
+                                    return data && data !== 'Not Assigned' ?
+                                        `<span class="badge bg-warning">${data}</span>` :
+                                        '<span class="badge bg-secondary">Not Assigned</span>';
+                                }
+                            },
+                            {
+                                data: 'accessPoints',
+                                render: function(data) {
+                                    if (!data || data === 'No Access') {
+                                        return '<span class="badge bg-secondary">No Access</span>';
+                                    }
+                                    const points = data.split(', ');
+                                    return points.map(point => `<span class="badge bg-info me-1">${point}</span>`).join('');
+                                }
+                            },
+                            {
+                                data: null,
+                                className: 'text-center',
+                                orderable: false,
+                                render: function(data) {
+                                    const printCount = data.printCount || 0;
+                                    const downloadCount = data.downloadCount || 0;
+                                    const isSelected = selectedParticipants.has(data.participantId.toString());
+
+                                    return `
+                                        <div class="action-buttons-container">
+                                            <!-- First Row -->
+                                            <div class="d-flex justify-content-center mb-2">
+                                                <button class="btn btn-outline-info btn-sm view-btn me-1"
+                                                        data-id="${data.participantId}"
+                                                        data-name="${data.fullName}"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+
+                                                <div class="btn-with-badge me-1">
+                                                    <button class="btn btn-outline-primary btn-sm print-btn"
+                                                            data-id="${data.participantId}"
+                                                            data-name="${data.fullName}"
+                                                            title="Print ID Card">
+                                                        <i class="fas fa-print"></i>
+                                                    </button>
+                                                    <span class="counter-badge print-counter" data-id="${data.participantId}"
+                                                            data-type="print" ${printCount > 0 ? '' : 'style="display: none;"'}>
+                                                        ${printCount}
+                                                    </span>
+                                                </div>
+
+                                                <div class="btn-with-badge">
+                                                    <button class="btn btn-outline-success btn-sm download-btn"
+                                                            data-id="${data.participantId}"
+                                                            data-name="${data.fullName}"
+                                                            title="Download PDF">
+                                                        <i class="fas fa-file-download"></i>
+                                                        ${isSelected ? '<span class="badge bg-danger selection-badge"></span>' : ''}
+                                                    </button>
+                                                    <span class="counter-badge download-counter" data-id="${data.participantId}"
+                                                            data-type="download" ${downloadCount > 0 ? '' : 'style="display: none;"'}>
+                                                        ${downloadCount}
+                                                    </span>
+                                                </div>
+                                            </div>
+
+                                            <!-- Second Row -->
+                                            <div class="d-flex justify-content-center">
+                                                <button class="btn btn-outline-warning btn-sm email-btn me-1"
+                                                        data-id="${data.participantId}"
+                                                        data-email="${data.email}"
+                                                        data-name="${data.fullName}"
+                                                        title="Send Email">
+                                                    <i class="fas fa-envelope"></i>
+                                                </button>
+
+                                                <button class="btn btn-outline-success btn-sm whatsapp-btn me-1"
+                                                        data-id="${data.participantId}"
+                                                        data-phone="${data.phone}"
+                                                        data-name="${data.fullName}"
+                                                        title="Send WhatsApp Message">
+                                                    <i class="fab fa-whatsapp"></i>
+                                                </button>
+
+                                                <button class="btn btn-outline-info btn-sm telegram-btn"
+                                                        data-id="${data.participantId}"
+                                                        data-telegram="${data.telegram || ''}"
+                                                        data-name="${data.fullName}"
+                                                        title="Send Telegram Message">
+                                                    <i class="fab fa-telegram"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    `;
+                                }
+                            }
+                        ],
+                        language: {
+                            emptyTable: "No participants found",
+                            zeroRecords: "No matching participants found"
+                        },
+                        responsive: true,
+                        pageLength: 10,
+                        lengthMenu: [5, 10, 25, 50],
+                        order: [[1, 'asc']] // Column index 1 is the Code column
                     });
                 }
+                $(document).on('change', '.participant-checkbox', function() {
+                    const id = $(this).data('id');
+                    const isChecked = $(this).prop('checked');
 
-                    async function generateAndDownloadPdfttt(htmlContent, name) {
-          return new Promise((resolve, reject) => {
-            try {
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(htmlContent, 'text/html');
+                    if (isChecked) {
+                        selectedParticipants.add(id);
+                    } else {
+                        selectedParticipants.delete(id);
+                        $('#selectAllCheckbox').prop('checked', false);
+                    }
 
-              const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
-              const bodyContent = doc.body.innerHTML;
+                    updateBulkUI();
 
-              const styleContainer = document.createElement('div');
-              styles.forEach(style => styleContainer.appendChild(style.cloneNode(true)));
-              document.head.appendChild(styleContainer);
+                    // UPDATE SELECTION BADGE ON DOWNLOAD BUTTON
+                    const downloadBtn = $(`.download-btn[data-id="${id}"]`);
+                    if (isChecked) {
+                        // Add selection badge if not already present
+                        if (!downloadBtn.find('.selection-badge').length) {
+                            downloadBtn.append('<span class="badge bg-danger selection-badge"></span>');
+                        }
+                    } else {
+                        // Remove selection badge
+                        downloadBtn.find('.selection-badge').remove();
+                    }
+                });
 
-              // ✅ MATCH PDF SIZE EXACTLY
-              const wrapper = document.createElement('div');
-              wrapper.style.width = '95mm';
-              wrapper.style.height = '53mm';
-              wrapper.style.margin = '0';
-              wrapper.style.padding = '0';
-              wrapper.style.overflow = 'hidden';
-              wrapper.style.background = '#fff';
-              wrapper.style.position = 'fixed';
-              wrapper.style.left = '0';
-              wrapper.style.top = '0';
+                $('#selectAllCheckbox').on('change', function() {
+                    const checked = $(this).prop('checked');
+                    $('.participant-checkbox').prop('checked', checked);
 
-              wrapper.innerHTML = bodyContent;
-              document.body.appendChild(wrapper);
+                    if (checked) {
+                        participantsTable.rows({ search: 'applied' }).every(function() {
+                            const id = this.data().participantId;
+                            selectedParticipants.add(id);
+                            // Add selection badge
+                            $(`.download-btn[data-id="${id}"]`).append('<span class="badge bg-danger selection-badge"></span>');
+                        });
+                    } else {
+                        selectedParticipants.clear();
+                        // Remove all selection badges
+                        $('.selection-badge').remove();
+                    }
+                    updateBulkUI();
+                });
 
-               const opt = {
-                margin: 0,
-                filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: {
-                  scale: 1,
-                  useCORS: true,
-                  backgroundColor: '#ffffff'
+                function updateBulkUI() {
+                    const count = selectedParticipants.size;
+                    $('.selected-count').text(count);
+                    $('.bulk-actions-container').toggle(count > 0);
+                }
+
+                $('#clearSelection').on('click', function(e) {
+                    e.preventDefault();
+                    selectedParticipants.clear();
+                    $('.participant-checkbox').prop('checked', false);
+                    $('#selectAllCheckbox').prop('checked', false);
+                    updateBulkUI();
+                    // REMOVE ALL SELECTION BADGES
+                    $('.selection-badge').remove();
+                });
+
+                $(document).on('click', '.email-btn', function(e) {
+                    e.preventDefault();
+                    const btn = $(this);
+                    const original = btn.html();
+                    btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+                    $.ajax({
+                        url: '/ParticipantCommunication/SendEmailToParticipant',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({ participantId: btn.data('id') }),
+                        success: function(res) {
+                            alert(res.success ? 'Email sent!' : 'Error: ' + res.message);
+                        },
+                        error: function() {
+                            alert('Failed to send email');
+                        },
+                        complete: function() {
+                            btn.html(original).prop('disabled', false);
+                        }
+                    });
+                });
+
+                function handlePdfFile(base64Data, fileName, shouldPrint) {
+        // Convert Base64 to Binary Blob
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/pdf' });
+        const fileURL = URL.createObjectURL(blob);
+
+        if (shouldPrint) {
+            // --- PRINT LOGIC ---
+            // Create a hidden iframe to hold the PDF for printing
+            const printIframe = document.createElement('iframe');
+            printIframe.style.display = 'none';
+            printIframe.src = fileURL;
+            document.body.appendChild(printIframe);
+
+            printIframe.onload = function() {
+                setTimeout(() => {
+                    printIframe.contentWindow.focus();
+                    printIframe.contentWindow.print();
+                    // Clean up iframe after print dialog opens
+                    setTimeout(() => document.body.removeChild(printIframe), 2000);
+                }, 500);
+            };
+        } else {
+            // --- DOWNLOAD LOGIC ---
+            const link = document.createElement('a');
+            link.href = fileURL;
+            link.download = `${fileName.replace(/\s+/g, '_')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Free up memory
+        setTimeout(() => URL.revokeObjectURL(fileURL), 10000);
+    }
+
+                $(document).on('click', '.print-btn, .download-btn', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const btn = $(this);
+        const isPrintAction = btn.hasClass('print-btn'); // Detect which button was clicked
+        const id = btn.data('id');
+        const name = btn.data('name');
+        const originalHtml = btn.html();
+
+        // UI Loading State
+        btn.html('<i class="fas fa-spinner fa-spin"></i>').prop('disabled', true);
+
+        // Step 1: Log to Database
+        logToDatabase(id, isPrintAction, function(updatedCount) {
+
+            // Step 2: Ajax Call to your [HttpPost] GenerateIdCard
+            $.ajax({
+                url: '/ParticipantCommunication/GenerateIdCard',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    QrCode: id.toString(),
+                    IsPrintCenter: true,
+                    AccessPoint: isPrintAction ? "Print Center" : "Download"
+                }),
+                success: function(res) {
+                    if (res.success && res.idCardPdfBase64) {
+                        // Step 3: Use helper to Print or Download
+                        handlePdfFile(res.idCardPdfBase64, `ID_Card_${name}`, isPrintAction);
+                    } else {
+                        alert(res.message || 'Error generating ID card');
+                    }
                 },
-                jsPDF: {
-                  unit: 'mm',
-                  format: [95, 53],
-                  orientation: 'landscape'
+                error: function() {
+                    alert('Failed to connect to the server');
                 },
-                pagebreak: { mode: ['avoid-all'] }
-              };
+                complete: function() {
+                    // Reset button state
+                    btn.html(originalHtml).prop('disabled', false);
+                }
+            });
+        });
+    });
+
+                function logToDatabase(participantId, isPrintAction, callback) {
+        $.ajax({
+            url: '/ParticipantCommunication/LogCardAction',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                ParticipantId: participantId,
+                IsPrintAction: isPrintAction
+            }),
+            success: function(result) {
+                if (result.success) {
+                    // Update the counter badge immediately
+                    const counterBadge = $(`.counter-badge[data-id="${participantId}"][data-type="${isPrintAction ? 'print' : 'download'}"]`);
+                    counterBadge.text(result.count);
+                    counterBadge.show();
+
+                    // Update the counter badge in MODAL
+                    const modalCounterId = isPrintAction ? 'previewPrintCounter' : 'previewDownloadCounter';
+                    const modalCounter = $('#' + modalCounterId);
+                    if (modalCounter.length > 0 && modalCounter.attr('data-id') == participantId) {
+                        modalCounter.text(result.count);
+                        if (result.count > 0) {
+                            modalCounter.show();
+                        } else {
+                            modalCounter.hide();
+                        }
+                    }
+
+                    // Refresh DataTable to show updated counts for all participants
+                    participantsTable.ajax.reload(null, false);
+
+                    if (callback) callback(result.count);
+                }
+            },
+            error: function() {
+                console.error('Failed to log to database');
+            }
+        });
+    }
+
+                async function generateAndDownloadPdfttt(htmlContent, name) {
+        return new Promise((resolve, reject) => {
+        try {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+
+            const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+            const bodyContent = doc.body.innerHTML;
+
+            const styleContainer = document.createElement('div');
+            styles.forEach(style => styleContainer.appendChild(style.cloneNode(true)));
+            document.head.appendChild(styleContainer);
+
+            // ✅ MATCH PDF SIZE EXACTLY
+            const wrapper = document.createElement('div');
+            wrapper.style.width = '95mm';
+            wrapper.style.height = '53mm';
+            wrapper.style.margin = '0';
+            wrapper.style.padding = '0';
+            wrapper.style.overflow = 'hidden';
+            wrapper.style.background = '#fff';
+            wrapper.style.position = 'fixed';
+            wrapper.style.left = '0';
+            wrapper.style.top = '0';
+
+            wrapper.innerHTML = bodyContent;
+            document.body.appendChild(wrapper);
+
+            const opt = {
+            margin: 0,
+            filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: [95, 53],
+                orientation: 'landscape'
+            },
+            pagebreak: { mode: ['avoid-all'] }
+            };
 
 
 
-              html2pdf()
+            html2pdf()
+            .set(opt)
+            .from(wrapper)
+            .save()
+            .then(() => {
+                document.body.removeChild(wrapper);
+                document.head.removeChild(styleContainer);
+                resolve();
+            })
+            .catch(err => {
+                document.body.removeChild(wrapper);
+                document.head.removeChild(styleContainer);
+                reject(err);
+            });
+
+        } catch (error) {
+            reject(error);
+        }
+        });
+    }
+
+                async function generateAndDownloadPdfLast(htmlContent, name) {
+                return new Promise((resolve, reject) => {
+        try {
+
+            // 1️⃣ Parse HTML string properly
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(htmlContent, 'text/html');
+
+            const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
+            const bodyContent = doc.body.innerHTML;
+
+            // 2️⃣ Inject styles into real document head
+            const styleContainer = document.createElement('div');
+            styles.forEach(style => {
+            styleContainer.appendChild(style.cloneNode(true));
+            });
+            document.head.appendChild(styleContainer);
+
+            const wrapper = document.createElement('div');
+                wrapper.style.width = '95mm';
+                wrapper.style.height = '53mm';
+                wrapper.style.background = '#fff';
+                wrapper.style.boxSizing = 'border-box';
+                wrapper.style.overflow = 'hidden';
+                wrapper.innerHTML = bodyContent;
+            document.body.appendChild(wrapper);
+
+            const opt = {
+            margin: 0,
+            filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: {
+                scale: 1,
+                useCORS: true,
+                backgroundColor: '#ffffff'
+            },
+            jsPDF: {
+                unit: 'mm',
+                format: [95, 53],
+        orientation: 'landscape'
+            },
+            pagebreak: { mode: ['css', 'avoid-all'] }
+            };
+
+            // 4️⃣ Render PDF
+            setTimeout(() => {
+            html2pdf()
                 .set(opt)
                 .from(wrapper)
                 .save()
                 .then(() => {
-                  document.body.removeChild(wrapper);
-                  document.head.removeChild(styleContainer);
-                  resolve();
+                document.body.removeChild(wrapper);
+                document.head.removeChild(styleContainer);
+                resolve();
                 })
                 .catch(err => {
-                  document.body.removeChild(wrapper);
-                  document.head.removeChild(styleContainer);
-                  reject(err);
+                document.body.removeChild(wrapper);
+                document.head.removeChild(styleContainer);
+                reject(err);
                 });
+            }, 500);
 
-            } catch (error) {
-              reject(error);
-            }
-          });
+        } catch (error) {
+            reject(error);
         }
-
-                    async function generateAndDownloadPdfLast(htmlContent, name) {
-          return new Promise((resolve, reject) => {
-            try {
-
-              // 1️⃣ Parse HTML string properly
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(htmlContent, 'text/html');
-
-              const styles = doc.querySelectorAll('style, link[rel="stylesheet"]');
-              const bodyContent = doc.body.innerHTML;
-
-              // 2️⃣ Inject styles into real document head
-              const styleContainer = document.createElement('div');
-              styles.forEach(style => {
-                styleContainer.appendChild(style.cloneNode(true));
-              });
-              document.head.appendChild(styleContainer);
-
-              // 3️⃣ Create A6 wrapper
-              const wrapper = document.createElement('div');
-                   wrapper.style.width = '95mm';
-                   wrapper.style.height = '53mm';
-                   wrapper.style.background = '#fff';
-                   wrapper.style.boxSizing = 'border-box';
-                   wrapper.style.overflow = 'hidden';
+        });
+                    }
 
 
 
-
-
-                      wrapper.innerHTML = bodyContent;
-              document.body.appendChild(wrapper);
-
-              const opt = {
-                margin: 0,
-                filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
-                image: { type: 'jpeg', quality: 1 },
-                html2canvas: {
-                  scale: 1,
-                  useCORS: true,
-                  backgroundColor: '#ffffff'
-                },
-                jsPDF: {
-                  unit: 'mm',
-                  format: [95, 53],
-          orientation: 'landscape'
-                },
-                pagebreak: { mode: ['css', 'avoid-all'] }
-              };
-
-              // 4️⃣ Render PDF
-              setTimeout(() => {
-                html2pdf()
-                  .set(opt)
-                  .from(wrapper)
-                  .save()
-                  .then(() => {
-                    document.body.removeChild(wrapper);
-                    document.head.removeChild(styleContainer);
-                    resolve();
-                  })
-                  .catch(err => {
-                    document.body.removeChild(wrapper);
-                    document.head.removeChild(styleContainer);
-                    reject(err);
-                  });
-              }, 500);
-
-            } catch (error) {
-              reject(error);
-            }
-          });
-        }
-
-
-
-
-
-                      async function generateAndDownloadPdf(htmlContent, name) {
-                    return new Promise((resolve, reject) => {
-                        try {
-                            const element = document.createElement('div'); // const element = document.createElement('div');
+                    async function generateAndDownloadPdf(htmlContent, name) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const element = document.createElement('div'); // const element = document.createElement('div');
+                    element.innerHTML = htmlContent;
+                    // Clone the element to avoid affecting the display
+                    const elementToPrint = element.cloneNode(true);
+                    elementToPrint.style.background = 'white';
+                    elementToPrint.style.margin = '0';
+                    elementToPrint.style.boxShadow = 'none';
+                    elementToPrint.style.border = 'none';
                         element.innerHTML = htmlContent;
-                        // Clone the element to avoid affecting the display
-                        const elementToPrint = element.cloneNode(true);
-                        elementToPrint.style.background = 'white';
-                        elementToPrint.style.margin = '0';
-                        elementToPrint.style.boxShadow = 'none';
-                        elementToPrint.style.border = 'none';
-                         element.innerHTML = htmlContent;
-                        document.body.appendChild(elementToPrint);
+                    document.body.appendChild(elementToPrint);
 
-                            if (htmlContent.includes('<body>')) {
-                                const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-                                if (bodyMatch && bodyMatch[1]) {
-                                    element.innerHTML = bodyMatch[1];
-                                } else {
-                                    element.innerHTML = htmlContent;
-                                }
+                        if (htmlContent.includes('<body>')) {
+                            const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                            if (bodyMatch && bodyMatch[1]) {
+                                element.innerHTML = bodyMatch[1];
                             } else {
                                 element.innerHTML = htmlContent;
                             }
-
-                            document.body.appendChild(element);
-
-                            const opt = {
-                            margin: 0,
-                            filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
-                            image: { type: 'jpeg', quality: 0.98 },
-                            html2canvas: {
-                                scale: 1, // Higher scale for better quality
-                                useCORS: true,
-                                backgroundColor: '#ffffff',
-                                logging: false,
-                                width: 95 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
-                                height: 53 * 3.78  // Convert mm to pixels
-                            },
-                            jsPDF: {
-                                unit: 'mm',
-                              format: [95, 53],
-                              orientation: 'landscape'
-                                // format: 'a6',
-                                // orientation: 'portrait'
-                            }
-                        };
-
-                            // Wait a moment for any images to load
-                            setTimeout(() => {
-                                html2pdf()
-                                    .set(opt)
-                                    .from(elementToPrint)
-                                    .save()
-                                    .then(() => {
-                                        document.body.removeChild(elementToPrint);
-                                        document.body.removeChild(element);
-                                        resolve();
-                                    })
-                                    .catch(error => {
-                                        console.error('PDF generation failed:', error);
-                                        // Clean up
-                                        document.body.removeChild(element);
-                                        reject(error);
-                                    });
-                            }, 500);
-
-                        } catch (error) {
-                            console.error('Error in generateAndDownloadPdf:', error);
-                            reject(error);
+                        } else {
+                            element.innerHTML = htmlContent;
                         }
-                    });
-                }
 
+                        document.body.appendChild(element);
 
-                       async function downloadSinglePDF(id, name) {
-            try {
-                const response = await fetch('/ParticipantCommunication/GenerateIdCard', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        QrCode: id.toString(),
-                        IsPrintCenter: true
-                    })
-                });
+                        const opt = {
+                        margin: 0,
+                        filename: name.replace(/\s+/g, '_') + '_Business_Card.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: {
+                            scale: 1, // Higher scale for better quality
+                            useCORS: true,
+                            backgroundColor: '#ffffff',
+                            logging: false,
+                            width: 95 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                            height: 53 * 3.78  // Convert mm to pixels
+                        },
+                        jsPDF: {
+                            unit: 'mm',
+                            format: [95, 53],
+                            orientation: 'landscape'
+                            // format: 'a6',
+                            // orientation: 'portrait'
+                        }
+                    };
 
-                const result = await response.json();
+                        // Wait a moment for any images to load
+                        setTimeout(() => {
+                            html2pdf()
+                                .set(opt)
+                                .from(elementToPrint)
+                                .save()
+                                .then(() => {
+                                    document.body.removeChild(elementToPrint);
+                                    document.body.removeChild(element);
+                                    resolve();
+                                })
+                                .catch(error => {
+                                    console.error('PDF generation failed:', error);
+                                    // Clean up
+                                    document.body.removeChild(element);
+                                    reject(error);
+                                });
+                        }, 500);
 
-                if (!result.success) {
-                    throw new Error(result.message || 'Failed to generate ID card');
-                }
-
-                // FIX: Use idCardPdfBase64 like the single download button
-                if (result.success && result.idCardPdfBase64) {
-                    // Create a hidden link and trigger download
-                    const byteCharacters = atob(result.idCardPdfBase64);
-                    const byteNumbers = new Array(byteCharacters.length);
-                    for (let i = 0; i < byteCharacters.length; i++) {
-                        byteNumbers[i] = byteCharacters.charCodeAt(i);
+                    } catch (error) {
+                        console.error('Error in generateAndDownloadPdf:', error);
+                        reject(error);
                     }
-                    const byteArray = new Uint8Array(byteNumbers);
-                    const blob = new Blob([byteArray], { type: 'application/pdf' });
-
-                    const link = document.createElement('a');
-                    link.href = window.URL.createObjectURL(blob);
-                    link.download = `ID_Card_${name.replace(/\s+/g, '_')}.pdf`;
-                    link.click();
-
-                    // Clean up
-                    setTimeout(() => {
-                        window.URL.revokeObjectURL(link.href);
-                    }, 100);
-
-                    return true;
-                } else {
-                    throw new Error(result.message || 'No PDF data received');
-                }
-
-            } catch (error) {
-                console.error(`Error downloading PDF for ${name}:`, error);
-                throw error;
-            }
-        }
-                    $('#bulkGeneratePdf').on('click', async function(e) {
-                        e.preventDefault();
-
-                        if (selectedParticipants.size === 0) {
-                            alert('Please select at least one participant.');
-                            return;
-                        }
-
-                        const btn = $(this);
-                        const originalHtml = btn.html();
-                        const total = selectedParticipants.size;
-                        let processed = 0;
-
-                        // Show loading
-                        btn.html(`<i class="fas fa-spinner fa-spin"></i> Processing... (0/${total})`)
-                           .prop('disabled', true);
-
-                        try {
-                            // Create an array to store all promises
-                            const downloadPromises = [];
-
-                            // For each selected participant
-                            selectedParticipants.forEach(id => {
-                                // Find the row data
-                                const row = $(`.participant-checkbox[data-id="${id}"]`).closest('tr');
-                                const name = row.find('.download-btn').data('name');
-
-                                // Create a download promise
-                                const downloadPromise = downloadSinglePDF(id, name)
-                                    .then(() => {
-                                        processed++;
-                                        btn.html(`<i class="fas fa-spinner fa-spin"></i> Processing... (${processed}/${total})`);
-                                        console.log(`Downloaded: ${name} (${id})`);
-
-                                        // ADD: Log action to database for each download
-                                        logToDatabase(id, false, function(updatedCount) {
-                                            console.log(`Download count for ${name} updated to: ${updatedCount}`);
-                                        });
-                                    })
-                                    .catch(error => {
-                                        console.error(`Failed to download ${name}:`, error);
-                                        // Continue with other downloads even if one fails
-                                    });
-
-                                downloadPromises.push(downloadPromise);
-                            });
-
-                            // Wait for all downloads to complete
-                            await Promise.allSettled(downloadPromises);
-
-                            // Reset button
-                            btn.html(originalHtml).prop('disabled', false);
-
-                            // Show completion message
-                            alert(`Successfully processed ${processed} out of ${total} PDFs.`);
-
-                            // ADD: Remove selection badges for all selected participants
-                            selectedParticipants.forEach(id => {
-                                $(`.download-btn[data-id="${id}"]`).find('.selection-badge').remove();
-                            });
-
-                            // Clear selection after successful download
-                            selectedParticipants.clear();
-                            $('.participant-checkbox').prop('checked', false);
-                            $('#selectAllCheckbox').prop('checked', false);
-                            updateBulkUI();
-
-                        } catch (error) {
-                            console.error('Bulk download error:', error);
-                            alert('An error occurred during bulk download. Check console for details.');
-                            btn.html(originalHtml).prop('disabled', false);
-                        }
-                    });
-                    initializeDataTable();
                 });
+            }
 
-                  function generateAndDownloadZip(zip, selectedData, button, originalButtonHtml, successCount, failedCount) {
-                    button.html('<i class="fas fa-spinner fa-spin"></i> Creating ZIP file...');
 
-                    console.log('Generating ZIP file...');
+                    async function downloadSinglePDF(id, name) {
+        try {
+            const response = await fetch('/ParticipantCommunication/GenerateIdCard', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    QrCode: id.toString(),
+                    IsPrintCenter: true
+                })
+            });
 
-                    // Check if zip has any files
-                    const fileCount = Object.keys(zip.files).length;
+            const result = await response.json();
 
-                    if (fileCount === 0) {
-                        console.error('No files to add to ZIP');
-                        button.html(originalButtonHtml).prop('disabled', false);
-                       // toastr.error('No PDFs were generated. Please try again.');
+            if (!result.success) {
+                throw new Error(result.message || 'Failed to generate ID card');
+            }
+
+            // FIX: Use idCardPdfBase64 like the single download button
+            if (result.success && result.idCardPdfBase64) {
+                // Create a hidden link and trigger download
+                const byteCharacters = atob(result.idCardPdfBase64);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `ID_Card_${name.replace(/\s+/g, '_')}.pdf`;
+                link.click();
+
+                // Clean up
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(link.href);
+                }, 100);
+
+                return true;
+            } else {
+                throw new Error(result.message || 'No PDF data received');
+            }
+
+        } catch (error) {
+            console.error(`Error downloading PDF for ${name}:`, error);
+            throw error;
+        }
+    }
+                $('#bulkGeneratePdf').on('click', async function(e) {
+                    e.preventDefault();
+
+                    if (selectedParticipants.size === 0) {
+                        alert('Please select at least one participant.');
                         return;
                     }
 
-                    // Generate ZIP file
-                    zip.generateAsync({
-                        type: "blob",
-                        compression: "DEFLATE",
-                        compressionOptions: {
-                            level: 6
-                        }
-                    })
-                    .then(function(content) {
-                        console.log('ZIP generated successfully, size:', content.size);
+                    const btn = $(this);
+                    const originalHtml = btn.html();
+                    const total = selectedParticipants.size;
+                    let processed = 0;
 
-                        // Create filename
-                        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
-                        const filename = `ID_Cards_${timestamp}.zip`;
+                    // Show loading
+                    btn.html(`<i class="fas fa-spinner fa-spin"></i> Processing... (0/${total})`)
+                        .prop('disabled', true);
 
-                        // Download using FileSaver.js
-                        saveAs(content, filename);
+                    try {
+                        // Create an array to store all promises
+                        const downloadPromises = [];
 
-                        // Restore button
-                        button.html(originalButtonHtml).prop('disabled', false);
+                        // For each selected participant
+                        selectedParticipants.forEach(id => {
+                            // Find the row data
+                            const row = $(`.participant-checkbox[data-id="${id}"]`).closest('tr');
+                            const name = row.find('.download-btn').data('name');
 
-                        // Show success message
-                        if (failedCount > 0) {
-                            //toastr.warning(`Downloaded ${successCount} of ${selectedData.length} ID cards. ${failedCount} failed.`);
-                        } else {
-                            //toastr.success(`Successfully downloaded ${successCount} ID cards`);
-                        }
-                    })
-                    .catch(function(error) {
-                        console.error('Error creating ZIP:', error);
-                        button.html(originalButtonHtml).prop('disabled', false);
-                        //toastr.error('Error creating ZIP file. Please try again.');
-                    });
+                            // Create a download promise
+                            const downloadPromise = downloadSinglePDF(id, name)
+                                .then(() => {
+                                    processed++;
+                                    btn.html(`<i class="fas fa-spinner fa-spin"></i> Processing... (${processed}/${total})`);
+                                    console.log(`Downloaded: ${name} (${id})`);
+
+                                    // ADD: Log action to database for each download
+                                    logToDatabase(id, false, function(updatedCount) {
+                                        console.log(`Download count for ${name} updated to: ${updatedCount}`);
+                                    });
+                                })
+                                .catch(error => {
+                                    console.error(`Failed to download ${name}:`, error);
+                                    // Continue with other downloads even if one fails
+                                });
+
+                            downloadPromises.push(downloadPromise);
+                        });
+
+                        // Wait for all downloads to complete
+                        await Promise.allSettled(downloadPromises);
+
+                        // Reset button
+                        btn.html(originalHtml).prop('disabled', false);
+
+                        // Show completion message
+                        alert(`Successfully processed ${processed} out of ${total} PDFs.`);
+
+                        // ADD: Remove selection badges for all selected participants
+                        selectedParticipants.forEach(id => {
+                            $(`.download-btn[data-id="${id}"]`).find('.selection-badge').remove();
+                        });
+
+                        // Clear selection after successful download
+                        selectedParticipants.clear();
+                        $('.participant-checkbox').prop('checked', false);
+                        $('#selectAllCheckbox').prop('checked', false);
+                        updateBulkUI();
+
+                    } catch (error) {
+                        console.error('Bulk download error:', error);
+                        alert('An error occurred during bulk download. Check console for details.');
+                        btn.html(originalHtml).prop('disabled', false);
+                    }
+                });
+                initializeDataTable();
+            });
+
+                function generateAndDownloadZip(zip, selectedData, button, originalButtonHtml, successCount, failedCount) {
+                button.html('<i class="fas fa-spinner fa-spin"></i> Creating ZIP file...');
+
+                console.log('Generating ZIP file...');
+
+                // Check if zip has any files
+                const fileCount = Object.keys(zip.files).length;
+
+                if (fileCount === 0) {
+                    console.error('No files to add to ZIP');
+                    button.html(originalButtonHtml).prop('disabled', false);
+                    // toastr.error('No PDFs were generated. Please try again.');
+                    return;
                 }
 
-                  function generateParticipantPDF(participantData, zip) {
-                    return new Promise((resolve, reject) => {
-                        $.ajax({
-                            url: '/ParticipantCommunication/GenerateIdCard',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({
-                                QrCode: participantData.QrCode,
-                                IsPrintCenter: true
-                            }),
-                            success: async function(res) {
-                                try {
-                                    if (!res.success) {
-                                        reject(new Error('API returned success: false'));
-                                        return;
-                                    }
+                // Generate ZIP file
+                zip.generateAsync({
+                    type: "blob",
+                    compression: "DEFLATE",
+                    compressionOptions: {
+                        level: 6
+                    }
+                })
+                .then(function(content) {
+                    console.log('ZIP generated successfully, size:', content.size);
 
-                                    const htmlContent = res.idCardHtml; // You need to get the HTML from response
-                                    const element = document.createElement('div');
+                    // Create filename
+                    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
+                    const filename = `ID_Cards_${timestamp}.zip`;
 
-                                    // Parse HTML content
-                                    if (htmlContent.includes('<body>')) {
-                                        const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-                                        if (bodyMatch && bodyMatch[1]) {
-                                            element.innerHTML = bodyMatch[1];
-                                        } else {
-                                            element.innerHTML = htmlContent;
-                                        }
+                    // Download using FileSaver.js
+                    saveAs(content, filename);
+
+                    // Restore button
+                    button.html(originalButtonHtml).prop('disabled', false);
+
+                    // Show success message
+                    if (failedCount > 0) {
+                        //toastr.warning(`Downloaded ${successCount} of ${selectedData.length} ID cards. ${failedCount} failed.`);
+                    } else {
+                        //toastr.success(`Successfully downloaded ${successCount} ID cards`);
+                    }
+                })
+                .catch(function(error) {
+                    console.error('Error creating ZIP:', error);
+                    button.html(originalButtonHtml).prop('disabled', false);
+                    //toastr.error('Error creating ZIP file. Please try again.');
+                });
+            }
+
+                function generateParticipantPDF(participantData, zip) {
+                return new Promise((resolve, reject) => {
+                    $.ajax({
+                        url: '/ParticipantCommunication/GenerateIdCard',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            QrCode: participantData.QrCode,
+                            IsPrintCenter: true
+                        }),
+                        success: async function(res) {
+                            try {
+                                if (!res.success) {
+                                    reject(new Error('API returned success: false'));
+                                    return;
+                                }
+
+                                const htmlContent = res.idCardHtml; // You need to get the HTML from response
+                                const element = document.createElement('div');
+
+                                // Parse HTML content
+                                if (htmlContent.includes('<body>')) {
+                                    const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                                    if (bodyMatch && bodyMatch[1]) {
+                                        element.innerHTML = bodyMatch[1];
                                     } else {
                                         element.innerHTML = htmlContent;
                                     }
+                                } else {
+                                    element.innerHTML = htmlContent;
+                                }
 
-                                    // Clone the element for printing
-                               const elementToPrint = element.cloneNode(true);
-                elementToPrint.style.background = 'white';
-                elementToPrint.style.margin = '0';
-                elementToPrint.style.boxShadow = 'none';
-                elementToPrint.style.border = 'none';
+                                // Clone the element for printing
+                            const elementToPrint = element.cloneNode(true);
+            elementToPrint.style.background = 'white';
+            elementToPrint.style.margin = '0';
+            elementToPrint.style.boxShadow = 'none';
+            elementToPrint.style.border = 'none';
 
 
-                                    // Append to body temporarily
-                                    document.body.appendChild(elementToPrint);
-                                    document.body.appendChild(element);
+                                // Append to body temporarily
+                                document.body.appendChild(elementToPrint);
+                                document.body.appendChild(element);
 
-                                    const opt = {
+                                const opt = {
+                                    margin: 0,
+                                    filename: participantData.ParticipantName.replace(/\s+/g, '_') + '_Business_Card.pdf',
+                                    image: { type: 'jpeg', quality: 0.98 },
+                                    html2canvas: {
+                                        scale: 3,
+                                        useCORS: true,
+                                        backgroundColor: '#ffffff',
+                                        logging: false,
+                                        width: 105 * 3.78,
+                                        height: 148 * 3.78
+                                    },
+                                    jsPDF: {
+                                        unit: 'mm',
+                                        format: 'a6',
+                                        orientation: 'portrait'
+                                    }
+                                };
+
+                                // Wait a moment for any images to load
+                                setTimeout(() => {
+                                    html2pdf()
+                                        .set(opt)
+                                        .from(elementToPrint)
+                                        .outputPdf('blob')
+                                        .then((pdfBlob) => {
+                                            // Clean up DOM elements
+                                            document.body.removeChild(elementToPrint);
+                                            document.body.removeChild(element);
+
+                                            // Create safe filename
+                                            const safeName = participantData.ParticipantName
+                                                .replace(/[^a-zA-Z0-9\s-]/g, '')
+                                                .replace(/\s+/g, '_');
+                                            const filename = `${safeName}_${participantData.QrCode}.pdf`;
+
+                                            // Add to ZIP
+                                            zip.file(filename, pdfBlob);
+                                            console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
+                                            resolve(pdfBlob);
+                                        })
+                                        .catch(error => {
+                                            console.error('PDF generation failed:', error);
+                                            // Clean up on error
+                                            document.body.removeChild(elementToPrint);
+                                            document.body.removeChild(element);
+                                            reject(error);
+                                        });
+                                }, 500);
+
+                            } catch (error) {
+                                // Ensure cleanup on error
+                                const elements = document.querySelectorAll('div[style*="-9999px"]');
+                                elements.forEach(el => {
+                                    if (el.parentNode === document.body) {
+                                        document.body.removeChild(el);
+                                    }
+                                });
+
+                                // Also remove any other temporary elements
+                                const tempElements = document.querySelectorAll('div[style*="position: absolute"]');
+                                tempElements.forEach(el => {
+                                    if (el.parentNode === document.body && el.style.left === '-9999px') {
+                                        document.body.removeChild(el);
+                                    }
+                                });
+
+                                reject(error);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            reject(new Error(`AJAX request failed: ${status} - ${error}`));
+                        }
+                    });
+                });
+            }
+
+                function generateParticipantPDFool(participantData, zip) {
+                return new Promise((resolve, reject) => {
+                    $.ajax({
+                        url: '/ParticipantCommunication/GenerateIdCard',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            QrCode: participantData.QrCode,
+                            IsPrintCenter: true
+                        }),
+                        success: async function(res) {
+                            if (!res.success) {
+                                reject(new Error('API returned success: false'));
+                                return;
+                            }
+
+                            htmlContent =res.idCardHtml;
+                                const element = document.createElement('div');
+
+                                // Extract body content if present
+                                if (htmlContent.includes('<body>')) {
+                                    const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+                                    element.innerHTML = bodyMatch && bodyMatch[1] ? bodyMatch[1] : htmlContent;
+                                } else {
+                                    element.innerHTML = htmlContent;
+                                }
+
+                                        //const element = document.createElement('div'); // const element = document.createElement('div');
+                    element.innerHTML = htmlContent;
+                    // Clone the element to avoid affecting the display
+                    const elementToPrint = element.cloneNode(true);
+                    elementToPrint.style.background = 'white';
+                    elementToPrint.style.margin = '0';
+                    elementToPrint.style.boxShadow = 'none';
+                    elementToPrint.style.border = 'none';
+
+
+
+
+
+
+
+                            // Create a hidden iframe to render the HTML
+                            const iframe = document.createElement('iframe');
+                            //iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:105mm;height:148mm;border:none;';
+
+                            document.body.appendChild(iframe);
+
+                            iframe.onload = async function() {
+                                try {
+                                    // Write HTML to iframe
+                                    iframe.contentDocument.open();
+                                    iframe.contentDocument.write(res.idCardHtml);
+                                    iframe.contentDocument.close();
+
+                                    // Wait for iframe to render
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    const element = iframe.contentDocument.body;
+                                        const elementToPrint = element.cloneNode(true);
+
+                                    // 3. Apply print styles
+                                    elementToPrint.style.background = 'white';
+                                    elementToPrint.style.margin = '0';
+                                    elementToPrint.style.boxShadow = 'none';
+                                    elementToPrint.style.border = 'none';
+                                    elementToPrint.style.color = '#000'; // Add for better print contrast
+
+                                    // 4. Append to IFRAME's body, not main document body
+                                    iframe.contentDocument.body.innerHTML = ''; // Clear iframe first
+                                    iframe.contentDocument.body.appendChild(elementToPrint);
+                                        const options = {
                                         margin: 0,
-                                        filename: participantData.ParticipantName.replace(/\s+/g, '_') + '_Business_Card.pdf',
                                         image: { type: 'jpeg', quality: 0.98 },
                                         html2canvas: {
-                                            scale: 3,
+                                            scale: 3, // Higher scale for better quality
                                             useCORS: true,
                                             backgroundColor: '#ffffff',
                                             logging: false,
-                                            width: 105 * 3.78,
-                                            height: 148 * 3.78
+                                            width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                                            height: 148 * 3.78  // Convert mm to pixels
                                         },
                                         jsPDF: {
                                             unit: 'mm',
                                             format: 'a6',
                                             orientation: 'portrait'
                                         }
-                                    };
+                                    }
 
-                                    // Wait a moment for any images to load
-                                    setTimeout(() => {
-                                        html2pdf()
-                                            .set(opt)
-                                            .from(elementToPrint)
-                                            .outputPdf('blob')
-                                            .then((pdfBlob) => {
-                                                // Clean up DOM elements
-                                                document.body.removeChild(elementToPrint);
-                                                document.body.removeChild(element);
 
-                                                // Create safe filename
-                                                const safeName = participantData.ParticipantName
-                                                    .replace(/[^a-zA-Z0-9\s-]/g, '')
-                                                    .replace(/\s+/g, '_');
-                                                const filename = `${safeName}_${participantData.QrCode}.pdf`;
 
-                                                // Add to ZIP
-                                                zip.file(filename, pdfBlob);
-                                                console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
-                                                resolve(pdfBlob);
-                                            })
-                                            .catch(error => {
-                                                console.error('PDF generation failed:', error);
-                                                // Clean up on error
-                                                document.body.removeChild(elementToPrint);
-                                                document.body.removeChild(element);
-                                                reject(error);
-                                            });
-                                    }, 500);
+
+                                    const pdfBlob = await html2pdf()
+                                        .set(options)
+                                        .from(elementToPrint)
+                                        .toPdf()
+                                        .output('blob');
+
+                                    // Add to zip
+                                    const safeName = participantData.ParticipantName
+                                        .replace(/[^a-zA-Z0-9\s-]/g, '')
+                                        .replace(/\s+/g, '_');
+                                    const filename = `${safeName}_${participantData.QrCode}.pdf`;
+
+                                    zip.file(filename, pdfBlob);
+                                    console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
+
+                                    // Cleanup
+                                    document.body.removeChild(iframe);
+                                    resolve();
 
                                 } catch (error) {
-                                    // Ensure cleanup on error
-                                    const elements = document.querySelectorAll('div[style*="-9999px"]');
-                                    elements.forEach(el => {
-                                        if (el.parentNode === document.body) {
-                                            document.body.removeChild(el);
-                                        }
-                                    });
-
-                                    // Also remove any other temporary elements
-                                    const tempElements = document.querySelectorAll('div[style*="position: absolute"]');
-                                    tempElements.forEach(el => {
-                                        if (el.parentNode === document.body && el.style.left === '-9999px') {
-                                            document.body.removeChild(el);
-                                        }
-                                    });
-
+                                    document.body.removeChild(iframe);
                                     reject(error);
                                 }
-                            },
-                            error: function(xhr, status, error) {
-                                reject(new Error(`AJAX request failed: ${status} - ${error}`));
-                            }
-                        });
-                    });
-                }
+                            };
 
-                  function generateParticipantPDFool(participantData, zip) {
-                    return new Promise((resolve, reject) => {
-                        $.ajax({
-                            url: '/ParticipantCommunication/GenerateIdCard',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({
-                                QrCode: participantData.QrCode,
-                                IsPrintCenter: true
-                            }),
-                            success: async function(res) {
-                                if (!res.success) {
-                                    reject(new Error('API returned success: false'));
-                                    return;
+                            // Trigger iframe load
+                            iframe.src = 'about:blank';
+                        },
+                        error: function(xhr, status, error) {
+                            reject(new Error(`AJAX error: ${error}`));
+                        }
+                    });
+                });
+            }
+
+                function generateParticipantPDFold(participantData, zip) {
+                return new Promise((resolve, reject) => {
+                    $.ajax({
+                        url: '/ParticipantCommunication/GenerateIdCard',
+                        type: 'POST',
+                        contentType: 'application/json',
+                        data: JSON.stringify({
+                            QrCode: participantData.QrCode,
+                            IsPrintCenter: true
+                        }),
+                        success: async function(res) {
+                            if (!res.success) {
+                                reject(new Error('API returned success: false'));
+                                return;
+                            }
+
+                            // Create a hidden iframe to render the HTML
+                            const iframe = document.createElement('iframe');
+                            //iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:105mm;height:148mm;border:none;';
+
+                            document.body.appendChild(iframe);
+
+                            iframe.onload = async function() {
+                                try {
+                                    // Write HTML to iframe
+                                    iframe.contentDocument.open();
+                                    iframe.contentDocument.write(res.idCardHtml);
+                                    iframe.contentDocument.close();
+
+                                    // Wait for iframe to render
+                                    await new Promise(resolve => setTimeout(resolve, 300));
+
+                                    const element = iframe.contentDocument.body;
+                                        const elementToPrint = element.cloneNode(true);
+
+                                    // 3. Apply print styles
+                                    elementToPrint.style.background = 'white';
+                                    elementToPrint.style.margin = '0';
+                                    elementToPrint.style.boxShadow = 'none';
+                                    elementToPrint.style.border = 'none';
+                                    elementToPrint.style.color = '#000'; // Add for better print contrast
+
+                                    // 4. Append to IFRAME's body, not main document body
+                                    iframe.contentDocument.body.innerHTML = ''; // Clear iframe first
+                                    iframe.contentDocument.body.appendChild(elementToPrint);
+                                        const options = {
+                                        margin: 0,
+                                        image: { type: 'jpeg', quality: 0.98 },
+                                        html2canvas: {
+                                            scale: 3, // Higher scale for better quality
+                                            useCORS: true,
+                                            backgroundColor: '#ffffff',
+                                            logging: false,
+                                            width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
+                                            height: 148 * 3.78  // Convert mm to pixels
+                                        },
+                                        jsPDF: {
+                                            unit: 'mm',
+                                            format: 'a6',
+                                            orientation: 'portrait'
+                                        }
+                                    }
+
+
+
+
+                                    const pdfBlob = await html2pdf()
+                                        .set(options)
+                                        .from(elementToPrint)
+                                        .toPdf()
+                                        .output('blob');
+
+                                    // Add to zip
+                                    const safeName = participantData.ParticipantName
+                                        .replace(/[^a-zA-Z0-9\s-]/g, '')
+                                        .replace(/\s+/g, '_');
+                                    const filename = `${safeName}_${participantData.QrCode}.pdf`;
+
+                                    zip.file(filename, pdfBlob);
+                                    console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
+
+                                    // Cleanup
+                                    document.body.removeChild(iframe);
+                                    resolve();
+
+                                } catch (error) {
+                                    document.body.removeChild(iframe);
+                                    reject(error);
                                 }
+                            };
 
-                                htmlContent =res.idCardHtml;
-                                 const element = document.createElement('div');
-
-                                    // Extract body content if present
-                                    if (htmlContent.includes('<body>')) {
-                                        const bodyMatch = htmlContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-                                        element.innerHTML = bodyMatch && bodyMatch[1] ? bodyMatch[1] : htmlContent;
-                                    } else {
-                                        element.innerHTML = htmlContent;
-                                    }
-
-                                         //const element = document.createElement('div'); // const element = document.createElement('div');
-                        element.innerHTML = htmlContent;
-                        // Clone the element to avoid affecting the display
-                        const elementToPrint = element.cloneNode(true);
-                        elementToPrint.style.background = 'white';
-                        elementToPrint.style.margin = '0';
-                        elementToPrint.style.boxShadow = 'none';
-                        elementToPrint.style.border = 'none';
-
-
-
-
-
-
-
-                                // Create a hidden iframe to render the HTML
-                                const iframe = document.createElement('iframe');
-                                //iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:105mm;height:148mm;border:none;';
-
-                                document.body.appendChild(iframe);
-
-                                iframe.onload = async function() {
-                                    try {
-                                        // Write HTML to iframe
-                                        iframe.contentDocument.open();
-                                        iframe.contentDocument.write(res.idCardHtml);
-                                        iframe.contentDocument.close();
-
-                                        // Wait for iframe to render
-                                        await new Promise(resolve => setTimeout(resolve, 300));
-
-                                        const element = iframe.contentDocument.body;
-                                         const elementToPrint = element.cloneNode(true);
-
-                                        // 3. Apply print styles
-                                        elementToPrint.style.background = 'white';
-                                        elementToPrint.style.margin = '0';
-                                        elementToPrint.style.boxShadow = 'none';
-                                        elementToPrint.style.border = 'none';
-                                        elementToPrint.style.color = '#000'; // Add for better print contrast
-
-                                        // 4. Append to IFRAME's body, not main document body
-                                        iframe.contentDocument.body.innerHTML = ''; // Clear iframe first
-                                        iframe.contentDocument.body.appendChild(elementToPrint);
-                                         const options = {
-                                         margin: 0,
-                                         image: { type: 'jpeg', quality: 0.98 },
-                                         html2canvas: {
-                                             scale: 3, // Higher scale for better quality
-                                             useCORS: true,
-                                             backgroundColor: '#ffffff',
-                                             logging: false,
-                                             width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
-                                             height: 148 * 3.78  // Convert mm to pixels
-                                         },
-                                         jsPDF: {
-                                             unit: 'mm',
-                                             format: 'a6',
-                                             orientation: 'portrait'
-                                         }
-                                     }
-
-
-
-
-                                        const pdfBlob = await html2pdf()
-                                            .set(options)
-                                            .from(elementToPrint)
-                                            .toPdf()
-                                            .output('blob');
-
-                                        // Add to zip
-                                        const safeName = participantData.ParticipantName
-                                            .replace(/[^a-zA-Z0-9\s-]/g, '')
-                                            .replace(/\s+/g, '_');
-                                        const filename = `${safeName}_${participantData.QrCode}.pdf`;
-
-                                        zip.file(filename, pdfBlob);
-                                        console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
-
-                                        // Cleanup
-                                        document.body.removeChild(iframe);
-                                        resolve();
-
-                                    } catch (error) {
-                                        document.body.removeChild(iframe);
-                                        reject(error);
-                                    }
-                                };
-
-                                // Trigger iframe load
-                                iframe.src = 'about:blank';
-                            },
-                            error: function(xhr, status, error) {
-                                reject(new Error(`AJAX error: ${error}`));
-                            }
-                        });
+                            // Trigger iframe load
+                            iframe.src = 'about:blank';
+                        },
+                        error: function(xhr, status, error) {
+                            reject(new Error(`AJAX error: ${error}`));
+                        }
                     });
-                }
-
-                  function generateParticipantPDFold(participantData, zip) {
-                    return new Promise((resolve, reject) => {
-                        $.ajax({
-                            url: '/ParticipantCommunication/GenerateIdCard',
-                            type: 'POST',
-                            contentType: 'application/json',
-                            data: JSON.stringify({
-                                QrCode: participantData.QrCode,
-                                IsPrintCenter: true
-                            }),
-                            success: async function(res) {
-                                if (!res.success) {
-                                    reject(new Error('API returned success: false'));
-                                    return;
-                                }
-
-                                // Create a hidden iframe to render the HTML
-                                const iframe = document.createElement('iframe');
-                                //iframe.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:105mm;height:148mm;border:none;';
-
-                                document.body.appendChild(iframe);
-
-                                iframe.onload = async function() {
-                                    try {
-                                        // Write HTML to iframe
-                                        iframe.contentDocument.open();
-                                        iframe.contentDocument.write(res.idCardHtml);
-                                        iframe.contentDocument.close();
-
-                                        // Wait for iframe to render
-                                        await new Promise(resolve => setTimeout(resolve, 300));
-
-                                        const element = iframe.contentDocument.body;
-                                         const elementToPrint = element.cloneNode(true);
-
-                                        // 3. Apply print styles
-                                        elementToPrint.style.background = 'white';
-                                        elementToPrint.style.margin = '0';
-                                        elementToPrint.style.boxShadow = 'none';
-                                        elementToPrint.style.border = 'none';
-                                        elementToPrint.style.color = '#000'; // Add for better print contrast
-
-                                        // 4. Append to IFRAME's body, not main document body
-                                        iframe.contentDocument.body.innerHTML = ''; // Clear iframe first
-                                        iframe.contentDocument.body.appendChild(elementToPrint);
-                                         const options = {
-                                         margin: 0,
-                                         image: { type: 'jpeg', quality: 0.98 },
-                                         html2canvas: {
-                                             scale: 3, // Higher scale for better quality
-                                             useCORS: true,
-                                             backgroundColor: '#ffffff',
-                                             logging: false,
-                                             width: 105 * 3.78, // Convert mm to pixels (105mm * 3.78px/mm)
-                                             height: 148 * 3.78  // Convert mm to pixels
-                                         },
-                                         jsPDF: {
-                                             unit: 'mm',
-                                             format: 'a6',
-                                             orientation: 'portrait'
-                                         }
-                                     }
-
-
-
-
-                                        const pdfBlob = await html2pdf()
-                                            .set(options)
-                                            .from(elementToPrint)
-                                            .toPdf()
-                                            .output('blob');
-
-                                        // Add to zip
-                                        const safeName = participantData.ParticipantName
-                                            .replace(/[^a-zA-Z0-9\s-]/g, '')
-                                            .replace(/\s+/g, '_');
-                                        const filename = `${safeName}_${participantData.QrCode}.pdf`;
-
-                                        zip.file(filename, pdfBlob);
-                                        console.log(`Added to ZIP: ${filename} (${pdfBlob.size} bytes)`);
-
-                                        // Cleanup
-                                        document.body.removeChild(iframe);
-                                        resolve();
-
-                                    } catch (error) {
-                                        document.body.removeChild(iframe);
-                                        reject(error);
-                                    }
-                                };
-
-                                // Trigger iframe load
-                                iframe.src = 'about:blank';
-                            },
-                            error: function(xhr, status, error) {
-                                reject(new Error(`AJAX error: ${error}`));
-                            }
-                        });
-                    });
-                }
-    </script>
+                });
+            }
+</script>
 }
