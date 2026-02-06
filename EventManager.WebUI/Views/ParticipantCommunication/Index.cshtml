@@ -8,6 +8,9 @@
 
 <!-- JSZip for creating zip files -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.111/pdf.min.js"></script>
+
 <style>
     /* Counter Badge Styles */
     .btn-with-badge {
@@ -152,10 +155,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-0">
-                <iframe id="pdfPreviewFrame"
+                <canvas id="pdfPreviewCanvas" style="display:block; margin:auto; border:1px solid #ccc;"></canvas>
+                @* <iframe id="pdfPreviewFrame"
                         style="width: 100%; height: 70vh; border: none;"
                         title="ID Card Preview">
-                </iframe>
+                </iframe> *@
             </div>
             <div class="modal-footer">
                 <div class="action-buttons-container" id="previewActionsContainer">
@@ -264,7 +268,139 @@
             });
         });
 
-        function showPdfPreview(base64Data, participantName, participantId) {
+                function showPdfPreview(base64Data, participantName, participantId) {
+            window.currentPreviewData = {
+                participantId: participantId,
+                participantName: participantName
+            };
+
+            let participantData = null;
+            if (participantsTable) {
+                const rowData = participantsTable
+                    .rows({ search: 'applied' })
+                    .data()
+                    .toArray()
+                    .find(row => row.participantId == participantId);
+
+                participantData = rowData;
+
+                // SET DATA ATTRIBUTES ON MODAL BUTTONS
+                $('#previewViewBtn').data('id', participantId).data('name', participantName);
+                $('#previewPrintBtn').data('id', participantId).data('name', participantName);
+                $('#previewDownloadBtn').data('id', participantId).data('name', participantName);
+                $('#previewEmailBtn')
+                    .data('id', participantId)
+                    .data('email', participantData.email)
+                    .data('name', participantName);
+
+                $('#previewWhatsappBtn')
+                    .data('id', participantId)
+                    .data('phone', participantData.phone)
+                    .data('name', participantName);
+
+                $('#previewTelegramBtn')
+                    .data('id', participantId)
+                    .data('telegram', participantData.telegram || '')
+                    .data('name', participantName);
+
+                // Counters
+                const printCount = participantData.printCount || 0;
+                const downloadCount = participantData.downloadCount || 0;
+
+                if (printCount > 0) {
+                    $('#previewPrintCounter').text(printCount).attr('data-id', participantId).show();
+                } else {
+                    $('#previewPrintCounter').attr('data-id', participantId).text('0').hide();
+                }
+
+                if (downloadCount > 0) {
+                    $('#previewDownloadCounter').text(downloadCount).attr('data-id', participantId).show();
+                } else {
+                    $('#previewDownloadCounter').attr('data-id', participantId).text('0').hide();
+                }
+            }
+
+            // Convert base64 to ArrayBuffer
+            const byteCharacters = atob(base64Data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const pdfData = byteArray.buffer;
+
+            // Set modal title
+            $('#previewModalTitle').text(`ID Card Preview - ${participantName}`);
+
+            // Initialize modal
+            const modalElement = document.getElementById('pdfPreviewModal');
+            if (pdfPreviewModal) {
+                pdfPreviewModal.hide();
+                $(modalElement).off('hidden.bs.modal');
+            }
+            $('.modal-backdrop').remove();
+            $('body').removeClass('modal-open');
+            $('body').css('padding-right', '');
+            pdfPreviewModal = new bootstrap.Modal(modalElement);
+            pdfPreviewModal.show();
+
+            // Render PDF using PDF.js with A6 aspect ratio
+            const canvas = document.getElementById('pdfPreviewCanvas');
+            const context = canvas.getContext('2d');
+
+            pdfjsLib.getDocument({ data: pdfData }).promise.then(pdf => {
+                pdf.getPage(1).then(page => {
+                    const viewport = page.getViewport({ scale: 1 }); // start with 1:1
+                    const pdfWidth = viewport.width;
+                    const pdfHeight = viewport.height;
+
+                    // A6 ratio: 105mm x 148mm ~ 1:1.41
+                    const a6Ratio = 148 / 105;
+
+                    // Determine modal max width
+                    const modalWidth = $('#pdfPreviewModal .modal-body').width() * 0.9; // 90% of modal width
+                    let scale = modalWidth / pdfWidth;
+
+                    // Ensure height fits inside modal too
+                    const modalHeight = $(window).height() * 0.7; // 70% of viewport height
+                    if (pdfHeight * scale > modalHeight) {
+                        scale = modalHeight / pdfHeight;
+                    }
+
+                    canvas.width = pdfWidth * scale;
+                    canvas.height = pdfHeight * scale;
+
+                    const renderContext = {
+                        canvasContext: context,
+                        viewport: page.getViewport({ scale: scale })
+                    };
+                    page.render(renderContext);
+                });
+            });
+
+           
+        }
+
+         // Cleanup on modal close
+ const modalElementObj = document.getElementById('pdfPreviewModal');
+            $(modalElementObj).on('hidden.bs.modal', function () {
+                $('#pdfPreviewCanvas').remove(); // remove old canvas
+                // recreate canvas for next preview
+                $(modalElementObj).find('.modal-body').append('<canvas id="pdfPreviewCanvas" style="display:block; margin:auto; border:1px solid #ccc;"></canvas>');
+
+                $('.modal-backdrop').remove();
+                $('body').removeClass('modal-open');
+                $('body').css('padding-right', '');
+
+                window.currentPreviewData = null;
+
+                if (pdfPreviewModal) {
+                    pdfPreviewModal.dispose();
+                    pdfPreviewModal = null;
+                }
+            });
+                
+        function showPdfPreviewold(base64Data, participantName, participantId) {
             window.currentPreviewData = {
                 participantId: participantId,
                 participantName: participantName
@@ -348,7 +484,7 @@
                     pdfPreviewModal = null;
                 }
             });
-        }                $('#quickScanBtn').on('click', function() {
+        }               $('#quickScanBtn').on('click', function() {
                     window.location.href = '/QrConfiguration/Index?fromQuickScan=true';
                     return true;
                 });
