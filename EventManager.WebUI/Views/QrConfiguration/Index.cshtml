@@ -278,7 +278,6 @@
         }
     }
 
-    /* New Scan Highlight */
     .new-scan {
         animation: highlight 2s ease;
     }
@@ -291,6 +290,33 @@
         100% {
             background-color: transparent;
         }
+    }
+
+    .modal-backdrop {
+        z-index: 1040 !important; 
+        background-color: rgba(0, 0, 0, 0.5); 
+    }
+
+    .modal {
+        z-index: 1050 !important;
+    }
+
+    .scanner-container {
+        position: relative;
+        z-index: 1030;
+    }
+
+    .scan-popup.modal {
+        background: transparent !important;
+    }
+
+    .scan-popup .modal-dialog {
+        margin: 1.75rem auto;
+        max-width: 500px;
+    }
+
+    body.modal-open {
+        overflow: visible !important;
     }
 </style>
 
@@ -437,7 +463,7 @@
 </div>
 
 <!-- Professional Popup Modal -->
-<div class="modal fade scan-popup" id="scanResultModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade scan-popup" id="scanResultModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" id="scanResultModalContent">
             <div class="modal-header">
